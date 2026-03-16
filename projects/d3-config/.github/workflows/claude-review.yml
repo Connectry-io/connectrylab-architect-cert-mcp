@@ -1,0 +1,107 @@
+# Task 3.6: CI/CD integration with Claude Code.
+#
+# This workflow demonstrates:
+#   - `claude -p` (piped/non-interactive mode) for CI environments
+#   - `--output-format json` for machine-readable output
+#   - `--json-schema` for structured, validated output
+#   - Running Claude as an automated code reviewer on pull requests
+#
+# In production, ANTHROPIC_API_KEY would be stored as a GitHub secret.
+
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for accurate diff
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Get changed files
+        id: changes
+        run: |
+          FILES=$(git diff --name-only origin/main...HEAD -- '*.ts' '*.tsx')
+          echo "files=$FILES" >> "$GITHUB_OUTPUT"
+
+      - name: Run Claude review
+        # Task 3.6: The -p flag runs Claude in non-interactive (piped) mode.
+        # --output-format json returns structured JSON instead of plain text.
+        # --json-schema validates the output against a schema, ensuring
+        # the response contains exactly the fields downstream steps expect.
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          claude -p \
+            --output-format json \
+            --json-schema '{
+              "type": "object",
+              "properties": {
+                "summary": { "type": "string" },
+                "issues": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "file": { "type": "string" },
+                      "line": { "type": "number" },
+                      "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+                      "message": { "type": "string" },
+                      "suggestion": { "type": "string" }
+                    },
+                    "required": ["file", "severity", "message"]
+                  }
+                },
+                "approved": { "type": "boolean" }
+              },
+              "required": ["summary", "issues", "approved"]
+            }' \
+            "Review these changed files for bugs, type safety issues, and adherence to project conventions. Changed files: ${{ steps.changes.outputs.files }}" \
+            > review-output.json
+
+      - name: Post review comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const review = JSON.parse(fs.readFileSync('review-output.json', 'utf8'));
+
+            let body = `## Claude Code Review\n\n${review.summary}\n\n`;
+
+            if (review.issues.length > 0) {
+              body += `### Issues Found (${review.issues.length})\n\n`;
+              for (const issue of review.issues) {
+                const location = issue.line ? `${issue.file}:${issue.line}` : issue.file;
+                body += `- **[${issue.severity.toUpperCase()}]** \`${location}\` — ${issue.message}\n`;
+                if (issue.suggestion) {
+                  body += `  > Suggestion: ${issue.suggestion}\n`;
+                }
+              }
+            } else {
+              body += '_No issues found._\n';
+            }
+
+            body += `\n**Verdict:** ${review.approved ? 'Approved' : 'Changes requested'}`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });

@@ -166,6 +166,13 @@ export interface DomainExamScore {
   readonly weight: number;
 }
 
+// ---- Follow-Up ----
+
+export interface FollowUpOption {
+  readonly key: string;
+  readonly label: string;
+}
+
 // ---- Config ----
 
 export interface UserConfig {

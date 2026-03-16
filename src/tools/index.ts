@@ -14,6 +14,7 @@ import { registerResetProgress } from './reset-progress.js';
 import { registerStartPracticeExam } from './start-practice-exam.js';
 import { registerSubmitExamAnswer } from './submit-exam-answer.js';
 import { registerGetExamHistory } from './get-exam-history.js';
+import { registerFollowUp } from './follow-up.js';
 
 export function registerTools(server: McpServer, db: Database.Database, userConfig: UserConfig): void {
   registerSubmitAnswer(server, db, userConfig);
@@ -29,4 +30,5 @@ export function registerTools(server: McpServer, db: Database.Database, userConf
   registerStartPracticeExam(server, db, userConfig);
   registerSubmitExamAnswer(server, db, userConfig);
   registerGetExamHistory(server, db, userConfig);
+  registerFollowUp(server, db, userConfig);
 }

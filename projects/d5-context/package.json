@@ -1,0 +1,30 @@
+{
+  "name": "@connectry/d5-context-demo",
+  "version": "1.0.0",
+  "description": "Domain 5 Reference Project — Mini Context Manager demonstrating long-session reliability patterns: context preservation, escalation, error propagation, large codebase context, human review, and information provenance",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node --loader ts-node/esm src/index.ts",
+    "dev": "npx tsx src/index.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0"
+  },
+  "keywords": [
+    "claude",
+    "anthropic",
+    "context-management",
+    "escalation",
+    "provenance",
+    "mcp",
+    "certification"
+  ],
+  "license": "MIT"
+}

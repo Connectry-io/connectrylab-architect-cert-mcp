@@ -1,0 +1,29 @@
+{
+  "name": "@connectry/d1-agentic-demo",
+  "version": "1.0.0",
+  "description": "Domain 1 Reference Project — Multi-Agent Research Coordinator demonstrating agentic loops, coordinator-subagent patterns, hooks, workflows, and session management",
+  "type": "module",
+  "main": "dist/coordinator.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node --loader ts-node/esm src/coordinator.ts",
+    "dev": "npx tsx src/coordinator.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0"
+  },
+  "keywords": [
+    "claude",
+    "anthropic",
+    "agentic",
+    "multi-agent",
+    "mcp",
+    "certification"
+  ],
+  "license": "MIT"
+}

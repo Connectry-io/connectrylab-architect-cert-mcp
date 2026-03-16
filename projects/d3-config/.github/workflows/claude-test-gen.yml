@@ -1,0 +1,96 @@
+# Task 3.6: CI/CD integration — automated test generation.
+#
+# This workflow demonstrates using Claude Code in CI to generate tests
+# for changed source files. It uses:
+#   - `claude -p` for non-interactive execution
+#   - `--output-format json` for structured output
+#   - `--allowedTools` to restrict Claude to safe operations
+#
+# The workflow runs on push to feature branches, generates missing tests,
+# and opens a PR with the new test files.
+
+name: Claude Test Generation
+
+on:
+  push:
+    branches:
+      - 'feat/**'
+      - 'fix/**'
+    paths:
+      - 'src/**/*.ts'
+      - '!src/**/*.test.ts'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          pnpm install
+
+      - name: Identify files missing tests
+        id: missing
+        run: |
+          # Find changed .ts files that do not have a corresponding .test.ts
+          CHANGED=$(git diff --name-only origin/main...HEAD -- 'src/**/*.ts' ':!src/**/*.test.ts')
+          MISSING=""
+          for file in $CHANGED; do
+            test_file="${file%.ts}.test.ts"
+            if [ ! -f "$test_file" ]; then
+              MISSING="$MISSING $file"
+            fi
+          done
+          echo "files=$MISSING" >> "$GITHUB_OUTPUT"
+
+      - name: Generate tests with Claude
+        if: steps.missing.outputs.files != ''
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # Task 3.6: Using -p flag for non-interactive mode.
+          # --allowedTools restricts Claude to only reading and writing files.
+          # This prevents unintended side effects in the CI environment.
+          for file in ${{ steps.missing.outputs.files }}; do
+            test_file="${file%.ts}.test.ts"
+            echo "Generating tests for $file -> $test_file"
+
+            claude -p \
+              --allowedTools "Read,Write,Grep,Glob" \
+              --output-format json \
+              --json-schema '{
+                "type": "object",
+                "properties": {
+                  "testFile": { "type": "string" },
+                  "testCount": { "type": "number" },
+                  "coverage": { "type": "string" }
+                },
+                "required": ["testFile", "testCount"]
+              }' \
+              "Read $file and generate a comprehensive Vitest test file at $test_file. Follow the testing conventions in .claude/rules/testing.md. Use Arrange-Act-Assert pattern. Target 80%+ coverage. Include edge cases and error paths." \
+              > /dev/null
+          done
+
+      - name: Run generated tests
+        if: steps.missing.outputs.files != ''
+        run: pnpm test --reporter=verbose
+
+      - name: Commit and push test files
+        if: steps.missing.outputs.files != ''
+        run: |
+          git config user.name "claude-ci-bot"
+          git config user.email "claude-ci@example.com"
+          git add 'src/**/*.test.ts'
+          git commit -m "test: add generated tests for changed source files" || exit 0
+          git push

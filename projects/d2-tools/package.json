@@ -1,0 +1,32 @@
+{
+  "name": "@connectry/d2-tools-demo",
+  "version": "1.0.0",
+  "description": "Domain 2 Reference Project — Mini MCP Server demonstrating tool design, structured errors, agent-scoped tools, MCP integration, and built-in tool patterns",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node --loader ts-node/esm src/server.ts",
+    "dev": "npx tsx src/server.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "better-sqlite3": "^12.8.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.0",
+    "tsx": "^4.19.0"
+  },
+  "keywords": [
+    "claude",
+    "anthropic",
+    "mcp",
+    "tool-design",
+    "structured-errors",
+    "certification"
+  ],
+  "license": "MIT"
+}

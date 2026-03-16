@@ -1,0 +1,35 @@
+{
+  "name": "@connectry/capstone-support-agent",
+  "version": "1.0.0",
+  "description": "Capstone Reference Project — Multi-Agent Support System demonstrating all 5 certification domains integrated into a cohesive customer support application",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node --loader ts-node/esm src/server.ts",
+    "dev": "npx tsx src/server.ts",
+    "inspect": "npx @modelcontextprotocol/inspector node --loader ts-node/esm src/server.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "better-sqlite3": "^11.7.0",
+    "zod": "^3.23.0",
+    "zod-to-json-schema": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0"
+  },
+  "keywords": [
+    "claude",
+    "anthropic",
+    "mcp",
+    "multi-agent",
+    "support-agent",
+    "certification",
+    "capstone"
+  ],
+  "license": "MIT"
+}

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type Database from 'better-sqlite3';
-import type { UserConfig } from '../types.js';
+import type { UserConfig, FollowUpOption } from '../types.js';
 import { gradeAnswer } from '../engine/grading.js';
 import { calculateSM2 } from '../engine/spaced-repetition.js';
 import { loadQuestions } from '../data/loader.js';
@@ -47,6 +47,19 @@ export function registerSubmitAnswer(server: McpServer, db: Database.Database, u
 
       updateMastery(db, userId, question.taskStatement, question.domainId, result.isCorrect, sm2.consecutiveCorrect);
 
+      const followUpOptions: readonly FollowUpOption[] = result.isCorrect
+        ? [
+            { key: 'next', label: 'Next question' },
+            { key: 'why_wrong', label: 'Explain why the others are wrong' },
+          ] as const
+        : [
+            { key: 'next', label: 'Got it, next question' },
+            { key: 'code_example', label: 'Explain with a code example' },
+            { key: 'concept', label: 'Show me the concept lesson' },
+            { key: 'handout', label: 'Show me the handout' },
+            { key: 'project', label: 'Show me in the reference project' },
+          ] as const;
+
       const response = {
         questionId: result.questionId,
         isCorrect: result.isCorrect,
@@ -54,6 +67,7 @@ export function registerSubmitAnswer(server: McpServer, db: Database.Database, u
         explanation: result.explanation,
         whyYourAnswerWasWrong: result.whyUserWasWrong,
         references: result.references,
+        followUpOptions,
       };
 
       return {

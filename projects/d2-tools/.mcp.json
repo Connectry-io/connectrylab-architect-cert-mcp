@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "billing-local": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["./dist/server.js"],
+      "env": {
+        "DATABASE_URL": "env://BILLING_DATABASE_URL",
+        "API_SECRET": "env://BILLING_API_SECRET"
+      }
+    },
+    "billing-remote": {
+      "type": "sse",
+      "url": "https://billing-mcp.internal.example.com/sse",
+      "env": {
+        "AUTH_TOKEN": "env://BILLING_AUTH_TOKEN"
+      }
+    }
+  }
+}

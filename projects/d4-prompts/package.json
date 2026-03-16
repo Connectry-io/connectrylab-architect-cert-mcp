@@ -1,0 +1,37 @@
+{
+  "name": "@connectry/d4-prompts-demo",
+  "version": "1.0.0",
+  "description": "Domain 4 Reference Project — Mini Data Extraction demonstrating prompt engineering, structured output, validation loops, batch processing, and multi-pass review",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node --loader ts-node/esm src/index.ts",
+    "dev": "npx tsx src/index.ts",
+    "extract:criteria": "npx tsx src/extraction/criteria-prompt.ts",
+    "extract:fewshot": "npx tsx src/extraction/few-shot.ts",
+    "extract:structured": "npx tsx src/extraction/structured-output.ts",
+    "extract:validate": "npx tsx src/extraction/validation-retry.ts",
+    "batch": "npx tsx src/batch/batch-processor.ts",
+    "review": "npx tsx src/review/multi-pass.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "zod": "^3.23.0",
+    "zod-to-json-schema": "^3.23.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0"
+  },
+  "keywords": [
+    "claude",
+    "anthropic",
+    "prompt-engineering",
+    "structured-output",
+    "batch-api",
+    "mcp",
+    "certification"
+  ],
+  "license": "MIT"
+}
