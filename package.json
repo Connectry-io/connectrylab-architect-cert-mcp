@@ -14,17 +14,28 @@
     "lint": "tsc --noEmit && tsc --noEmit -p tests/tsconfig.json",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["claude", "anthropic", "certification", "mcp", "architect", "connectry"],
+  "keywords": [
+    "claude",
+    "anthropic",
+    "certification",
+    "mcp",
+    "architect",
+    "connectry"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/Connectry-io/connectry-architect-mcp"
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
     "better-sqlite3": "^12.8.0",
-    "zod": "^4.3.6"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
