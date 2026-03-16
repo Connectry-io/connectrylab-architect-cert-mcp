@@ -1,0 +1,37 @@
+{
+  "name": "connectry-architect-mcp",
+  "version": "0.1.0",
+  "description": "Free certification prep for Claude Certified Architect — by Connectry LABS",
+  "type": "module",
+  "bin": {
+    "connectry-architect-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit && tsc --noEmit -p tests/tsconfig.json",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["claude", "anthropic", "certification", "mcp", "architect", "connectry"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Connectry-io/connectry-architect-mcp"
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "better-sqlite3": "^12.8.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.5.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  }
+}
