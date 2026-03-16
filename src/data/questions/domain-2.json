@@ -1,4 +1,200 @@
 {
   "domainId": 2,
-  "questions": []
+  "questions": [
+    {
+      "id": "q-2.1-easy-1",
+      "taskStatement": "2.1",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "You are writing a tool description for a `get_user_profile` function that an agent will use to fetch user data from a database. You want Claude to invoke it correctly every time.",
+      "text": "Which of the following tool descriptions best follows Anthropic's guidance for clear, effective tool interfaces?",
+      "options": {
+        "A": "\"Fetches user profile data from the database given a user_id (integer). Returns a JSON object with fields: name, email, created_at, and account_status. Does NOT modify any data.\"",
+        "B": "\"Gets user info.\"",
+        "C": "\"Retrieves all kinds of user data including profile, settings, and preferences from various backend systems.\"",
+        "D": "\"A versatile function for working with users. Can be used to get, update, or delete user profiles depending on the context.\""
+      },
+      "correctAnswer": "A",
+      "explanation": "Anthropic recommends that tool descriptions be precise: state what input is expected, what the tool returns, and any important constraints such as read-only behavior. Option A satisfies all of these requirements in a concise way.",
+      "whyWrongMap": {
+        "B": "Too vague — 'gets user info' gives Claude no guidance on required inputs, return format, or scope, making incorrect invocations likely.",
+        "C": "Overstates the tool's scope. Implying it fetches settings and preferences when it only fetches a profile will mislead Claude into calling it for tasks it cannot perform.",
+        "D": "Describing multiple, conflicting behaviors (get, update, delete) in one tool description violates the single-responsibility principle and will cause Claude to make incorrect assumptions about the tool's effects."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#best-practices-for-tool-definitions"
+      ]
+    },
+    {
+      "id": "q-2.1-medium-1",
+      "taskStatement": "2.1",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "A team is building an agent that can both read and write records in a CRM. They are debating whether to expose a single `crm_operation` tool with an `action` parameter, or separate tools like `crm_read_contact` and `crm_update_contact`.",
+      "text": "According to Anthropic's tool design best practices, which approach should the team choose and why?",
+      "options": {
+        "A": "Use a single `crm_operation` tool; fewer tools reduce the model's decision overhead and are easier to maintain.",
+        "B": "Use separate tools per action; this gives Claude explicit, bounded interfaces and makes the tool's side-effects immediately clear from the name and description alone.",
+        "C": "Use a single tool but enumerate all valid `action` values in the description; the model can infer intent from context.",
+        "D": "The choice does not matter as long as the parameter schema is complete; Claude infers the correct behavior from the JSON schema types."
+      },
+      "correctAnswer": "B",
+      "explanation": "Anthropic's guidance stresses that each tool should have a single, well-defined purpose. Separate tools make side-effects (read vs. write) immediately apparent, reduce ambiguity, and allow the model to reason about safety more reliably.",
+      "whyWrongMap": {
+        "A": "While fewer tools can reduce complexity in some cases, merging read and write operations into one tool obscures side-effects and forces Claude to reason about the `action` parameter before knowing whether a destructive operation will occur.",
+        "C": "Relying on an enumerated `action` parameter still requires Claude to parse description prose to understand side-effects, which is more error-prone than self-describing tool names.",
+        "D": "JSON schema types describe data shapes, not behavioral semantics or side-effects. A complete schema alone is insufficient to communicate whether an operation is safe or destructive."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#best-practices-for-tool-definitions"
+      ]
+    },
+    {
+      "id": "q-2.2-medium-1",
+      "taskStatement": "2.2",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "An MCP tool `send_email` fails because the recipient address is malformed. The tool implementation must return an error back to the Claude agent that called it.",
+      "text": "What is the correct MCP protocol mechanism for returning a tool-level error so that Claude can reason about the failure and decide on a recovery action?",
+      "options": {
+        "A": "Return an HTTP 500 status code from the MCP server; Claude will interpret non-200 responses as tool failures.",
+        "B": "Return a result object with `isError: true` and include a descriptive error message in the `content` array.",
+        "C": "Throw an unhandled exception inside the tool handler; the MCP SDK will automatically convert it to a structured error.",
+        "D": "Return an empty result object; Claude will re-invoke the tool with different parameters after detecting an empty response."
+      },
+      "correctAnswer": "B",
+      "explanation": "The MCP specification defines that tool-level errors should be communicated by returning a result with `isError: true` alongside a human-readable message in `content`. This allows Claude to see the error within the conversation flow and plan a recovery strategy.",
+      "whyWrongMap": {
+        "A": "MCP communicates over JSON-RPC, not raw HTTP response codes. Transport-level errors differ from tool-level errors; returning an HTTP 500 would terminate the request at the transport layer rather than giving Claude actionable error content.",
+        "C": "While some SDKs may catch exceptions and convert them, relying on unhandled exceptions is not the defined MCP error protocol. It produces inconsistent behavior across implementations and does not guarantee a structured, parsable error message for the model.",
+        "D": "An empty result is not a defined error signal in MCP. Claude has no mechanism to distinguish an intentionally empty result from a silent failure, so it will not automatically retry with different parameters."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#handling-tool-use-and-tool-results",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp"
+      ]
+    },
+    {
+      "id": "q-2.2-hard-1",
+      "taskStatement": "2.2",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "Your MCP tool `query_database` can fail in two distinct ways: a transient connection timeout, and a permanent schema validation error caused by a bad user query. The orchestrating Claude agent must handle these differently — retrying on transient failures and escalating on permanent ones.",
+      "text": "What is the best practice for structuring MCP tool error responses to enable the agent to distinguish transient from permanent failures?",
+      "options": {
+        "A": "Use two different MCP error codes in the JSON-RPC error object: a retryable code (e.g., -32001) and a permanent code (e.g., -32002), so Claude can branch on the numeric code.",
+        "B": "Always return `isError: true` with a structured `content` payload that includes a machine-readable `error_type` field (e.g., `\"error_type\": \"transient\"` vs `\"error_type\": \"permanent\"`) alongside a human-readable message.",
+        "C": "Return `isError: true` for transient errors only; return a successful result with an `error` field embedded in the JSON body for permanent errors, so Claude uses different code paths.",
+        "D": "Include both error types in a single error message string and instruct Claude via the system prompt to parse the string for keywords like 'timeout' to decide retry logic."
+      },
+      "correctAnswer": "B",
+      "explanation": "The MCP spec's `isError: true` pattern with structured content is the recommended surface for tool errors. Embedding a machine-readable `error_type` field inside the content payload allows the agent to programmatically branch on failure category while preserving the human-readable message for logging and user explanation.",
+      "whyWrongMap": {
+        "A": "JSON-RPC error codes in the transport-level error object are reserved for protocol-level failures (e.g., method not found), not application-level tool errors. Using them for business logic violates the MCP specification and may not be surfaced to Claude's reasoning.",
+        "C": "Mixing `isError: true` for one failure mode and a success envelope with an embedded `error` field for another creates an inconsistent contract. Claude's tool-use reasoning expects a uniform error signal; asymmetric patterns increase the chance of misclassification.",
+        "D": "Parsing error strings in the system prompt is brittle, locale-sensitive, and extremely difficult to maintain. It conflates orchestration logic with prompt engineering and breaks whenever error message wording changes."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#handling-tool-use-and-tool-results",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp"
+      ]
+    },
+    {
+      "id": "q-2.3-medium-1",
+      "taskStatement": "2.3",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "You are building a multi-agent pipeline where an orchestrator delegates sub-tasks to a specialized `data_analyst` subagent. The orchestrator must guarantee that the subagent always uses its `run_sql_query` tool to answer questions rather than generating a SQL result from memory.",
+      "text": "Which `tool_choice` configuration should the orchestrator pass when invoking the `data_analyst` subagent to enforce tool usage?",
+      "options": {
+        "A": "`{\"type\": \"auto\"}` — lets Claude decide whether a tool is needed based on the question.",
+        "B": "`{\"type\": \"any\"}` — forces Claude to call at least one tool from the provided list before responding.",
+        "C": "`{\"type\": \"tool\", \"name\": \"run_sql_query\"}` — forces Claude to call exactly the specified tool.",
+        "D": "`{\"type\": \"none\"}` — disables tool use so Claude relies entirely on its trained knowledge."
+      },
+      "correctAnswer": "C",
+      "explanation": "Setting `tool_choice` to `{\"type\": \"tool\", \"name\": \"run_sql_query\"}` forces the model to invoke that specific tool, guaranteeing that answers are grounded in real query results rather than hallucinated data.",
+      "whyWrongMap": {
+        "A": "`auto` allows Claude to skip tool use entirely if it believes it can answer from context. This is too permissive when the goal is to guarantee fresh, query-backed results.",
+        "B": "`any` forces the model to call some tool, but does not pin which one. If the subagent has multiple tools available, it might call a different one and still not execute a SQL query.",
+        "D": "`none` explicitly disables all tool use, which is the opposite of the desired behavior and would prevent any SQL query from running."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#controlling-claudes-output"
+      ]
+    },
+    {
+      "id": "q-2.3-hard-1",
+      "taskStatement": "2.3",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "A complex agentic system has three specialized subagents: `researcher`, `writer`, and `fact_checker`. Each subagent has access to a different set of tools. The orchestrator must route tasks without exposing tools irrelevant to each subagent's role.",
+      "text": "What is the correct architectural approach for tool distribution in this multi-agent system?",
+      "options": {
+        "A": "Pass the full unified tool list to all three subagents and rely on detailed system prompt instructions to tell each agent to ignore tools outside its role.",
+        "B": "Provide each subagent with only its role-specific tools at the API level (i.e., different `tools` arrays per API call), and document each tool's purpose in its description.",
+        "C": "Use a single `router_agent` with access to all tools; have it call tools on behalf of specialized agents and relay results, eliminating the need for per-agent tool configuration.",
+        "D": "Expose all tools to all subagents but use `tool_choice: {\"type\": \"none\"}` for agents that should not call tools in a given turn, toggling it dynamically."
+      },
+      "correctAnswer": "B",
+      "explanation": "Anthropic recommends providing each agent only the tools it needs for its specific role. This enforces least-privilege at the API level, reduces the model's decision overhead, and prevents accidental invocation of out-of-scope tools regardless of prompt instructions.",
+      "whyWrongMap": {
+        "A": "Relying on system prompt instructions to suppress irrelevant tools is a soft guardrail. Claude may still call an out-of-scope tool if it infers it would be helpful, and the approach scales poorly as tool counts grow.",
+        "C": "Centralizing all tool calls in a single router agent creates a bottleneck, increases latency, and violates the principle of agent specialization. It also concentrates risk — a failure in the router blocks all downstream agents.",
+        "D": "Using `tool_choice: none` to suppress tools still exposes the full tool list to the model's context window, consuming tokens and increasing the chance of hallucinated tool calls in subsequent turns when the restriction is lifted."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#controlling-claudes-output"
+      ]
+    },
+    {
+      "id": "q-2.4-medium-1",
+      "taskStatement": "2.4",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "A developer wants to add a custom MCP server that exposes internal company APIs to Claude Code. They have already built and tested the server locally at `npx my-company-mcp-server`.",
+      "text": "What is the correct way to register this local MCP server so Claude Code can discover and use its tools?",
+      "options": {
+        "A": "Add the server's tool definitions directly to the Claude Code system prompt using the `/tools` slash command.",
+        "B": "Add an entry to the `mcpServers` object in the project's `.claude/claude.json` (or user-level config) with the `command` and optional `args` fields, then restart Claude Code.",
+        "C": "Place the MCP server binary in the Claude Code plugin directory (`~/.claude/plugins/`) and it will be auto-discovered on next launch.",
+        "D": "Set an environment variable `CLAUDE_MCP_SERVER=npx my-company-mcp-server` before launching Claude Code; it reads this variable to discover servers."
+      },
+      "correctAnswer": "B",
+      "explanation": "Claude Code discovers MCP servers through the `mcpServers` configuration object in `.claude/claude.json` at the project or user level. Each entry specifies the `command` (and optional `args` and `env`) used to launch the server process.",
+      "whyWrongMap": {
+        "A": "Claude Code does not have a `/tools` slash command for registering MCP servers. The system prompt is for behavioral instructions, not for server registration.",
+        "C": "Claude Code does not have a `~/.claude/plugins/` auto-discovery directory. There is no plugin drop-in mechanism; all MCP servers must be explicitly declared in the configuration file.",
+        "D": "There is no `CLAUDE_MCP_SERVER` environment variable supported by Claude Code for MCP server discovery. Server configuration is file-based, not environment-variable-based."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/mcp"
+      ]
+    },
+    {
+      "id": "q-2.5-easy-1",
+      "taskStatement": "2.5",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "A Claude Code agent needs to find all TypeScript files in a large monorepo that import from a specific internal library `@company/auth`. The agent must then read one specific file identified by its exact path.",
+      "text": "Which combination of Claude Code built-in tools is most appropriate for this two-step task?",
+      "options": {
+        "A": "Use Glob to find the TypeScript files, then use Read to read the specific file.",
+        "B": "Use Grep to find the TypeScript files containing the import, then use Read to read the specific file.",
+        "C": "Use Glob to find the TypeScript files, then use Grep to read the specific file.",
+        "D": "Use Read for both steps: first to scan all `.ts` files, then to read the target file."
+      },
+      "correctAnswer": "B",
+      "explanation": "Grep is designed to search file contents by pattern — it will efficiently find all `.ts` files that contain `@company/auth` imports. Read is then the correct tool to retrieve the full content of the identified file at a known path.",
+      "whyWrongMap": {
+        "A": "Glob matches files by name pattern (e.g., `**/*.ts`), not by content. It cannot filter files based on whether they contain a specific import statement, so it would return all TypeScript files regardless of their imports.",
+        "C": "Grep is the correct first step, but it cannot be used as a substitute for Read. Grep returns matching lines with context, not the full file content needed for a subsequent analysis step.",
+        "D": "Read retrieves the content of a single file at a known path. Using it to 'scan' multiple files is not how the tool works — it does not accept glob patterns or perform content-based filtering across multiple files."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/overview"
+      ]
+    }
+  ]
 }

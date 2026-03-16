@@ -1,4 +1,197 @@
 {
   "domainId": 3,
-  "questions": []
+  "questions": [
+    {
+      "id": "q-3.1-easy-1",
+      "taskStatement": "3.1",
+      "domainId": 3,
+      "difficulty": "easy",
+      "scenario": "A developer is setting up Claude Code for the first time and wants to understand how CLAUDE.md files interact across different scopes.",
+      "text": "A team places a CLAUDE.md at the project root and another CLAUDE.md inside the `src/backend/` subdirectory. When Claude Code is invoked from within `src/backend/`, which instructions does it load?",
+      "options": {
+        "A": "Only the project-root CLAUDE.md, since it is the primary configuration file",
+        "B": "Only the subdirectory CLAUDE.md, because it is closest to the working context",
+        "C": "Both CLAUDE.md files — the project-root file and the subdirectory file are combined",
+        "D": "Neither file; Claude Code requires a user-level CLAUDE.md to activate"
+      },
+      "correctAnswer": "C",
+      "explanation": "Claude Code applies a hierarchical merge: the user-level, project-level, and any directory-level CLAUDE.md files are all loaded and concatenated, allowing subdirectory files to extend rather than replace parent rules.",
+      "whyWrongMap": {
+        "A": "The project-root CLAUDE.md is loaded, but it is not the only file — directory-level files are also included.",
+        "B": "The subdirectory file is loaded, but the project-root file is not discarded; both are active.",
+        "D": "A user-level CLAUDE.md is optional. Project-level and directory-level files are sufficient to activate configuration."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/memory"
+      ]
+    },
+    {
+      "id": "q-3.1-medium-1",
+      "taskStatement": "3.1",
+      "domainId": 3,
+      "difficulty": "medium",
+      "scenario": "An architect wants to share common linting conventions across multiple CLAUDE.md files without duplicating content. She has stored the shared rules in `.claude/rules/lint-rules.md`.",
+      "text": "Which CLAUDE.md syntax correctly imports the shared lint rules file so Claude Code automatically includes it?",
+      "options": {
+        "A": "`include: .claude/rules/lint-rules.md`",
+        "B": "`@import .claude/rules/lint-rules.md`",
+        "C": "`<!-- rules: .claude/rules/lint-rules.md -->`",
+        "D": "`source(.claude/rules/lint-rules.md)`"
+      },
+      "correctAnswer": "B",
+      "explanation": "Claude Code uses the `@import` syntax inside CLAUDE.md to pull in external rule files, enabling modular and reusable instruction sets stored under `.claude/rules/`.",
+      "whyWrongMap": {
+        "A": "`include:` is not a recognized CLAUDE.md directive; Claude Code will treat it as plain text.",
+        "C": "HTML comment syntax is not parsed by Claude Code as an import directive.",
+        "D": "`source()` is a shell built-in and has no meaning inside a CLAUDE.md markdown file."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/memory"
+      ]
+    },
+    {
+      "id": "q-3.2-medium-1",
+      "taskStatement": "3.2",
+      "domainId": 3,
+      "difficulty": "medium",
+      "scenario": "A platform team wants to create a `/deploy` slash command that is available only within their monorepo, not globally for every user. The command should open a fresh conversation context instead of inheriting the current one.",
+      "text": "Where should the team place the slash command markdown file, and which frontmatter field controls context isolation?",
+      "options": {
+        "A": "Place it in `~/.claude/commands/` and set `context: inherit`",
+        "B": "Place it in `.claude/commands/` within the project and set `context: fork`",
+        "C": "Place it in `.claude/commands/` within the project and set `context: reset`",
+        "D": "Place it in `~/.claude/commands/` and set `context: fork`"
+      },
+      "correctAnswer": "B",
+      "explanation": "Project-scoped slash commands live in `.claude/commands/` at the repo root, making them available only within that project. The `context: fork` frontmatter field starts a fresh conversation that does not inherit the current session's history.",
+      "whyWrongMap": {
+        "A": "`~/.claude/commands/` is the user-level (global) scope, not project-scoped. `context: inherit` keeps the existing conversation context rather than isolating it.",
+        "C": "`context: reset` is not a valid frontmatter value for Claude Code slash commands; the correct isolation value is `fork`.",
+        "D": "`~/.claude/commands/` is the global user scope, not the project scope, so the command would be available in all projects."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/slash-commands"
+      ]
+    },
+    {
+      "id": "q-3.3-medium-1",
+      "taskStatement": "3.3",
+      "domainId": 3,
+      "difficulty": "medium",
+      "scenario": "A team maintains a polyglot monorepo containing a React frontend under `frontend/**` and a Go service under `services/api/**`. They want frontend-specific ESLint conventions to activate only when Claude Code is working on frontend files.",
+      "text": "How should the team configure path-specific rules in their CLAUDE.md to conditionally load the ESLint conventions only for the `frontend/` subtree?",
+      "options": {
+        "A": "Add a second CLAUDE.md inside `frontend/` containing the ESLint rules — no frontmatter required",
+        "B": "Use YAML frontmatter with a `paths` key in the top-level CLAUDE.md, e.g., `paths: ['frontend/**']`, above the ESLint section",
+        "C": "Create a `.eslintrc-claude.md` file in the `frontend/` directory and reference it from the root CLAUDE.md",
+        "D": "Use an `@if path=frontend/**` directive block in the root CLAUDE.md to wrap the ESLint section"
+      },
+      "correctAnswer": "B",
+      "explanation": "Claude Code supports YAML frontmatter with a `paths` glob list inside CLAUDE.md rule blocks, which causes those instructions to activate only when the files being edited match the specified path patterns.",
+      "whyWrongMap": {
+        "A": "While a subdirectory CLAUDE.md works, it always loads when that directory is active — it does not provide conditional, path-scoped activation driven by frontmatter glob matching.",
+        "C": "There is no `.eslintrc-claude.md` convention; Claude Code does not parse arbitrary named files for configuration.",
+        "D": "`@if path=` is not a valid Claude Code CLAUDE.md directive; conditional loading is handled through frontmatter `paths` keys, not inline block directives."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/memory"
+      ]
+    },
+    {
+      "id": "q-3.4-hard-1",
+      "taskStatement": "3.4",
+      "domainId": 3,
+      "difficulty": "hard",
+      "scenario": "A senior engineer asks Claude Code to refactor an authentication module spread across 12 files, replacing a custom JWT library with a standard OIDC provider. She is unsure whether to use plan mode or let Claude Code execute directly.",
+      "text": "Which combination of factors most strongly indicates that plan mode should be used before direct execution in this scenario?",
+      "options": {
+        "A": "The task touches more than 5 files and introduces a new external dependency, making upfront exploration and approval of the approach critical before destructive edits occur",
+        "B": "Plan mode should always be used for any security-related change, regardless of scope, because security decisions require human review by policy",
+        "C": "Plan mode is only beneficial when the engineer cannot describe the desired end state; since she can, direct execution is more efficient",
+        "D": "The choice between plan mode and direct execution is irrelevant for refactoring tasks because Claude Code automatically pauses for confirmation before modifying more than 10 files"
+      },
+      "correctAnswer": "A",
+      "explanation": "Plan mode is most valuable for cross-cutting, multi-file changes that introduce architectural dependencies — it lets the Explore subagent map the codebase and produce an approval-gated plan before any irreversible edits are made, reducing costly mid-refactor pivots.",
+      "whyWrongMap": {
+        "B": "While security changes warrant care, plan mode is not mandated by policy for all security work; the decision is based on scope and reversibility, not topic category.",
+        "C": "The engineer's ability to describe the end state does not remove the benefit of plan mode; the value lies in surfacing hidden dependencies and sequencing edits safely, not in goal clarification.",
+        "D": "Claude Code does not have an automatic file-count threshold that triggers a confirmation pause; plan mode must be explicitly invoked by the user."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/workflows"
+      ]
+    },
+    {
+      "id": "q-3.5-hard-1",
+      "taskStatement": "3.5",
+      "domainId": 3,
+      "difficulty": "hard",
+      "scenario": "A developer is using Claude Code to generate a data-transformation pipeline. After three attempts, the output still silently drops records when the input contains null fields. She wants to apply iterative refinement to drive Claude Code toward correct behavior.",
+      "text": "Which iterative refinement technique is MOST effective for eliminating the silent null-handling bug across subsequent generations?",
+      "options": {
+        "A": "Ask Claude Code to 'try again' with a higher temperature so it explores a broader solution space",
+        "B": "Provide a concrete input/output example that includes a null field paired with the expected output, then instruct Claude Code to verify the generated code against that example before returning it",
+        "C": "Switch to plan mode and re-describe the entire pipeline specification from scratch in a new conversation",
+        "D": "Add a generic instruction such as 'handle all edge cases correctly' to the system prompt and retry"
+      },
+      "correctAnswer": "B",
+      "explanation": "Input/output examples targeting the failing case give Claude Code an executable specification it can validate against during generation; concrete examples outperform vague instructions and are the primary driver of iterative refinement in Claude Code workflows.",
+      "whyWrongMap": {
+        "A": "Temperature is an API-level parameter not exposed via Claude Code's interactive interface, and higher temperature increases randomness rather than directing the model toward a specific correct behavior.",
+        "C": "Rewriting the full specification in a new session discards the refinement history and does not specifically target the null-handling bug; it is wasteful and less precise than a targeted example.",
+        "D": "Vague instructions like 'handle all edge cases' are explicitly less effective than concrete examples because they leave the definition of correct behavior ambiguous."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/workflows"
+      ]
+    },
+    {
+      "id": "q-3.6-medium-1",
+      "taskStatement": "3.6",
+      "domainId": 3,
+      "difficulty": "medium",
+      "scenario": "A DevOps engineer wants to run Claude Code inside a GitHub Actions workflow to automatically review pull requests and emit a structured JSON report that a downstream step can parse.",
+      "text": "Which Claude Code CLI invocation correctly runs a non-interactive review and produces machine-parseable JSON output?",
+      "options": {
+        "A": "`claude --interactive review --format json`",
+        "B": "`claude -p \"Review this PR for security issues\" --output-format json`",
+        "C": "`claude run --no-tty --emit json \"Review this PR for security issues\"`",
+        "D": "`claude --ci --structured \"Review this PR for security issues\"`"
+      },
+      "correctAnswer": "B",
+      "explanation": "The `-p` flag passes a prompt non-interactively (suitable for CI pipelines), and `--output-format json` instructs Claude Code to emit a structured JSON response that downstream pipeline steps can consume programmatically.",
+      "whyWrongMap": {
+        "A": "`--interactive` is the opposite of what a CI pipeline needs; this flag keeps the session open for user input and does not exist in this form in the Claude Code CLI.",
+        "C": "`claude run` and `--emit json` are not valid Claude Code CLI subcommands or flags.",
+        "D": "`--ci` and `--structured` are not recognized Claude Code CLI flags; non-interactive mode is controlled by `-p` and output format by `--output-format`."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/cli-reference"
+      ]
+    },
+    {
+      "id": "q-3.6-hard-1",
+      "taskStatement": "3.6",
+      "domainId": 3,
+      "difficulty": "hard",
+      "scenario": "A platform team integrates Claude Code into a multi-stage CI/CD pipeline. Stage 1 runs unit tests and emits a JSON report. Stage 2 should pass that report to Claude Code along with a JSON schema, so Claude Code produces a structured analysis guaranteed to match the schema.",
+      "text": "Which Claude Code CLI flags, used together, allow Stage 2 to consume the Stage 1 JSON report as a prompt input AND enforce that the output conforms to a specific JSON schema?",
+      "options": {
+        "A": "`-p` to supply the prompt and `--output-format json` to request JSON output",
+        "B": "`-p` to supply the prompt and `--json-schema <schema-file>` to validate and constrain the output structure",
+        "C": "`--stdin` to stream the report as input and `--schema-enforce` to apply the JSON schema",
+        "D": "`--input-file <report>` to load the report and `--output-format structured` to enforce schema compliance"
+      },
+      "correctAnswer": "B",
+      "explanation": "In Claude Code's CI integration, `-p` provides the non-interactive prompt (which can include or reference the Stage 1 report) and `--json-schema` supplies a schema file that constrains the model's output to a guaranteed-valid JSON structure — enabling reliable downstream parsing.",
+      "whyWrongMap": {
+        "A": "`--output-format json` requests JSON-formatted output but does not enforce conformance to a specific schema; without `--json-schema`, the structure is at the model's discretion.",
+        "C": "`--stdin` and `--schema-enforce` are not valid Claude Code CLI flags; input is passed via `-p` and schema enforcement via `--json-schema`.",
+        "D": "`--input-file` and `--output-format structured` are not recognized Claude Code CLI options; the correct flags are `-p` and `--json-schema`."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/cli-reference"
+      ]
+    }
+  ]
 }

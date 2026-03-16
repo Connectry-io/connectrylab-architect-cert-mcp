@@ -1,4 +1,245 @@
 {
   "domainId": 1,
-  "questions": []
+  "questions": [
+    {
+      "id": "q-1.1-easy-1",
+      "taskStatement": "1.1",
+      "domainId": 1,
+      "difficulty": "easy",
+      "scenario": "You are building an agentic loop in Python using the Anthropic SDK. After calling `client.messages.create(...)`, you receive a response object and need to decide whether to keep looping or stop.",
+      "text": "Which field on the API response object should your loop inspect to determine whether the model has finished or is requesting a tool call?",
+      "options": {
+        "A": "response.content[0].type",
+        "B": "response.stop_reason",
+        "C": "response.usage.output_tokens",
+        "D": "response.model"
+      },
+      "correctAnswer": "B",
+      "explanation": "The `stop_reason` field signals why the model stopped generating. A value of `\"tool_use\"` means the model is requesting one or more tool calls and the loop should continue; `\"end_turn\"` means the model has finished and the loop should exit.",
+      "whyWrongMap": {
+        "A": "`response.content[0].type` tells you the type of the first content block (e.g., `text` or `tool_use`), but it does not represent the overall termination signal for the turn — `stop_reason` is the canonical field for loop control.",
+        "C": "`usage.output_tokens` is a billing/telemetry field that counts tokens generated; it carries no semantic information about whether the model wants to call a tool or has completed its response.",
+        "D": "`response.model` simply echoes which model version was used for inference and has no bearing on agentic loop control."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use"
+      ]
+    },
+    {
+      "id": "q-1.1-medium-2",
+      "taskStatement": "1.1",
+      "domainId": 1,
+      "difficulty": "medium",
+      "scenario": "An engineer implements an agentic loop that executes tool calls and feeds results back. During a long-running task the model returns `stop_reason: \"tool_use\"` with two `tool_use` content blocks in a single response.",
+      "text": "What is the correct way to return the results of both tool calls to the model in the next API request?",
+      "options": {
+        "A": "Make two separate API calls, each with one `tool_result` block, so the model can process them individually.",
+        "B": "Append the model's full assistant message to the conversation, then add a single `user` message that contains both `tool_result` content blocks.",
+        "C": "Replace the last user message with a combined message containing both `tool_result` blocks, discarding the assistant turn.",
+        "D": "Add each `tool_result` as a separate `user` turn so the model sees alternating user/assistant messages."
+      },
+      "correctAnswer": "B",
+      "explanation": "When the model requests multiple tool calls in one turn, all results must be returned together in a single `user` message containing one `tool_result` block per tool call, keyed to each `tool_use_id`. The assistant turn that triggered the calls must remain in the conversation history.",
+      "whyWrongMap": {
+        "A": "Splitting results across two API calls would create separate, unrelated conversation threads; the model would not see the full context of both results together and the `tool_use_id` linkage would be broken.",
+        "C": "Discarding the assistant turn violates the alternating user/assistant structure required by the Messages API and would cause an API validation error.",
+        "D": "Inserting multiple `user` turns breaks the required alternating structure; the API expects a single `user` message containing all `tool_result` blocks for that round."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use"
+      ]
+    },
+    {
+      "id": "q-1.2-medium-1",
+      "taskStatement": "1.2",
+      "domainId": 1,
+      "difficulty": "medium",
+      "scenario": "A team is designing a document-processing system where a coordinator agent receives a list of 50 contracts and must extract key clauses from each one. The contracts are independent of each other.",
+      "text": "Which architecture best balances throughput and isolation for this workload?",
+      "options": {
+        "A": "A single agent that processes all 50 contracts sequentially within one long conversation context.",
+        "B": "A coordinator that spawns a separate subagent for each contract, running them in parallel, with each subagent receiving only the contract it needs.",
+        "C": "A coordinator that passes all 50 contracts in a single system prompt to one subagent and asks it to iterate.",
+        "D": "Two subagents that each receive 25 contracts and process them sequentially, sharing a single conversation context."
+      },
+      "correctAnswer": "B",
+      "explanation": "Spawning one subagent per contract in parallel maximises throughput by exploiting concurrency, and each subagent's isolated context prevents cross-contamination between contracts. The coordinator then aggregates the structured results.",
+      "whyWrongMap": {
+        "A": "Sequential processing in a single context means no parallelism, and the ever-growing context window degrades performance and risks exceeding limits as contracts accumulate.",
+        "C": "Passing all 50 contracts to one subagent creates a very large context, increases the risk of inter-document confusion, and prevents parallel execution.",
+        "D": "Sharing a conversation context between batches still risks context pollution, does not fully exploit parallelism, and is harder to fault-isolate when one contract causes an error."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents/multi-agent-systems"
+      ]
+    },
+    {
+      "id": "q-1.2-hard-1",
+      "taskStatement": "1.2",
+      "domainId": 1,
+      "difficulty": "hard",
+      "scenario": "A coordinator agent spawns three specialized subagents: one for data retrieval, one for analysis, and one for report generation. The analysis subagent discovers mid-task that the retrieved data is malformed and cannot proceed.",
+      "text": "What is the recommended pattern for the analysis subagent to communicate this failure back to the coordinator so the coordinator can decide whether to retry retrieval or abort?",
+      "options": {
+        "A": "The analysis subagent should silently return an empty result so the report generator can handle the missing data gracefully.",
+        "B": "The analysis subagent should raise an uncaught exception, crashing its process so the coordinator detects a non-zero exit code.",
+        "C": "The analysis subagent should return a structured error payload — including error type, a human-readable message, and partial results if available — so the coordinator has enough context to make a retry or abort decision.",
+        "D": "The analysis subagent should call the coordinator's tool directly to halt all other subagents before reporting the error."
+      },
+      "correctAnswer": "C",
+      "explanation": "Structured error payloads give the coordinator actionable information: the error type lets it decide if a retry is warranted, partial results prevent duplicating completed work, and a clear message aids debugging. This follows the principle that errors must propagate with full context, not be swallowed.",
+      "whyWrongMap": {
+        "A": "Returning an empty result hides the failure from the coordinator; the report generator would produce an incomplete report without any signal that upstream data was malformed.",
+        "B": "An uncaught exception provides no structured context and forces the coordinator to infer failure from a process-level signal, making it impossible to distinguish retrieval failures from analysis bugs.",
+        "D": "Subagents in a hub-and-spoke architecture should not reach across to control peer subagents; that responsibility belongs to the coordinator, which must be the single decision-making authority over orchestration."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents/multi-agent-systems"
+      ]
+    },
+    {
+      "id": "q-1.3-easy-1",
+      "taskStatement": "1.3",
+      "domainId": 1,
+      "difficulty": "easy",
+      "scenario": "A coordinator agent needs to delegate a sub-task to a subagent using the Claude Agent SDK. The subagent should only have access to a `read_file` tool and a `search_code` tool — not the full tool list available to the coordinator.",
+      "text": "Which parameter on the subagent invocation controls which tools the subagent is allowed to use?",
+      "options": {
+        "A": "system_prompt",
+        "B": "allowed_tools",
+        "C": "tool_choice",
+        "D": "max_tokens"
+      },
+      "correctAnswer": "B",
+      "explanation": "`allowed_tools` scopes the subagent's tool access to an explicit list, enforcing least-privilege by ensuring it cannot call tools the coordinator did not explicitly grant. This is the mechanism for tool isolation in the Agent SDK.",
+      "whyWrongMap": {
+        "A": "The system prompt can include prose instructions about which tools to use, but it is a probabilistic guide — the model may deviate. `allowed_tools` is the deterministic, programmatic enforcement mechanism.",
+        "C": "`tool_choice` controls how the model selects among available tools (e.g., `auto`, `any`, or a specific tool name) — it does not restrict which tools are visible to the subagent.",
+        "D": "`max_tokens` sets the output token budget for the response and has no relationship to tool access control."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents/multi-agent-systems"
+      ]
+    },
+    {
+      "id": "q-1.3-medium-1",
+      "taskStatement": "1.3",
+      "domainId": 1,
+      "difficulty": "medium",
+      "scenario": "A coordinator agent finishes a research phase and needs to pass its findings to a report-writing subagent. The research findings are 3,000 tokens of structured data. The coordinator is considering several context-passing strategies.",
+      "text": "Which approach most reliably ensures the subagent receives the research findings without corrupting its context or relying on the model's memory?",
+      "options": {
+        "A": "Tell the subagent in its system prompt to 'use the research you have already seen' — the model will remember it from the coordinator's context.",
+        "B": "Serialize the research findings and include them explicitly in the subagent's first user message so the subagent's context is self-contained.",
+        "C": "Store the findings in a global variable accessible to both agents and instruct the subagent to read it when needed.",
+        "D": "Summarise the findings in one sentence in the subagent's system prompt to keep context small."
+      },
+      "correctAnswer": "B",
+      "explanation": "Subagents have isolated contexts — they do not share memory with the coordinator. Explicitly passing the serialized findings in the user message makes the subagent's context self-contained and deterministic, which is the required pattern for reliable context handoff.",
+      "whyWrongMap": {
+        "A": "Subagents do not inherit the coordinator's conversation history; each subagent starts a fresh context. Relying on 'memory' from the coordinator's thread will result in the subagent having no access to those findings.",
+        "C": "While a shared store (e.g., a file or database) can work, simply declaring a 'global variable' accessible to both assumes a shared runtime that multi-agent systems do not guarantee, especially across distributed or independently spawned processes.",
+        "D": "A one-sentence summary discards the structured detail the report-writing subagent needs; lossy compression of critical data causes downstream quality failures."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents/multi-agent-systems"
+      ]
+    },
+    {
+      "id": "q-1.4-hard-1",
+      "taskStatement": "1.4",
+      "domainId": 1,
+      "difficulty": "hard",
+      "scenario": "A financial workflow requires that every monetary amount extracted by an AI agent be formatted as a two-decimal-place string (e.g., `\"1234.56\"`) before being written to a ledger. The team debates whether to enforce this via a system prompt instruction or a programmatic PostToolUse hook.",
+      "text": "Why is a PostToolUse hook the superior enforcement mechanism for this requirement compared to a system prompt instruction?",
+      "options": {
+        "A": "Hooks execute before the model sees the tool output, allowing the data to be pre-validated before influencing the model's next decision.",
+        "B": "A hook is deterministic code that runs regardless of how the model interprets its instructions, eliminating the probability that the model will forget or deviate from the formatting rule.",
+        "C": "Hooks allow the agent to call additional tools mid-stream, whereas system prompt instructions can only guide the initial tool selection.",
+        "D": "System prompt instructions are ignored by subagents, so hooks are the only way to enforce rules in multi-agent pipelines."
+      },
+      "correctAnswer": "B",
+      "explanation": "Programmatic hooks enforce constraints deterministically — they run as code in the orchestration layer and cannot be 'forgotten' or misinterpreted. A system prompt instruction is probabilistic: the model may comply most of the time but is not guaranteed to, especially under context pressure, making it insufficient for financial data integrity.",
+      "whyWrongMap": {
+        "A": "PostToolUse hooks run *after* the tool has returned its output, not before — they intercept and can transform the tool result before it is added to the conversation context. PreToolUse hooks run before execution.",
+        "C": "Hooks intercept and transform tool call parameters or outputs; they do not enable the agent to invoke additional tools mid-stream in a fundamentally different way than the normal agentic loop.",
+        "D": "System prompt instructions are respected by subagents when included in their context; the distinction is not that subagents ignore them, but that all prompt-based instructions are probabilistic rather than deterministic."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents/multi-agent-systems"
+      ]
+    },
+    {
+      "id": "q-1.5-medium-1",
+      "taskStatement": "1.5",
+      "domainId": 1,
+      "difficulty": "medium",
+      "scenario": "You are using the Claude Agent SDK and need to ensure that every time the agent calls a `database_write` tool, the parameters are logged to an audit system before the write is executed. If the audit log call fails, the database write must be aborted.",
+      "text": "Which SDK hook type is the correct place to implement this audit-and-gate pattern?",
+      "options": {
+        "A": "PostToolUse hook on `database_write`",
+        "B": "PreToolUse hook on `database_write`",
+        "C": "A system prompt instruction telling the model to call an `audit_log` tool before every `database_write`",
+        "D": "A Stop hook that reviews all tool calls made during the session"
+      },
+      "correctAnswer": "B",
+      "explanation": "A PreToolUse hook fires before the tool executes, giving you the opportunity to run the audit log call and, if it fails, raise an exception or return an error that aborts the tool invocation entirely. This is the only hook type that can gate execution before the side effect occurs.",
+      "whyWrongMap": {
+        "A": "A PostToolUse hook fires *after* the tool has already executed; by the time the hook runs, the database write has already been committed, making it impossible to abort on audit failure.",
+        "C": "Relying on the model to call `audit_log` before `database_write` is a probabilistic instruction — the model may occasionally reorder or skip calls, which is unacceptable for an audit requirement. Programmatic enforcement is required.",
+        "D": "A Stop hook runs at the end of the session after all tool calls are complete; it cannot retroactively abort writes that have already been committed."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents/multi-agent-systems"
+      ]
+    },
+    {
+      "id": "q-1.6-medium-1",
+      "taskStatement": "1.6",
+      "domainId": 1,
+      "difficulty": "medium",
+      "scenario": "An architect is designing an AI system to perform a security audit of a 200-file codebase. The system must identify vulnerabilities in individual files and then produce a cross-file dependency analysis showing how vulnerabilities interact across module boundaries.",
+      "text": "Which task decomposition strategy best matches this two-level requirement?",
+      "options": {
+        "A": "A single large prompt asking the model to read all 200 files and produce both per-file findings and the cross-file analysis in one response.",
+        "B": "A prompt chain where Phase 1 runs parallel per-file subagents that each analyze one file, and Phase 2 runs a single integration agent that receives all Phase 1 outputs and performs the cross-file dependency analysis.",
+        "C": "A single subagent that sequentially reads each file, appending findings to its own context, then generates the cross-file analysis at the end.",
+        "D": "Two independent agents running in parallel: one for per-file analysis and one for cross-file analysis, each reading the full codebase independently."
+      },
+      "correctAnswer": "B",
+      "explanation": "A two-phase prompt chain exploits parallelism where the work is independent (per-file analysis) and serializes where dependencies require it (cross-file synthesis). Phase 1 subagents have focused, small contexts; Phase 2 receives structured summaries rather than raw files, keeping the integration agent's context manageable.",
+      "whyWrongMap": {
+        "A": "Feeding 200 files into a single prompt almost certainly exceeds the context window and forces the model to hold too much information at once, degrading analysis quality for both levels.",
+        "C": "A single sequential agent accumulates all file contents and intermediate findings in one context window, which will degrade in quality over 200 files and provides no parallelism benefit.",
+        "D": "Running the cross-file analysis agent in parallel with per-file analysis means the cross-file agent cannot yet have the per-file results it depends on; the dependency ordering makes strict parallelism here incorrect."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents/multi-agent-systems"
+      ]
+    },
+    {
+      "id": "q-1.7-hard-1",
+      "taskStatement": "1.7",
+      "domainId": 1,
+      "difficulty": "hard",
+      "scenario": "A long-running agent session has been running for two hours and is approaching the context window limit. The session contains a mix of tool outputs, intermediate reasoning, user clarifications, and completed sub-tasks. The team needs to continue the session without losing critical state.",
+      "text": "What is the recommended strategy for preserving actionable state when a long-running session approaches context limits?",
+      "options": {
+        "A": "Rely on the model's built-in context compression: it will automatically prioritize the most important information as the window fills up.",
+        "B": "Truncate the oldest messages from the conversation history to make room for new content, keeping only the most recent exchanges.",
+        "C": "Before the context limit is reached, have the agent produce a structured summary of key decisions, completed steps, pending tasks, and discovered facts, then start a fresh session with this summary as the new context foundation.",
+        "D": "Fork the session into multiple parallel sessions that each receive half of the conversation history, then merge their outputs at the end."
+      },
+      "correctAnswer": "C",
+      "explanation": "Producing a structured summary before hitting the limit preserves only the actionable facts — decisions made, tasks completed, open questions — while discarding the verbose intermediate reasoning and raw tool outputs that fill most of the context window. The fresh session then has a clean, high-signal foundation.",
+      "whyWrongMap": {
+        "A": "There is no automatic context compression built into the Claude API that intelligently preserves the most important information; the model simply loses access to content that falls outside the context window, which can cause it to repeat work or forget constraints.",
+        "B": "Truncating the oldest messages is a naive strategy that typically discards the initial instructions, constraints, and early decisions that are most critical for continued coherent execution.",
+        "D": "Splitting the conversation history across parallel sessions creates inconsistent views of state; each fork will lack context from the other half, leading to conflicting or redundant outputs that are difficult to merge reliably."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents/multi-agent-systems"
+      ]
+    }
+  ]
 }

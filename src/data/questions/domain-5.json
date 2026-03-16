@@ -1,4 +1,203 @@
 {
   "domainId": 5,
-  "questions": []
+  "questions": [
+    {
+      "id": "q-5.1-easy-1",
+      "taskStatement": "5.1",
+      "domainId": 5,
+      "difficulty": "easy",
+      "scenario": "A developer is building a customer support chatbot that handles multi-turn conversations. They notice that after about 15 exchanges the model starts forgetting earlier details the user provided, such as their account type and the product they described.",
+      "text": "What is the primary mechanism Claude uses to retain information across turns in a conversation, and what is its fundamental limitation?",
+      "options": {
+        "A": "Claude stores conversation history in a persistent database that is queried each turn; the limitation is database latency.",
+        "B": "Claude's context window holds the full conversation history passed by the application; the limitation is a finite maximum token count.",
+        "C": "Claude uses in-weights memory formed during training; the limitation is that it only remembers facts present in its training data.",
+        "D": "Claude maintains a hidden state vector updated each turn; the limitation is that the vector degrades over long sessions."
+      },
+      "correctAnswer": "B",
+      "explanation": "Claude has no persistent memory between API calls. The application is responsible for passing the full conversation history (or a summarized version) inside the context window on every request. The context window has a fixed token limit, which is the fundamental constraint on how much history can be preserved.",
+      "whyWrongMap": {
+        "A": "Claude does not have a built-in database; all memory must be managed externally by the application layer.",
+        "C": "In-weights knowledge from training is static world knowledge, not user-specific conversation history from the current session.",
+        "D": "Claude is a stateless API service; there is no hidden state carried between requests."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/memory"
+      ]
+    },
+    {
+      "id": "q-5.1-medium-1",
+      "taskStatement": "5.1",
+      "domainId": 5,
+      "difficulty": "medium",
+      "scenario": "An architect is designing a long-running research assistant that must retain findings from a 200-turn dialogue. The full transcript already consumes 85,000 tokens, and the model's context window is 200,000 tokens. New research requests average 2,000 tokens each.",
+      "text": "Which context management strategy best preserves critical information while allowing the session to continue indefinitely without hitting the context limit?",
+      "options": {
+        "A": "Increase the max_tokens parameter on each API call so the model generates longer responses that self-summarize.",
+        "B": "Store the full transcript externally and periodically ask Claude to produce a structured summary; replace older turns with that summary while keeping recent turns verbatim.",
+        "C": "Rely on Claude's built-in sliding window that automatically drops the oldest tokens.",
+        "D": "Split each new request into separate API calls with no shared history, then merge the responses client-side."
+      },
+      "correctAnswer": "B",
+      "explanation": "Progressive summarization is the recommended pattern: the application stores the full history externally, periodically condenses older content into a dense summary, and injects that summary plus recent verbatim turns into each new request. This keeps the context window within limits while preserving critical accumulated knowledge.",
+      "whyWrongMap": {
+        "A": "max_tokens controls output length, not context retention; increasing it does not affect how much history is available to the model.",
+        "C": "Claude's API does not include an automatic sliding window; token overflow causes an error and is the application's responsibility to handle.",
+        "D": "Splitting into isolated calls loses all conversational context, making coherent multi-turn research impossible."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/memory",
+        "https://docs.anthropic.com/en/docs/build-with-claude/context-windows"
+      ]
+    },
+    {
+      "id": "q-5.2-medium-1",
+      "taskStatement": "5.2",
+      "domainId": 5,
+      "difficulty": "medium",
+      "scenario": "A coding assistant agent receives the instruction: \"Refactor the authentication module.\" The request is ambiguous—it could mean improving readability, replacing the library, or migrating to OAuth. The agent has tools to read files and execute code.",
+      "text": "According to Anthropic's guidance on agentic best practices, what should the agent do before proceeding with the refactor?",
+      "options": {
+        "A": "Choose the interpretation most likely to be correct based on prior conversation context and proceed immediately to minimize latency.",
+        "B": "Pause and ask the user a targeted clarifying question to resolve the ambiguity before taking any file-modifying actions.",
+        "C": "Attempt all three interpretations in parallel subagents and present the results to the user for selection.",
+        "D": "Refuse the task entirely and ask the user to resubmit with a fully specified requirements document."
+      },
+      "correctAnswer": "B",
+      "explanation": "Anthropic recommends that agents pause and seek clarification at the start of a task when instructions are ambiguous and the cost of a wrong interpretation is high. Irreversible or wide-scope file changes like a refactor warrant a targeted question before execution rather than a potentially costly mistake.",
+      "whyWrongMap": {
+        "A": "Proceeding on a guess risks performing irreversible changes that do not match user intent, violating the principle of minimal footprint.",
+        "C": "Running all interpretations simultaneously wastes resources and may make conflicting changes that are difficult to reconcile.",
+        "D": "Outright refusal is unnecessarily restrictive; a single focused clarifying question is sufficient and more user-friendly."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agentic-usage#clarify-before-acting"
+      ]
+    },
+    {
+      "id": "q-5.2-hard-1",
+      "taskStatement": "5.2",
+      "domainId": 5,
+      "difficulty": "hard",
+      "scenario": "A multi-step data pipeline agent is mid-execution when it encounters a decision point: the source dataset has an unexpected schema, and continuing would require deleting and recreating a production table. Pausing for human input will delay a time-sensitive report by four hours.",
+      "text": "Which escalation design pattern best balances reliability with operational urgency in this scenario?",
+      "options": {
+        "A": "Configure the agent with a pre-approved decision matrix that covers known schema variations, allowing autonomous action within bounded parameters while escalating only truly novel deviations.",
+        "B": "Allow the agent to proceed autonomously because the business cost of delay outweighs the risk of data loss; log all actions for post-hoc review.",
+        "C": "Always halt and wait for human approval regardless of urgency, because irreversible production changes require explicit consent in every case.",
+        "D": "Implement an automatic rollback mechanism and let the agent proceed, since rollback eliminates the risk of permanent damage."
+      },
+      "correctAnswer": "A",
+      "explanation": "Anthropic recommends designing agents with pre-approved action envelopes for anticipated situations, combined with escalation triggers for unanticipated ones. A decision matrix that governs known schema variations keeps the pipeline moving within safe boundaries while ensuring genuinely novel risks still surface to humans.",
+      "whyWrongMap": {
+        "B": "Autonomous deletion of production tables without consent violates the minimal-footprint and irreversibility principles, regardless of business urgency.",
+        "C": "Blanket halting ignores the reality that well-scoped pre-approval can safely cover predictable decisions, making systems unnecessarily brittle.",
+        "D": "Rollback reduces but does not eliminate risk; schema mismatches can cause cascading downstream failures that a rollback may not fully address, and the root ambiguity remains unresolved."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agentic-usage#minimize-footprint",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agentic-usage#clarify-before-acting"
+      ]
+    },
+    {
+      "id": "q-5.3-medium-1",
+      "taskStatement": "5.3",
+      "domainId": 5,
+      "difficulty": "medium",
+      "scenario": "An orchestrator agent delegates a web-scraping subtask to a worker agent. The worker fails with a network timeout and returns an error object. The orchestrator must decide how to handle this before reporting results to the user.",
+      "text": "What is the recommended error propagation approach for multi-agent systems according to Anthropic's documentation?",
+      "options": {
+        "A": "The orchestrator should silently retry the failed subtask up to five times before surfacing any error, to avoid alarming the user prematurely.",
+        "B": "The orchestrator should pass the raw exception stack trace directly to the user to provide maximum transparency.",
+        "C": "The orchestrator should catch the error, assess whether retry or fallback is viable, log context-rich diagnostic information, and surface a user-friendly status with enough detail for informed decisions.",
+        "D": "Worker agents should never return errors; they should instead return empty results so the orchestrator can continue without interruption."
+      },
+      "correctAnswer": "C",
+      "explanation": "Robust multi-agent error handling requires the orchestrator to intercept subagent errors, evaluate recovery options (retry, fallback, or escalate), preserve detailed diagnostic context for debugging, and communicate failure status to the user in a clear, actionable way rather than silently swallowing or blindly propagating errors.",
+      "whyWrongMap": {
+        "A": "Silent retries mask the failure state from the user and can cause significant delays or resource exhaustion without informed consent.",
+        "B": "Raw stack traces expose internal implementation details, may include sensitive data, and are not actionable for most users.",
+        "D": "Returning empty results on failure creates silent data quality issues that are harder to diagnose than explicit error propagation."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agentic-usage",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use"
+      ]
+    },
+    {
+      "id": "q-5.4-hard-1",
+      "taskStatement": "5.4",
+      "domainId": 5,
+      "difficulty": "hard",
+      "scenario": "A developer asks an AI coding assistant to trace a bug through a monorepo containing 3,000 files and 1.2 million lines of code. Loading the entire codebase into the context window is impossible. The assistant must navigate imports, function calls, and configuration files spanning dozens of modules.",
+      "text": "Which combination of techniques most effectively supports context management during large codebase exploration?",
+      "options": {
+        "A": "Load the entire repository via a file-tree concatenation tool and use a 1-million-token context model to hold everything simultaneously.",
+        "B": "Use semantic search or grep tools to locate relevant files, load only the specific files and functions on the call path, and maintain a running map of explored nodes to avoid revisiting already-analyzed code.",
+        "C": "Ask the developer to manually paste only the files they suspect contain the bug, relying entirely on their judgment to scope the investigation.",
+        "D": "Perform a single broad keyword search and present all matching lines to the user without further analysis."
+      },
+      "correctAnswer": "B",
+      "explanation": "For large codebase exploration, Anthropic recommends a targeted, incremental approach: use search tools to identify entry points, load only the relevant code segments, and track explored paths to avoid redundant context consumption. This keeps the active context focused and navigable while preserving the ability to follow the dependency chain.",
+      "whyWrongMap": {
+        "A": "Even 1-million-token models cannot hold 1.2 million lines of code; beyond the token limit, signal-to-noise degrades as irrelevant code dilutes the model's attention.",
+        "C": "Relying solely on the developer's intuition bypasses the assistant's ability to discover non-obvious code paths and defeats the purpose of automated exploration.",
+        "D": "Dumping all keyword matches without structured traversal produces an unordered list that is neither efficient nor reliable for tracing execution paths."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agentic-usage",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use"
+      ]
+    },
+    {
+      "id": "q-5.5-medium-1",
+      "taskStatement": "5.5",
+      "domainId": 5,
+      "difficulty": "medium",
+      "scenario": "A medical documentation assistant generates discharge summaries from clinical notes. The product team wants to fully automate the workflow to eliminate physician review. The system achieves 97% accuracy on a test set of 500 cases.",
+      "text": "How should a Claude Architect evaluate whether to implement fully automated generation versus a human-in-the-loop workflow?",
+      "options": {
+        "A": "97% accuracy exceeds the 95% industry threshold, so full automation is justified and physician review can be removed.",
+        "B": "The architect should assess the consequence severity of the 3% error rate in a high-stakes medical context; given that errors could directly harm patients, a human review checkpoint is warranted before documents are finalized.",
+        "C": "Automation decisions are purely a business concern; the architect's role is only to implement whatever the product team specifies.",
+        "D": "Implement full automation but add an audit log so errors can be corrected retroactively, balancing speed with accountability."
+      },
+      "correctAnswer": "B",
+      "explanation": "Anthropic's guidance emphasizes that human review requirements scale with the consequence severity of errors, not merely their frequency. In high-stakes domains such as healthcare, a 3% error rate represents significant patient risk, and a human checkpoint before finalization is a critical reliability safeguard regardless of raw accuracy metrics.",
+      "whyWrongMap": {
+        "A": "No universal 95% threshold exists for medical automation; consequence severity, not a numeric benchmark, drives the decision.",
+        "C": "Architects have a professional and ethical responsibility to raise reliability and safety concerns; deferring entirely to business stakeholders on high-risk automation is inappropriate.",
+        "D": "Retroactive correction after a document has been shared with a patient or used for treatment decisions may be too late to prevent harm; pre-finalization review is preferable."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agentic-usage#when-to-pause-for-human-review",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agentic-usage#minimize-footprint"
+      ]
+    },
+    {
+      "id": "q-5.6-hard-1",
+      "taskStatement": "5.6",
+      "domainId": 5,
+      "difficulty": "hard",
+      "scenario": "A research synthesis agent aggregates findings from 12 sources to produce a report. Two authoritative sources contradict each other on a key statistic, and the agent's confidence in which is correct is low. The downstream consumer of this report will make a significant financial decision based on it.",
+      "text": "Which approach best demonstrates proper information provenance and uncertainty handling as outlined in Anthropic's documentation?",
+      "options": {
+        "A": "Average the two conflicting statistics and report the midpoint without noting the discrepancy, to produce a single coherent figure.",
+        "B": "Choose the statistic from the source with the higher domain authority and omit the conflicting data to avoid confusing the reader.",
+        "C": "Present both statistics with explicit attribution to their sources, describe the nature and magnitude of the conflict, state the agent's confidence level, and recommend that the consumer verify the statistic independently before acting.",
+        "D": "Flag the entire report as unreliable and refuse to deliver any output until the contradiction is resolved by a human researcher."
+      },
+      "correctAnswer": "C",
+      "explanation": "Anthropic's guidelines on handling uncertainty and provenance state that Claude should be calibrated and transparent: acknowledge conflicting evidence, attribute claims to their sources, express confidence honestly, and recommend human verification for high-stakes decisions rather than silently resolving ambiguity or fabricating a consensus.",
+      "whyWrongMap": {
+        "A": "Averaging without disclosure misrepresents the data's actual state, hides the underlying uncertainty, and could lead to a decision based on a figure that matches neither source.",
+        "B": "Silently discarding conflicting data violates information provenance principles and may eliminate a materially important signal that the consumer needs to evaluate.",
+        "D": "Refusing to deliver any output is an over-correction; a well-structured report that transparently presents the conflict is far more useful than no report, and resolution may not be possible before the consumer's deadline."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agentic-usage",
+        "https://docs.anthropic.com/en/docs/about-claude/model-card"
+      ]
+    }
+  ]
 }

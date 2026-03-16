@@ -1,4 +1,206 @@
 {
   "domainId": 4,
-  "questions": []
+  "questions": [
+    {
+      "id": "q-4.1-easy-1",
+      "taskStatement": "4.1",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "A developer is writing a system prompt for a customer support bot and wants Claude to always respond in a polite, professional tone and limit answers to 150 words.",
+      "text": "Which of the following best exemplifies the principle of designing prompts with explicit criteria?",
+      "options": {
+        "A": "\"Be helpful and answer customer questions.\"",
+        "B": "\"You are a customer support agent. Respond politely and professionally. Limit every response to 150 words or fewer. Do not discuss competitor products.\"",
+        "C": "\"Try to keep responses short and stay on topic.\"",
+        "D": "\"Answer questions as best you can and keep the customer happy.\""
+      },
+      "correctAnswer": "B",
+      "explanation": "Option B contains explicit, measurable criteria—tone (polite/professional), length (≤150 words), and a topic boundary (no competitor products)—leaving no ambiguity about expected behavior. Explicit criteria reduce variance and make evaluation straightforward.",
+      "whyWrongMap": {
+        "A": "Too vague; 'helpful' is subjective and provides no measurable constraint.",
+        "C": "'Short' and 'on topic' are subjective and do not give Claude a precise target to optimize for.",
+        "D": "'As best you can' and 'keep happy' are ambiguous and cannot be objectively evaluated or enforced."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct"
+      ]
+    },
+    {
+      "id": "q-4.2-medium-1",
+      "taskStatement": "4.2",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "An engineering team is building a data-extraction pipeline that must classify support tickets into exactly three categories: 'Billing', 'Technical', or 'General'. They notice Claude occasionally returns category names in unexpected formats (e.g., 'billing issue', 'tech support').",
+      "text": "Which few-shot prompting strategy is MOST effective for enforcing consistent output format in this scenario?",
+      "options": {
+        "A": "Include a single example at the start of the system prompt demonstrating the desired category label.",
+        "B": "Provide 3–5 input/output examples in the human turn that each demonstrate the exact expected category label, followed by the actual ticket to classify.",
+        "C": "Instruct Claude in the system prompt to 'always use one of the three allowed category names' without examples.",
+        "D": "Use a longer system prompt that describes each category in detail, relying on Claude's understanding without any examples."
+      },
+      "correctAnswer": "B",
+      "explanation": "Few-shot examples placed immediately before the task in the human turn serve as the strongest formatting signal; multiple diverse examples (3–5) cover edge cases and pattern-match the exact tokens Claude should emit. This is the canonical few-shot technique documented by Anthropic.",
+      "whyWrongMap": {
+        "A": "A single example is often insufficient to suppress format drift across diverse inputs; more examples improve consistency.",
+        "C": "Natural-language instructions alone are weaker than concrete examples because they don't demonstrate the exact output token sequence expected.",
+        "D": "Detailed descriptions help with understanding but do not anchor the output format the way concrete input/output pairs do."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview"
+      ]
+    },
+    {
+      "id": "q-4.3-medium-1",
+      "taskStatement": "4.3",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A fintech application requires Claude to extract transaction details (amount, currency, merchant, date) from unstructured receipt text and return them as a structured object that will be inserted directly into a database.",
+      "text": "What is the recommended approach to enforce structured output from Claude in production systems?",
+      "options": {
+        "A": "Ask Claude to 'respond only with valid JSON' in the system prompt and parse the raw text response.",
+        "B": "Define a tool with a JSON schema that describes the required fields, call Claude with tool_choice set to force tool use, and read the structured result from the tool_use content block.",
+        "C": "Use regular expressions to extract fields from Claude's free-text response after each call.",
+        "D": "Instruct Claude to wrap its JSON output in XML tags and parse between the tags."
+      },
+      "correctAnswer": "B",
+      "explanation": "Anthropic's tool use feature is the canonical mechanism for guaranteed structured output: the JSON schema constrains the shape of the response at the API level, and setting tool_choice to the specific tool forces Claude to populate the schema fields. This eliminates parsing ambiguity present in free-text approaches.",
+      "whyWrongMap": {
+        "A": "Claude may still deviate from valid JSON with natural-language caveats; relying on text parsing is fragile compared to schema-enforced tool use.",
+        "C": "Regex post-processing is brittle, maintenance-heavy, and fails silently when Claude reformats its output.",
+        "D": "XML tag parsing is an improvement over raw text but still relies on prompt compliance rather than schema enforcement, making it less reliable than tool use."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/forcing-tool-use"
+      ]
+    },
+    {
+      "id": "q-4.3-hard-1",
+      "taskStatement": "4.3",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A developer defines a tool schema with a required field `confidence_score` typed as `number` with a minimum of 0 and maximum of 1. During testing, they observe that Claude sometimes returns confidence values outside the declared range when the model is uncertain.",
+      "text": "Which combination of measures BEST ensures the `confidence_score` field always falls within the [0, 1] range?",
+      "options": {
+        "A": "Add the constraint only to the tool description string; Claude will read it and comply.",
+        "B": "Declare `minimum: 0` and `maximum: 1` in the JSON schema for the tool parameter AND add an explicit note in the tool description reinforcing the range constraint.",
+        "C": "After receiving the tool result, validate the value in application code and raise an error if out of range, without modifying the schema.",
+        "D": "Switch from tool use to asking Claude to return JSON in a code block and validate with a JSON schema library in post-processing."
+      },
+      "correctAnswer": "B",
+      "explanation": "Combining JSON schema constraints (minimum/maximum) with a natural-language reminder in the tool description creates redundant enforcement: the schema shapes the structured output at the model level while the description provides semantic context that reduces out-of-range responses. Neither mechanism alone is as robust as both together.",
+      "whyWrongMap": {
+        "A": "Description strings alone carry no machine-enforced constraint; the model may still violate them especially under distributional shift.",
+        "C": "Application-side validation catches errors but does not prevent them; a retry loop without schema constraints will likely produce the same out-of-range values.",
+        "D": "Code-block JSON parsing is more fragile than tool use, and post-processing validation alone does not reduce the frequency of invalid outputs at the source."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct"
+      ]
+    },
+    {
+      "id": "q-4.4-medium-1",
+      "taskStatement": "4.4",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A content moderation pipeline calls Claude to label user posts. Occasionally Claude returns an unexpected label not in the allowed set, causing downstream JSON deserialization errors.",
+      "text": "Which validation and retry strategy BEST handles out-of-schema responses without degrading pipeline throughput?",
+      "options": {
+        "A": "Catch deserialization errors, log them, and skip those posts permanently to keep throughput high.",
+        "B": "Validate the response against the expected label set immediately after each call; on failure, retry the request up to N times with an updated prompt that provides the invalid response as a negative example and explicitly restates the allowed labels.",
+        "C": "Increase the max_tokens limit so Claude has more space to reason through the correct label.",
+        "D": "Run every post through Claude twice by default and take a majority vote, regardless of whether the first response was valid."
+      },
+      "correctAnswer": "B",
+      "explanation": "Immediate validation followed by targeted retries that include the invalid output as a negative few-shot example is the recommended feedback-loop pattern: it directly signals to Claude what went wrong and anchors the retry to the correct output space, maximizing first-pass accuracy on retries while only adding latency to the small fraction of failing calls.",
+      "whyWrongMap": {
+        "A": "Silently skipping failures violates error-handling requirements and produces an incomplete moderation dataset.",
+        "C": "max_tokens controls response length, not label accuracy; increasing it will not constrain the output to the allowed set.",
+        "D": "Double-calling every post doubles cost and latency even when the first response is valid, which is wasteful and does not target the root cause."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview"
+      ]
+    },
+    {
+      "id": "q-4.5-medium-1",
+      "taskStatement": "4.5",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A legal tech company needs to summarize 10,000 case documents overnight. Each document is independent and averages 4,000 tokens. The team wants to minimize total processing time while staying within API rate limits.",
+      "text": "Which batch processing strategy BEST balances throughput and rate-limit compliance?",
+      "options": {
+        "A": "Send all 10,000 requests simultaneously in a single burst and rely on the API to queue them.",
+        "B": "Process documents sequentially one at a time to guarantee no rate limits are hit.",
+        "C": "Use the Anthropic Batches API to submit all documents in one batch job, which processes requests asynchronously and offers higher throughput than the standard synchronous API.",
+        "D": "Concatenate all documents into a single large prompt and request one summarization covering all cases."
+      },
+      "correctAnswer": "C",
+      "explanation": "The Anthropic Message Batches API is designed for exactly this use case: large volumes of independent, asynchronous requests. It provides higher throughput limits than the synchronous API and processes items in parallel on Anthropic's infrastructure, making it the optimal choice for overnight batch jobs.",
+      "whyWrongMap": {
+        "A": "A simultaneous burst will immediately trigger rate-limit errors (429s) because the synchronous API enforces requests-per-minute and tokens-per-minute ceilings.",
+        "B": "Sequential processing is the slowest strategy and will take far longer than necessary, likely exceeding the overnight window for 10,000 documents.",
+        "D": "Concatenating all documents into one prompt would vastly exceed the context window (200K tokens max) and produce a single combined summary rather than per-document summaries."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/message-batches",
+        "https://docs.anthropic.com/en/docs/build-with-claude/rate-limits"
+      ]
+    },
+    {
+      "id": "q-4.6-hard-1",
+      "taskStatement": "4.6",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A software company is building an automated code review system where one Claude instance generates a code change, a second Claude instance critiques it for bugs and security issues, and a third instance synthesizes the feedback into a final approved diff.",
+      "text": "In this multi-pass review architecture, what is the PRIMARY risk to output quality and how should it be mitigated?",
+      "options": {
+        "A": "Token cost is the primary risk; mitigate by reducing the context passed to each instance.",
+        "B": "The critique instance may echo the generator's framing due to anchoring bias; mitigate by running the critique instance without showing it the generator's reasoning, only the code artifact itself.",
+        "C": "The synthesis instance will always prefer the generator's original code; mitigate by giving the synthesis instance a higher temperature.",
+        "D": "Multi-instance architectures always produce slower responses; mitigate by merging all three passes into a single call."
+      },
+      "correctAnswer": "B",
+      "explanation": "In multi-agent review pipelines, presenting the critique model with the generator's internal reasoning or justifications creates anchoring bias—the reviewer is more likely to rationalize rather than independently challenge the original output. Isolating the critique instance to evaluate only the artifact (the code diff) encourages genuinely independent analysis, which is the design principle behind split-role multi-pass architectures.",
+      "whyWrongMap": {
+        "A": "Reducing context passed to each instance degrades quality and is the wrong trade-off; the goal is to preserve independent judgment, not to save tokens at the expense of accuracy.",
+        "C": "Higher temperature increases randomness rather than independence and could introduce new bugs; synthesis quality depends on reasoning quality, not sampling entropy.",
+        "D": "Collapsing three passes into one prompt eliminates the independent review benefit and reintroduces the single-model limitations the architecture was designed to overcome."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#multi-agent-architectures"
+      ]
+    },
+    {
+      "id": "q-4.1-hard-1",
+      "taskStatement": "4.1",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A healthcare organization is deploying Claude to assist nurses with medication dosage calculations. The system prompt must prevent Claude from making definitive clinical recommendations while still being genuinely useful for lookup and arithmetic tasks.",
+      "text": "Which prompt design approach BEST satisfies both utility and safety constraints simultaneously?",
+      "options": {
+        "A": "Instruct Claude: 'Do not answer any medical questions.' This ensures safety by broadly refusing all clinical content.",
+        "B": "Include no safety constraints and rely on Claude's built-in safety training to refuse inappropriate requests.",
+        "C": "Provide explicit criteria that define the permitted task scope (dosage arithmetic, formulary lookup, unit conversion), an explicit list of out-of-scope actions (definitive clinical decisions, drug interaction diagnosis), and require Claude to append a disclaimer on every response directing nurses to verify with a licensed pharmacist.",
+        "D": "Use a high temperature setting to make responses more varied and exploratory, reducing the chance of overconfident outputs."
+      },
+      "correctAnswer": "C",
+      "explanation": "Effective safety-preserving prompts define both what Claude SHOULD do (in-scope tasks) and what it SHOULD NOT do (out-of-scope actions) with explicit criteria, then add a mandatory disclaimer that routes final accountability to a licensed professional. This approach maximizes utility within a clearly bounded safe operating envelope.",
+      "whyWrongMap": {
+        "A": "A blanket refusal of all medical questions eliminates the utility the system was deployed to provide and is an over-restriction that renders the tool useless.",
+        "B": "Relying solely on default safety training without application-layer constraints does not customize the model's behavior for the specific clinical context and regulatory requirements.",
+        "D": "Temperature controls sampling randomness, not factual accuracy or scope compliance; a high temperature would increase the risk of hallucinated dosage values, directly worsening patient safety."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview",
+        "https://docs.anthropic.com/en/docs/build-with-claude/safety-guardrails"
+      ]
+    }
+  ]
 }
