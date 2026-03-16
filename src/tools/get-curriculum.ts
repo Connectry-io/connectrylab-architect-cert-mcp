@@ -19,7 +19,6 @@ export function registerGetCurriculum(server: McpServer, db: Database.Database, 
       const lines: string[] = ['═══ CERTIFICATION CURRICULUM ═══', ''];
       for (const domain of curriculum.domains) {
         lines.push(`## Domain ${domain.id}: ${domain.title} (${domain.weight}%)`);
-        lines.push(`Mental Model: "${domain.mentalModel}"`);
         lines.push('');
         for (const ts of domain.taskStatements) {
           const m = mastery.find(x => x.taskStatement === ts.id);

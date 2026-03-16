@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type Database from 'better-sqlite3';
 import type { UserConfig } from '../types.js';
@@ -7,7 +8,7 @@ export function registerPrompts(server: McpServer, db: Database.Database, userCo
   server.prompt(
     'quiz_question',
     'Present a certification exam question with clickable A/B/C/D options',
-    { questionId: { description: 'Question ID to present', required: true } },
+    { questionId: z.string().describe('Question ID to present') },
     async ({ questionId }) => {
       const questions = loadQuestions();
       const question = questions.find(q => q.id === questionId);
@@ -44,7 +45,7 @@ export function registerPrompts(server: McpServer, db: Database.Database, userCo
   server.prompt(
     'assessment_question',
     'Present an assessment question with A/B/C/D options',
-    { questionId: { description: 'Assessment question ID', required: true }, questionNumber: { description: 'Current question number (1-15)', required: true } },
+    { questionId: z.string().describe('Assessment question ID'), questionNumber: z.string().describe('Current question number (1-15)') },
     async ({ questionId, questionNumber }) => {
       const question = loadQuestions().find(q => q.id === questionId);
       if (!question) return { messages: [{ role: 'user' as const, content: { type: 'text' as const, text: 'Question not found.' } }] };
@@ -84,7 +85,7 @@ export function registerPrompts(server: McpServer, db: Database.Database, userCo
   server.prompt(
     'post_answer_options',
     'Present options after answering a question',
-    { wasCorrect: { description: 'Whether the previous answer was correct', required: true } },
+    { wasCorrect: z.string().describe('Whether the previous answer was correct') },
     async ({ wasCorrect }) => {
       const options = wasCorrect === 'true'
         ? '1. **Next Question** — Continue with the next question\n2. **Explain Further** — Show a deeper explanation with code example\n3. **View Handout** — Read the concept lesson for this topic\n4. **Change Topic** — Switch to a different domain'
@@ -113,7 +114,7 @@ export function registerPrompts(server: McpServer, db: Database.Database, userCo
   server.prompt(
     'confirm_action',
     'Confirm a destructive action like resetting progress',
-    { action: { description: 'The action to confirm', required: true } },
+    { action: z.string().describe('The action to confirm') },
     async ({ action }) => ({
       messages: [{
         role: 'user' as const,
