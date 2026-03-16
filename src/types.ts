@@ -141,6 +141,31 @@ export interface SM2Result {
   readonly nextReviewAt: string;
 }
 
+// ---- Practice Exam ----
+
+export interface ExamAttempt {
+  readonly id: number;
+  readonly userId: string;
+  readonly startedAt: string;
+  readonly completedAt: string | null;
+  readonly totalQuestions: number;
+  readonly correctAnswers: number;
+  readonly score: number;
+  readonly passed: boolean;
+  readonly questionIds: readonly string[];
+  readonly answeredQuestionIds: readonly string[];
+  readonly domainScores: Readonly<Record<string, DomainExamScore>>;
+}
+
+export interface DomainExamScore {
+  readonly domainId: number;
+  readonly domainTitle: string;
+  readonly totalQuestions: number;
+  readonly correctAnswers: number;
+  readonly accuracyPercent: number;
+  readonly weight: number;
+}
+
 // ---- Config ----
 
 export interface UserConfig {

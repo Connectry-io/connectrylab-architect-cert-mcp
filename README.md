@@ -89,8 +89,11 @@ Browse the entire exam curriculum with your current mastery level per task state
 ### 📋 Personalized Study Plans
 Get a recommended study order based on your assessment results and learning path. The plan tells you which domain to focus on next, how many reviews are overdue, and estimates your time to exam readiness.
 
+### 🎯 Practice Exams with History
+Take full 60-question practice exams weighted by domain — just like the real certification. Each exam uses a fresh set of questions (no repetition from your last attempt). Scored out of 1000 with pass/fail at 720. All attempts are saved with per-domain breakdowns so you can track improvement over time.
+
 ### 🔄 Pick Up Where You Left Off
-Everything persists in a local SQLite database. Close Claude, come back tomorrow, switch from Claude Desktop to Claude Code — your mastery levels, answer history, review schedule, and handout progress are all waiting for you.
+Everything persists in a local SQLite database. Close Claude, come back tomorrow, switch from Claude Desktop to Claude Code — your mastery levels, answer history, review schedule, exam history, and handout progress are all waiting for you.
 
 </td>
 </tr>
@@ -226,11 +229,19 @@ Everything happens through natural conversation with Claude. Here's every capabi
 | **Deep dive on a task** | *"Show me details for task 1.2"* | `get_section_details` returns: mastery level, accuracy %, total attempts, whether you've read the concept lesson, and the full concept handout text. |
 | **View the curriculum map** | *"Show the curriculum with my mastery"* | `get_curriculum` displays all 30 task statements with their mastery level badge: `[UNASSESSED]`, `[WEAK]`, `[DEVELOPING]`, `[STRONG]`, or `[MASTERED]`. |
 
+### 🎯 Practice Exams
+
+| Action | How to ask | What happens |
+|--------|-----------|--------------|
+| **Take a practice exam** | *"Start a practice exam"* | `start_practice_exam` generates a fresh 60-question exam weighted by domain (D1: 16, D2: 11, D3: 12, D4: 12, D5: 9). Each exam avoids repeating questions from your most recent attempt. Scored out of 1000 — passing is 720. |
+| **Answer an exam question** | *"B"* | `submit_exam_answer` grades your answer, shows feedback, and serves the next question. After question 60, the exam is auto-scored with per-domain breakdown. |
+| **View exam history** | *"Show my exam history"* | `get_exam_history` displays all completed exams with scores, pass/fail status, per-domain breakdowns, and improvement trends across attempts. |
+
 ### 🔧 Management
 
 | Action | How to ask | What happens |
 |--------|-----------|--------------|
-| **Reset all progress** | *"Reset my progress"* | `reset_progress` wipes all answers, mastery, review schedule, and handout views. Requires explicit confirmation — no accidental resets. |
+| **Reset all progress** | *"Reset my progress"* | `reset_progress` wipes all answers, mastery, review schedule, handout views, and exam history. Requires explicit confirmation — no accidental resets. |
 | **Access reference projects** | *"Show me a reference project for domain 2"* | `scaffold_project` provides hands-on coding exercises for each domain. |
 
 <br />
@@ -510,6 +521,84 @@ Claude: ═══ WEAK AREAS ═══
         your weakest one?
 ```
 
+### Taking a Practice Exam
+
+```
+You: "I want to take a practice exam"
+
+Claude: ═══ PRACTICE EXAM STARTED ═══
+
+        Simulating the Claude Certified Architect — Foundations exam.
+
+        Exam ID: 1
+        Total Questions: 60
+        Passing Score: 720/1000
+
+        Question Distribution:
+          D1: Agentic Architecture & Orchestration — 16 questions (27%)
+          D2: Tool Design & MCP Integration — 11 questions (18%)
+          D3: Claude Code Configuration & Workflows — 12 questions (20%)
+          D4: Prompt Engineering & Structured Output — 12 questions (20%)
+          D5: Context Management & Reliability — 9 questions (15%)
+
+        ─── Question 1 of 60 ───
+
+        Domain: D1
+        Task: 1.3
+        Difficulty: medium
+
+        Scenario: A legal tech startup runs parallel subagents
+        for contract analysis. Each subagent handles a different
+        clause type but should not access other subagents' tools.
+
+        How should the coordinator restrict each subagent's
+        tool access?
+
+        A) Use a shared tool registry with role-based filtering
+        B) Pass an allowed_tools parameter scoping each subagent
+           to only its relevant tools
+        C) Let each subagent discover tools dynamically at runtime
+        D) Use system prompt instructions to tell each subagent
+           which tools to ignore
+```
+
+### Viewing Exam History
+
+```
+You: "Show me my exam history"
+
+Claude: ═══ EXAM HISTORY ═══
+
+        Total Attempts: 3
+        Best Score: 812/1000
+        Latest Score: 812/1000
+
+        ─── Attempt #3 (latest) ───
+          Date: 2026-03-16
+          Score: 812/1000 ✅ PASSED
+          Correct: 49/60 (82%)
+
+          Domain Scores:
+            D1: Agentic Architecture — 14/16 (88%)
+            D2: Tool Design & MCP — 9/11 (82%)
+            D3: Claude Code Config — 10/12 (83%)
+            D4: Prompt Engineering — 9/12 (75%)
+            D5: Context & Reliability — 7/9 (78%)
+
+          Change from previous: ↑ +78 points
+
+        ─── Attempt #2 ───
+          Date: 2026-03-14
+          Score: 734/1000 ✅ PASSED
+          Correct: 44/60 (73%)
+          ...
+
+        ─── Overall Trend ───
+          First attempt: 653/1000
+          Latest attempt: 812/1000
+          Total improvement: +159 points
+```
+
 <br />
 
 ## 🔄 How It Works
@@ -644,7 +733,7 @@ Each domain contains 5–7 task statements with **13 questions each** (4 easy, 5
 
 ## 🛠 Tools
 
-Architect Cert provides **10 MCP tools** that Claude uses to deliver the study experience:
+Architect Cert provides **13 MCP tools** that Claude uses to deliver the study experience:
 
 | Tool | Description |
 |------|-------------|
@@ -656,6 +745,9 @@ Architect Cert provides **10 MCP tools** that Claude uses to deliver the study e
 | `get_section_details` | Deep dive into a specific task statement with concept lesson |
 | `get_weak_areas` | Identify topics that need the most work, ranked by weakness |
 | `get_study_plan` | Get personalized recommendations based on your performance and exam weights |
+| `start_practice_exam` | Take a full 60-question practice exam simulating the real certification exam |
+| `submit_exam_answer` | Submit and grade answers during a practice exam |
+| `get_exam_history` | View all past exam attempts with scores, trends, and per-domain comparison |
 | `scaffold_project` | Access reference projects for hands-on practice with real code |
 | `reset_progress` | Start over — requires explicit confirmation to prevent accidents |
 

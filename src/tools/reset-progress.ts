@@ -19,8 +19,9 @@ export function registerResetProgress(server: McpServer, db: Database.Database, 
       db.prepare('DELETE FROM session_state WHERE userId = ?').run(userId);
       db.prepare('DELETE FROM study_sessions WHERE userId = ?').run(userId);
       db.prepare('DELETE FROM handout_views WHERE userId = ?').run(userId);
+      db.prepare('DELETE FROM exam_attempts WHERE userId = ?').run(userId);
 
-      return { content: [{ type: 'text' as const, text: 'All progress has been reset. You can start fresh with start_assessment.' }] };
+      return { content: [{ type: 'text' as const, text: 'All progress has been reset, including exam history. You can start fresh with start_assessment.' }] };
     }
   );
 }

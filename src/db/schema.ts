@@ -78,4 +78,19 @@ CREATE TABLE IF NOT EXISTS session_state (
   lastUpdatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (userId) REFERENCES users(id)
 );
+
+CREATE TABLE IF NOT EXISTS exam_attempts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  userId TEXT NOT NULL,
+  startedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  completedAt DATETIME,
+  totalQuestions INTEGER NOT NULL DEFAULT 60,
+  correctAnswers INTEGER DEFAULT 0,
+  score INTEGER DEFAULT 0,
+  passed BOOLEAN DEFAULT FALSE,
+  questionIds TEXT NOT NULL DEFAULT '[]',
+  answeredQuestionIds TEXT NOT NULL DEFAULT '[]',
+  domainScores TEXT NOT NULL DEFAULT '{}',
+  FOREIGN KEY (userId) REFERENCES users(id)
+);
 `;
