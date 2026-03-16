@@ -1,0 +1,74 @@
+{
+  "domains": [
+    {
+      "id": 1,
+      "title": "Agentic Architecture & Orchestration",
+      "weight": 27,
+      "mentalModel": "The model drives decisions, code enforces guardrails",
+      "taskStatements": [
+        { "id": "1.1", "domainId": 1, "title": "Design and implement agentic loops for autonomous task execution", "description": "Understanding the agentic loop lifecycle: sending requests, inspecting stop_reason, executing tools, and returning results.", "mentalModel": "The model drives decisions, code enforces guardrails" },
+        { "id": "1.2", "domainId": 1, "title": "Orchestrate multi-agent systems with coordinator-subagent patterns", "description": "Hub-and-spoke architecture, isolated context, task decomposition, and result aggregation.", "mentalModel": "The model drives decisions, code enforces guardrails" },
+        { "id": "1.3", "domainId": 1, "title": "Configure subagent invocation, context passing, and spawning", "description": "Task tool, allowedTools, explicit context passing, parallel subagent execution.", "mentalModel": "The model drives decisions, code enforces guardrails" },
+        { "id": "1.4", "domainId": 1, "title": "Implement multi-step workflows with enforcement and handoff patterns", "description": "Programmatic enforcement vs prompt-based guidance, structured handoff protocols.", "mentalModel": "The model drives decisions, code enforces guardrails" },
+        { "id": "1.5", "domainId": 1, "title": "Apply Agent SDK hooks for tool call interception and data normalization", "description": "PostToolUse hooks, tool call interception, deterministic vs probabilistic compliance.", "mentalModel": "The model drives decisions, code enforces guardrails" },
+        { "id": "1.6", "domainId": 1, "title": "Design task decomposition strategies for complex workflows", "description": "Prompt chaining vs dynamic decomposition, per-file analysis vs cross-file integration.", "mentalModel": "The model drives decisions, code enforces guardrails" },
+        { "id": "1.7", "domainId": 1, "title": "Manage session state, resumption, and forking", "description": "Named sessions, fork_session, structured summaries vs stale context.", "mentalModel": "The model drives decisions, code enforces guardrails" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Tool Design & MCP Integration",
+      "weight": 18,
+      "mentalModel": "Tool descriptions are the LLM's only guide — design them like API docs",
+      "taskStatements": [
+        { "id": "2.1", "domainId": 2, "title": "Design effective tool interfaces with clear descriptions and boundaries", "description": "Tool descriptions as selection mechanism, disambiguation, splitting vs consolidating.", "mentalModel": "Tool descriptions are the LLM's only guide — design them like API docs" },
+        { "id": "2.2", "domainId": 2, "title": "Implement structured error responses for MCP tools", "description": "isError flag, error categories, retryable vs non-retryable, structured metadata.", "mentalModel": "Tool descriptions are the LLM's only guide — design them like API docs" },
+        { "id": "2.3", "domainId": 2, "title": "Distribute tools appropriately across agents and configure tool choice", "description": "Scoped tool access, tool_choice options, forced selection patterns.", "mentalModel": "Tool descriptions are the LLM's only guide — design them like API docs" },
+        { "id": "2.4", "domainId": 2, "title": "Integrate MCP servers into Claude Code and agent workflows", "description": "Project vs user scope, .mcp.json, environment variable expansion, MCP resources.", "mentalModel": "Tool descriptions are the LLM's only guide — design them like API docs" },
+        { "id": "2.5", "domainId": 2, "title": "Select and apply built-in tools effectively", "description": "Grep vs Glob vs Read/Write/Edit, incremental codebase understanding.", "mentalModel": "Tool descriptions are the LLM's only guide — design them like API docs" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Claude Code Configuration & Workflows",
+      "weight": 20,
+      "mentalModel": "Hierarchy of instructions: user → project → directory, each scoped to its audience",
+      "taskStatements": [
+        { "id": "3.1", "domainId": 3, "title": "Configure CLAUDE.md files with appropriate hierarchy and scoping", "description": "User-level, project-level, directory-level, @import syntax, .claude/rules/.", "mentalModel": "Hierarchy of instructions: user → project → directory, each scoped to its audience" },
+        { "id": "3.2", "domainId": 3, "title": "Create and configure custom slash commands and skills", "description": "Project vs user scope, context: fork, allowed-tools, argument-hint frontmatter.", "mentalModel": "Hierarchy of instructions: user → project → directory, each scoped to its audience" },
+        { "id": "3.3", "domainId": 3, "title": "Apply path-specific rules for conditional convention loading", "description": "YAML frontmatter paths, glob patterns, conditional activation.", "mentalModel": "Hierarchy of instructions: user → project → directory, each scoped to its audience" },
+        { "id": "3.4", "domainId": 3, "title": "Determine when to use plan mode vs direct execution", "description": "Complexity assessment, architectural decisions, Explore subagent.", "mentalModel": "Hierarchy of instructions: user → project → directory, each scoped to its audience" },
+        { "id": "3.5", "domainId": 3, "title": "Apply iterative refinement techniques for progressive improvement", "description": "Input/output examples, test-driven iteration, interview pattern.", "mentalModel": "Hierarchy of instructions: user → project → directory, each scoped to its audience" },
+        { "id": "3.6", "domainId": 3, "title": "Integrate Claude Code into CI/CD pipelines", "description": "-p flag, --output-format json, --json-schema, session context isolation.", "mentalModel": "Hierarchy of instructions: user → project → directory, each scoped to its audience" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Prompt Engineering & Structured Output",
+      "weight": 20,
+      "mentalModel": "Specificity beats vagueness. Examples beat instructions. Schemas beat parsing.",
+      "taskStatements": [
+        { "id": "4.1", "domainId": 4, "title": "Design prompts with explicit criteria to improve precision", "description": "Explicit criteria vs vague instructions, false positive management.", "mentalModel": "Specificity beats vagueness. Examples beat instructions. Schemas beat parsing." },
+        { "id": "4.2", "domainId": 4, "title": "Apply few-shot prompting to improve output consistency", "description": "Targeted examples, ambiguous case handling, format demonstration.", "mentalModel": "Specificity beats vagueness. Examples beat instructions. Schemas beat parsing." },
+        { "id": "4.3", "domainId": 4, "title": "Enforce structured output using tool use and JSON schemas", "description": "tool_use with schemas, tool_choice options, nullable fields, enum patterns.", "mentalModel": "Specificity beats vagueness. Examples beat instructions. Schemas beat parsing." },
+        { "id": "4.4", "domainId": 4, "title": "Implement validation, retry, and feedback loops", "description": "Retry-with-error-feedback, limits of retry, detected_pattern tracking.", "mentalModel": "Specificity beats vagueness. Examples beat instructions. Schemas beat parsing." },
+        { "id": "4.5", "domainId": 4, "title": "Design efficient batch processing strategies", "description": "Message Batches API, latency tolerance, custom_id, failure handling.", "mentalModel": "Specificity beats vagueness. Examples beat instructions. Schemas beat parsing." },
+        { "id": "4.6", "domainId": 4, "title": "Design multi-instance and multi-pass review architectures", "description": "Self-review limitations, independent review instances, per-file + cross-file passes.", "mentalModel": "Specificity beats vagueness. Examples beat instructions. Schemas beat parsing." }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Context Management & Reliability",
+      "weight": 15,
+      "mentalModel": "Context is finite and degrades — extract facts, trim noise, verify provenance",
+      "taskStatements": [
+        { "id": "5.1", "domainId": 5, "title": "Manage conversation context to preserve critical information", "description": "Progressive summarization risks, lost-in-the-middle, tool output trimming.", "mentalModel": "Context is finite and degrades — extract facts, trim noise, verify provenance" },
+        { "id": "5.2", "domainId": 5, "title": "Design effective escalation and ambiguity resolution patterns", "description": "Escalation triggers, customer preferences, sentiment unreliability.", "mentalModel": "Context is finite and degrades — extract facts, trim noise, verify provenance" },
+        { "id": "5.3", "domainId": 5, "title": "Implement error propagation strategies across multi-agent systems", "description": "Structured error context, access failures vs empty results, partial results.", "mentalModel": "Context is finite and degrades — extract facts, trim noise, verify provenance" },
+        { "id": "5.4", "domainId": 5, "title": "Manage context effectively in large codebase exploration", "description": "Context degradation, scratchpad files, subagent delegation, /compact.", "mentalModel": "Context is finite and degrades — extract facts, trim noise, verify provenance" },
+        { "id": "5.5", "domainId": 5, "title": "Design human review workflows and confidence calibration", "description": "Stratified sampling, field-level confidence, accuracy by document type.", "mentalModel": "Context is finite and degrades — extract facts, trim noise, verify provenance" },
+        { "id": "5.6", "domainId": 5, "title": "Preserve information provenance and handle uncertainty in synthesis", "description": "Claim-source mappings, conflict annotation, temporal data handling.", "mentalModel": "Context is finite and degrades — extract facts, trim noise, verify provenance" }
+      ]
+    }
+  ]
+}
