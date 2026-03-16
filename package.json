@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "tsc --noEmit && tsc --noEmit -p tests/tsconfig.json",
+    "generate:pdfs": "tsx scripts/generate-pdfs.ts",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -40,6 +41,8 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.5.0",
+    "marked": "^17.0.4",
+    "puppeteer": "^24.39.1",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
