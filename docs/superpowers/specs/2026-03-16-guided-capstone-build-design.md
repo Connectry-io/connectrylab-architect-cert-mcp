@@ -107,7 +107,7 @@ Out-of-order actions return descriptive error messages (e.g., "Complete the quiz
 | theme | TEXT NOT NULL | User's project description |
 | currentStep | INTEGER DEFAULT 0 | Current step index (0 = shaping, 1-18 = building) |
 | status | TEXT DEFAULT 'shaping' | 'shaping' \| 'building' \| 'completed' \| 'abandoned' |
-| themeValidated | INTEGER DEFAULT 0 | Whether theme passed LLM validation |
+| themeValidated | INTEGER DEFAULT 0 | Set to 1 on `confirm` action (user locks in theme) |
 | createdAt | TEXT NOT NULL | ISO timestamp |
 | updatedAt | TEXT NOT NULL | ISO timestamp |
 
