@@ -14,7 +14,7 @@
 
 <p align="center">
   Adaptive certification prep powered by the Model Context Protocol.<br />
-  390 questions. 30 concept handouts. 6 reference projects. Practice exams. Spaced repetition. Zero sycophancy.
+  390 questions. Guided capstone build. 30 concept handouts. 6 reference projects. Practice exams. Spaced repetition. Zero sycophancy.
 </p>
 
 <p align="center">
@@ -29,6 +29,7 @@
   <a href="#-features">Features</a> •
   <a href="#-how-it-works">How It Works</a> •
   <a href="#-study-modes">Study Modes</a> •
+  <a href="#-guided-capstone-build">Capstone Build</a> •
   <a href="#-reference-projects">Reference Projects</a> •
   <a href="#-concept-handouts">Concept Handouts</a> •
   <a href="#-exam-domains">Exam Domains</a> •
@@ -44,6 +45,7 @@ Architect Cert is a free, open-source [MCP](https://modelcontextprotocol.io/) se
 
 It ships with:
 - **390 scenario-based questions** across all 5 exam domains and 30 task statements
+- **Guided capstone build** — shape your own project, then build it step-by-step while learning every task statement hands-on
 - **30 concept handouts** — one per task statement, with code examples and common mistakes
 - **6 reference projects** — runnable TypeScript codebases demonstrating each domain in practice
 - **Practice exams** — 60-question weighted exams with history tracking and improvement trends
@@ -132,7 +134,7 @@ Architect Cert works with any client that supports the [Model Context Protocol](
 - **Arguments:** none
 - **Transport:** stdio
 
-The server exposes 14 tools, 8 prompts, and 3 resource types.
+The server exposes 17 tools, 8 prompts, and 3 resource types.
 
 </details>
 
@@ -146,6 +148,7 @@ Restart your MCP client and start chatting:
 | Practice questions | *"Give me a practice question"* |
 | Focus on a domain | *"Give me a question about agentic architecture"* |
 | Learn a concept first | *"Teach me about task 2.3 — tool provisioning"* |
+| Build your own capstone | *"I want to start a guided capstone build"* |
 | Take a practice exam | *"I want to take a practice exam"* |
 | Check your progress | *"Show my study progress"* |
 | Get a study plan | *"What should I study next?"* |
@@ -190,11 +193,14 @@ Three-priority algorithm: overdue reviews first, then weak areas, then new mater
 ### Interactive Follow-Ups
 After every answer, you get follow-up options. Got it wrong? Choose to see a code example, read the concept lesson, open the handout, or explore the relevant reference project — then jump back to your quiz.
 
-### 30 Concept Handouts
-Every task statement has a structured handout: concept explanation, TypeScript code example, common mistakes, and documentation references. Available as markdown in Claude or as branded PDFs for offline study.
+### Guided Capstone Build
+Shape your own project idea, then build it file-by-file across 18 steps. Each step: quiz on the relevant task statements, Claude generates themed code, then a walkthrough explains how every section maps to exam concepts. Learn by doing.
 
 </td>
 <td width="50%">
+
+### 30 Concept Handouts
+Every task statement has a structured handout: concept explanation, TypeScript code example, common mistakes, and documentation references. Available as markdown in Claude or as branded PDFs for offline study.
 
 ### 6 Reference Projects
 Runnable TypeScript codebases that demonstrate each domain in practice. A capstone project ties all 5 domains together. Each file maps to specific task statements so you can see concepts in real code.
@@ -220,7 +226,7 @@ Generate branded PDFs for all 30 handouts with `npm run generate:pdfs`. Each PDF
 │   ┌──────────────┐       ┌──────────────────────────┐           │
 │   │ Claude Desktop│       │   Architect Cert MCP     │           │
 │   │ Claude Code   │◄─────►│                          │           │
-│   │ Any MCP client│ stdio │  14 tools                │           │
+│   │ Any MCP client│ stdio │  17 tools                │           │
 │   └──────────────┘       │   8 prompts               │           │
 │                           │   3 resource types        │           │
 │                           └──────────┬───────────────┘           │
@@ -351,6 +357,72 @@ The [SM-2 algorithm](https://en.wikipedia.org/wiki/SuperMemo#Description_of_SM-2
 - **Correct answer:** Ease factor increases by 0.1
 
 Difficult questions come back often. Easy ones space out to weeks or months.
+
+<br />
+
+## Guided Capstone Build
+
+The most hands-on way to learn — build your own project from scratch while covering all 30 task statements. Instead of just answering questions, you architect a real system themed to your own idea.
+
+### How it works
+
+The capstone build has three phases:
+
+**Phase 1 — Project Shaping**
+
+You describe a project idea (e.g., "a multi-agent code review system"). Claude analyzes your idea against all 30 architectural criteria and identifies gaps. You refine together until every task statement is covered.
+
+```
+You: "I want to start a guided capstone build"
+
+Claude: [presents the 30 criteria across all 5 domains]
+        Describe your project idea and I'll analyze coverage.
+
+You: "A multi-agent code review system that analyzes PRs"
+
+Claude: Your idea naturally covers 24/30 criteria. To cover the
+        remaining 6, I'd suggest adding: [specific suggestions
+        mapped to task statements]
+```
+
+**Phase 2 — Interleaved Build (18 steps)**
+
+Each step follows the same pattern:
+
+1. **Quiz** — 2-3 questions on the task statements you're about to build
+2. **Build** — Claude generates the file's code, themed to your project
+3. **Walkthrough** — Line-by-line explanation mapping code to task statements
+
+The 18 steps build incrementally:
+
+| Steps | What you build | Task Statements |
+|-------|---------------|-----------------|
+| 1-2 | Project config (CLAUDE.md, package.json) | 3.1-3.4 |
+| 3-5 | MCP server, tools, error handling | 2.1-2.5 |
+| 6-10 | Agentic loop, subagents, hooks, workflows, sessions | 1.1-1.7 |
+| 11-13 | Prompts: system, extraction, batch processing | 4.1-4.6 |
+| 14-18 | Context: preservation, triggers, propagation, scratchpad, confidence | 5.1-5.6 |
+
+Every quiz answer feeds into the same spaced repetition and mastery tracking as regular practice.
+
+**Phase 3 — Final Review**
+
+After step 18, you get a complete coverage map: all 30 task statements, where each is demonstrated in your project, and your quiz performance per domain. Weak areas are flagged for further study.
+
+### Capstone build tools
+
+| Tool | What it does |
+|------|-------------|
+| `start_capstone_build` | See the 30 criteria, describe your theme, refine until coverage is complete |
+| `capstone_build_step` | Drive the build: confirm, quiz, build, next, status, or abandon |
+| `capstone_build_status` | Check your progress — current step, criteria coverage, quiz performance |
+
+### How it connects to everything else
+
+- Quiz answers during the build use the same `submit_answer` grading and SM-2 scheduling
+- After any quiz question, you can use the same follow-up options (code example, concept lesson, handout, reference project)
+- The reference projects show how the capstone structure looks when complete
+- Progress persists across sessions — pick up where you left off
 
 <br />
 
@@ -508,7 +580,7 @@ The Claude Certified Architect — Foundations exam covers 5 domains:
 
 ## Tools
 
-Architect Cert provides **14 MCP tools** that Claude uses to deliver the study experience:
+Architect Cert provides **17 MCP tools** that Claude uses to deliver the study experience:
 
 | Tool | Description |
 |------|-------------|
@@ -525,6 +597,9 @@ Architect Cert provides **14 MCP tools** that Claude uses to deliver the study e
 | `submit_exam_answer` | Submit and grade answers during a practice exam |
 | `get_exam_history` | View all past exam attempts with scores, trends, and per-domain comparison |
 | `scaffold_project` | Access reference projects for hands-on practice with real code |
+| `start_capstone_build` | Start a guided capstone build — shape your project and validate criteria coverage |
+| `capstone_build_step` | Drive the capstone build: confirm, quiz, build, next, status, or abandon |
+| `capstone_build_status` | Check capstone build progress — current step, coverage, quiz performance |
 | `reset_progress` | Start over — requires explicit confirmation to prevent accidents |
 
 The server also registers **8 interactive prompts** and **3 resource types** (concept handouts, reference projects, exam overview).
@@ -543,6 +618,7 @@ Claude (UI) <-> MCP Server (stdio) <-> Core Engine <-> SQLite
 | Grading Engine | Pure TypeScript functions | Deterministic answer verification |
 | Spaced Repetition | SM-2 algorithm | Optimal review scheduling |
 | Follow-Up System | State-driven tool chain | Interactive post-answer detours |
+| Capstone Build Engine | 18-step interleaved builder | Guided learn-build-explain flow with LLM validation |
 | Question Bank | 390 bundled JSON questions | Scenario-based, verified against docs |
 | Concept Handouts | 30 bundled markdown files | Structured study materials per task statement |
 | Reference Projects | 6 bundled TypeScript projects | Runnable code demonstrating each domain |
@@ -614,12 +690,15 @@ src/
 │   ├── curriculum.json   # 30 task statements
 │   ├── questions/        # 390 questions (5 domain files)
 │   ├── handouts/         # 30 concept handouts (markdown)
+│   ├── criteria.ts       # 30 task statement criteria for capstone validation
+│   ├── build-steps.ts    # 18 capstone build step definitions
 │   └── system-prompt.ts  # Anti-sycophancy rules
 ├── db/
-│   ├── schema.ts         # SQLite schema (7 tables)
+│   ├── schema.ts         # SQLite schema (9 tables)
 │   ├── store.ts          # Database initialization
 │   ├── mastery.ts        # Mastery level calculations
 │   ├── answers.ts        # Answer recording
+│   ├── capstone.ts       # Capstone build CRUD operations
 │   └── exam-attempts.ts  # Practice exam tracking
 ├── engine/
 │   ├── grading.ts        # Deterministic grading
@@ -627,7 +706,7 @@ src/
 │   ├── question-selector.ts  # Priority-based selection
 │   ├── exam-builder.ts       # Practice exam generation
 │   └── adaptive-path.ts      # Learning path recommendations
-├── tools/                # 14 MCP tool handlers
+├── tools/                # 17 MCP tool handlers
 ├── prompts/              # 8 MCP prompt definitions
 └── resources/            # 3 MCP resource types
 
