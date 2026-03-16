@@ -15,6 +15,9 @@ import { registerStartPracticeExam } from './start-practice-exam.js';
 import { registerSubmitExamAnswer } from './submit-exam-answer.js';
 import { registerGetExamHistory } from './get-exam-history.js';
 import { registerFollowUp } from './follow-up.js';
+import { registerStartCapstoneBuild } from './start-capstone-build.js';
+import { registerCapstoneBuildStep } from './capstone-build-step.js';
+import { registerCapstoneBuildStatus } from './capstone-build-status.js';
 
 export function registerTools(server: McpServer, db: Database.Database, userConfig: UserConfig): void {
   registerSubmitAnswer(server, db, userConfig);
@@ -31,4 +34,7 @@ export function registerTools(server: McpServer, db: Database.Database, userConf
   registerSubmitExamAnswer(server, db, userConfig);
   registerGetExamHistory(server, db, userConfig);
   registerFollowUp(server, db, userConfig);
+  registerStartCapstoneBuild(server, db, userConfig);
+  registerCapstoneBuildStep(server, db, userConfig);
+  registerCapstoneBuildStatus(server, db, userConfig);
 }

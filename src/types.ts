@@ -173,6 +173,47 @@ export interface FollowUpOption {
   readonly label: string;
 }
 
+// ---- Capstone Build ----
+
+export type CapstoneBuildStatus = 'shaping' | 'building' | 'completed' | 'abandoned';
+
+export interface CapstoneBuild {
+  readonly id: string;
+  readonly userId: string;
+  readonly theme: string;
+  readonly currentStep: number;
+  readonly status: CapstoneBuildStatus;
+  readonly themeValidated: number;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface CapstoneBuildStep {
+  readonly id: string;
+  readonly buildId: string;
+  readonly stepIndex: number;
+  readonly fileName: string;
+  readonly taskStatements: string;
+  readonly quizQuestionIds: string | null;
+  readonly quizCompleted: number;
+  readonly buildCompleted: number;
+  readonly walkthroughViewed: number;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export interface BuildStepTemplate {
+  readonly stepIndex: number;
+  readonly fileName: string;
+  readonly taskStatements: readonly string[];
+}
+
+export interface BuildStepUpdates {
+  readonly quizCompleted: number;
+  readonly buildCompleted: number;
+  readonly walkthroughViewed: number;
+}
+
 // ---- Config ----
 
 export interface UserConfig {

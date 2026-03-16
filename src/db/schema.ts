@@ -93,4 +93,31 @@ CREATE TABLE IF NOT EXISTS exam_attempts (
   domainScores TEXT NOT NULL DEFAULT '{}',
   FOREIGN KEY (userId) REFERENCES users(id)
 );
+
+CREATE TABLE IF NOT EXISTS capstone_builds (
+  id TEXT PRIMARY KEY,
+  userId TEXT NOT NULL,
+  theme TEXT NOT NULL,
+  currentStep INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'shaping',
+  themeValidated INTEGER DEFAULT 0,
+  createdAt TEXT NOT NULL,
+  updatedAt TEXT NOT NULL,
+  FOREIGN KEY (userId) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS capstone_build_steps (
+  id TEXT PRIMARY KEY,
+  buildId TEXT NOT NULL,
+  stepIndex INTEGER NOT NULL,
+  fileName TEXT NOT NULL,
+  taskStatements TEXT NOT NULL,
+  quizQuestionIds TEXT,
+  quizCompleted INTEGER DEFAULT 0,
+  buildCompleted INTEGER DEFAULT 0,
+  walkthroughViewed INTEGER DEFAULT 0,
+  createdAt TEXT NOT NULL,
+  updatedAt TEXT NOT NULL,
+  FOREIGN KEY (buildId) REFERENCES capstone_builds(id)
+);
 `;
