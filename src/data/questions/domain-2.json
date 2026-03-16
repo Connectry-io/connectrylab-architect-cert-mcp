@@ -6,23 +6,96 @@
       "taskStatement": "2.1",
       "domainId": 2,
       "difficulty": "easy",
-      "scenario": "You are writing a tool description for a `get_user_profile` function that an agent will use to fetch user data from a database. You want Claude to invoke it correctly every time.",
-      "text": "Which of the following tool descriptions best follows Anthropic's guidance for clear, effective tool interfaces?",
+      "scenario": "A developer is registering a tool called `get_user` with no description field. When tested, Claude sometimes calls this tool when it should be calling `get_account` instead, and vice versa.",
+      "text": "What is the PRIMARY reason Claude confuses these two tools?",
       "options": {
-        "A": "\"Fetches user profile data from the database given a user_id (integer). Returns a JSON object with fields: name, email, created_at, and account_status. Does NOT modify any data.\"",
-        "B": "\"Gets user info.\"",
-        "C": "\"Retrieves all kinds of user data including profile, settings, and preferences from various backend systems.\"",
-        "D": "\"A versatile function for working with users. Can be used to get, update, or delete user profiles depending on the context.\""
+        "A": "Tool descriptions are the primary signal Claude uses to decide which tool to call; without them, Claude can only guess from the name alone.",
+        "B": "The tool names are too short and should be more verbose.",
+        "C": "Claude always calls the first tool listed when unsure, so `get_user` should be moved later in the list.",
+        "D": "The Anthropic API requires a minimum of three tools before disambiguation logic activates."
       },
       "correctAnswer": "A",
-      "explanation": "Anthropic recommends that tool descriptions be precise: state what input is expected, what the tool returns, and any important constraints such as read-only behavior. Option A satisfies all of these requirements in a concise way.",
+      "explanation": "Tool descriptions are the primary mechanism by which Claude decides which tool is appropriate for a given situation. Without a description, Claude has only the tool name as signal, which is insufficient to reliably distinguish between semantically similar tools like `get_user` and `get_account`.",
       "whyWrongMap": {
-        "B": "Too vague — 'gets user info' gives Claude no guidance on required inputs, return format, or scope, making incorrect invocations likely.",
-        "C": "Overstates the tool's scope. Implying it fetches settings and preferences when it only fetches a profile will mislead Claude into calling it for tasks it cannot perform.",
-        "D": "Describing multiple, conflicting behaviors (get, update, delete) in one tool description violates the single-responsibility principle and will cause Claude to make incorrect assumptions about the tool's effects."
+        "B": "Tool name length has no direct bearing on disambiguation quality; a descriptive description on a short-named tool will outperform a long name with no description.",
+        "C": "Claude does not use list position as a tiebreaker; it evaluates all available tools against the description and context of the request.",
+        "D": "There is no minimum tool count requirement in the Anthropic API before disambiguation logic applies; descriptions matter regardless of how many tools are registered."
       },
       "references": [
-        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#best-practices-for-tool-definitions"
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use"
+      ]
+    },
+    {
+      "id": "q-2.1-easy-2",
+      "taskStatement": "2.1",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "You are writing a tool description for a function that queries a read-only product catalog. The tool takes a `query` string and returns a list of matching product objects including name, SKU, and price.",
+      "text": "Which description best follows tool-description best practices?",
+      "options": {
+        "A": "\"Searches the catalog.\"",
+        "B": "\"A tool for products. Input: query. Output: list.\"",
+        "C": "\"Searches the read-only product catalog by keyword. Returns a list of matching products, each containing name, SKU, and price. Use this tool when the user asks about available products, pricing, or inventory lookup. Does not modify catalog data.\"",
+        "D": "\"Call this function with a string. It will return some objects. Please read the source code for full details.\""
+      },
+      "correctAnswer": "C",
+      "explanation": "A good tool description covers what the tool does, when to use it, what it returns, and any important constraints or edge cases. Option C states the action (searches), the data source (read-only product catalog), the input type (keyword), the return structure (list with name, SKU, price), a usage hint, and a safety constraint (does not modify data).",
+      "whyWrongMap": {
+        "A": "Too vague \u2014 it tells Claude nothing about what catalog is being searched, what the return value looks like, or when this tool is preferred over alternatives.",
+        "B": "Restates the parameter names without adding semantic meaning; Claude cannot infer use cases, return shape, or constraints from this description.",
+        "D": "Referring Claude to source code is not actionable; Claude cannot read source files at inference time and this provides no useful disambiguation signal."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview"
+      ]
+    },
+    {
+      "id": "q-2.1-easy-3",
+      "taskStatement": "2.1",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "A team registers a single tool called `file_manager` that accepts a `mode` parameter with values `read`, `write`, `delete`, and `list`. They notice Claude sometimes picks the wrong mode or calls the tool unnecessarily.",
+      "text": "What is the recommended refactoring approach for this tool design?",
+      "options": {
+        "A": "Keep the single tool but add more allowed values to the `mode` parameter to cover additional operations.",
+        "B": "Rename the tool to `advanced_file_manager` so Claude treats it with higher priority.",
+        "C": "Add a `description` parameter to the tool call so Claude can explain why it chose that mode.",
+        "D": "Split the tool into separate focused tools \u2014 `read_file`, `write_file`, `delete_file`, `list_files` \u2014 each with its own description."
+      },
+      "correctAnswer": "D",
+      "explanation": "Splitting a mega-tool with a mode parameter into focused, single-purpose tools is a key best practice. Each focused tool can have a precise description covering its specific behavior, preconditions, and return value, giving Claude far richer signal for selecting the correct operation than a shared tool with a mode switch.",
+      "whyWrongMap": {
+        "A": "Adding more modes to an already overloaded tool compounds the disambiguation problem; the description becomes harder to write clearly and Claude must make an additional disambiguation decision for the mode value.",
+        "B": "Tool naming conventions influence readability and clarity but renaming alone does not improve Claude's ability to select the right operation; descriptions drive selection.",
+        "C": "Parameters are inputs to the tool, not meta-instructions to the model; adding a `description` parameter would be passed to the tool function, not used by Claude for tool selection."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview"
+      ]
+    },
+    {
+      "id": "q-2.1-easy-4",
+      "taskStatement": "2.1",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "An architect is naming a set of tools for a calendar integration. They are considering the names: `doCalendarStuff`, `CalendarTool`, `create_calendar_event`, and `c`.",
+      "text": "Which naming convention best follows tool-naming best practices for Claude tool interfaces?",
+      "options": {
+        "A": "`doCalendarStuff` \u2014 verb-first camelCase communicates action intent.",
+        "B": "`CalendarTool` \u2014 PascalCase is the standard for tools in the Anthropic API.",
+        "C": "`create_calendar_event` \u2014 snake_case with a verb-noun pattern that clearly states the action and object.",
+        "D": "`c` \u2014 short names reduce token usage and improve performance."
+      },
+      "correctAnswer": "C",
+      "explanation": "The recommended convention is snake_case with a clear verb-noun pattern (e.g., `create_calendar_event`). This makes the tool's purpose immediately scannable, pairs naturally with an equally clear description, and is consistent with the naming style used throughout Anthropic's documentation and examples.",
+      "whyWrongMap": {
+        "A": "`doCalendarStuff` is vague \u2014 'stuff' conveys no information about which calendar action is performed, making the description's job harder.",
+        "B": "There is no PascalCase requirement in the Anthropic API; snake_case is the idiomatic style shown in official documentation and examples.",
+        "D": "Ultra-short names like `c` provide no semantic signal and force the description to carry all disambiguation weight, which degrades the combined name+description clarity Claude uses for selection."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview"
       ]
     },
     {
@@ -30,23 +103,320 @@
       "taskStatement": "2.1",
       "domainId": 2,
       "difficulty": "medium",
-      "scenario": "A team is building an agent that can both read and write records in a CRM. They are debating whether to expose a single `crm_operation` tool with an `action` parameter, or separate tools like `crm_read_contact` and `crm_update_contact`.",
-      "text": "According to Anthropic's tool design best practices, which approach should the team choose and why?",
+      "scenario": "A team has two tools: `search_knowledge_base` and `search_web`. Users frequently ask general questions and Claude is calling `search_web` for answers that are already in the internal knowledge base, increasing cost and latency.",
+      "text": "Which description strategy best fixes the tool selection problem?",
       "options": {
-        "A": "Use a single `crm_operation` tool; fewer tools reduce the model's decision overhead and are easier to maintain.",
-        "B": "Use separate tools per action; this gives Claude explicit, bounded interfaces and makes the tool's side-effects immediately clear from the name and description alone.",
-        "C": "Use a single tool but enumerate all valid `action` values in the description; the model can infer intent from context.",
-        "D": "The choice does not matter as long as the parameter schema is complete; Claude infers the correct behavior from the JSON schema types."
+        "A": "Add explicit disambiguation language to both descriptions: `search_knowledge_base` should state it covers internal, proprietary, or company-specific information and should be tried first; `search_web` should state it is for publicly available information not found in the knowledge base.",
+        "B": "Remove `search_web` entirely so Claude always uses the internal knowledge base.",
+        "C": "Merge the two tools into one `search` tool with a `source` parameter set to `internal` or `web`.",
+        "D": "Prefix both tool names with a priority number, e.g., `1_search_knowledge_base` and `2_search_web`, to communicate ordering."
       },
-      "correctAnswer": "B",
-      "explanation": "Anthropic's guidance stresses that each tool should have a single, well-defined purpose. Separate tools make side-effects (read vs. write) immediately apparent, reduce ambiguity, and allow the model to reason about safety more reliably.",
+      "correctAnswer": "A",
+      "explanation": "The correct fix is to add explicit disambiguation language in both descriptions. By specifying the domain of each tool (internal/proprietary vs. publicly available) and a preference order in the description text, Claude has the signal it needs to make the correct selection without removing tools or changing the interface structure.",
       "whyWrongMap": {
-        "A": "While fewer tools can reduce complexity in some cases, merging read and write operations into one tool obscures side-effects and forces Claude to reason about the `action` parameter before knowing whether a destructive operation will occur.",
-        "C": "Relying on an enumerated `action` parameter still requires Claude to parse description prose to understand side-effects, which is more error-prone than self-describing tool names.",
-        "D": "JSON schema types describe data shapes, not behavioral semantics or side-effects. A complete schema alone is insufficient to communicate whether an operation is safe or destructive."
+        "B": "Removing `search_web` reduces the agent's capability; the goal is to fix selection logic, not eliminate tools.",
+        "C": "Merging into a mega-tool with a `source` parameter recreates the same disambiguation problem at the parameter level and violates the focused-tool best practice.",
+        "D": "Numeric prefixes in names are a brittle hack; Claude does not parse numeric prefixes as priority instructions, and it breaks the clean verb-noun naming convention."
       },
       "references": [
-        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#best-practices-for-tool-definitions"
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use"
+      ]
+    },
+    {
+      "id": "q-2.1-medium-2",
+      "taskStatement": "2.1",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "A developer registers a `send_email` tool with a `recipients` parameter described only as `\"List of recipients\"`. In production, Claude sometimes passes a flat string like `\"alice@example.com, bob@example.com\"` instead of an array.",
+      "text": "Which parameter description change most directly prevents this error?",
+      "options": {
+        "A": "Rename the parameter from `recipients` to `recipientList` to imply it is a list.",
+        "B": "Change the parameter type to `string` in the schema so Claude always passes a string, then split it server-side.",
+        "C": "Update the description to explicitly state: `\"Array of email address strings, e.g. [\\\"alice@example.com\\\", \\\"bob@example.com\\\"]. Must be an array even when there is only one recipient. Do not pass a comma-separated string.\"`",
+        "D": "Add a system prompt instruction telling Claude to always use arrays for all tool parameters."
+      },
+      "correctAnswer": "C",
+      "explanation": "Parameter descriptions should state the exact expected format, include a concrete example, and explicitly call out common mistakes. Telling Claude what NOT to do (no comma-separated strings) and what TO do (array even for one recipient) in the parameter description gives the model the precision it needs to populate parameters correctly.",
+      "whyWrongMap": {
+        "A": "Renaming the parameter provides a weak naming hint but does not override the ambiguity; without an explicit format description and example, Claude may still pass a string.",
+        "B": "Changing the schema type to string to work around Claude's behavior shifts the burden to the server and loses type safety; it does not teach Claude the correct interface.",
+        "D": "A blanket system prompt instruction applies globally and lacks specificity; it may interfere with other tools that legitimately accept strings and does not document the constraint where developers will look \u2014 in the tool schema."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview"
+      ]
+    },
+    {
+      "id": "q-2.1-medium-3",
+      "taskStatement": "2.1",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "An agentic assistant has a `get_order_status` tool and a `get_order_history` tool. A product manager notices that Claude calls `get_order_history` (which returns all past orders) when users ask 'where is my current order?', even though `get_order_status` is the correct and cheaper call.",
+      "text": "What is the most effective single change to the tool definitions to correct this behavior?",
+      "options": {
+        "A": "Add `\"DEPRECATED: use get_order_status instead\"` to the `get_order_history` description.",
+        "B": "Increase the `max_tokens` parameter to give Claude more space to reason about which tool to choose.",
+        "C": "Swap the order of the two tools in the tools array so `get_order_status` appears first.",
+        "D": "Update `get_order_status` description to explicitly mention it handles real-time tracking and current delivery status for a single order, and update `get_order_history` to clarify it returns a paginated list of all past orders \u2014 not intended for current shipment tracking."
+      },
+      "correctAnswer": "D",
+      "explanation": "Both descriptions must be updated together for effective disambiguation. The correct tool's description should attract the right queries by mentioning real-time tracking and current status; the incorrect tool's description should repel those queries by clarifying it covers historical data, not live shipment tracking.",
+      "whyWrongMap": {
+        "A": "Marking a live tool as deprecated is misleading and may cause Claude to avoid it entirely; the tool is valid for its intended purpose and should have an accurate, positive description instead.",
+        "B": "`max_tokens` controls response length, not tool selection reasoning; tool selection is driven by descriptions, not token budget.",
+        "C": "Tool array ordering does not influence Claude's selection logic; Claude evaluates all tool descriptions against the request context regardless of order."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview"
+      ]
+    },
+    {
+      "id": "q-2.1-medium-4",
+      "taskStatement": "2.1",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "A team is designing a tool that calls an external API with a `date_range` parameter. The API accepts dates in `YYYY-MM-DD` format only and returns an error for any other format. The tool description currently says: `\"date_range: The date range for the query.\"`",
+      "text": "Which parameter description includes all the elements needed to prevent format errors?",
+      "options": {
+        "A": "\"date_range: An object with start and end dates.\"",
+        "B": "\"date_range: Object with keys `start` and `end`, each a date string in ISO 8601 YYYY-MM-DD format (e.g., {start: '2024-01-15', end: '2024-03-31'}). Both fields are required. Dates must not be in the future.\"",
+        "C": "\"date_range: Required. Please format correctly.\"",
+        "D": "\"date_range: See API documentation for format requirements.\""
+      },
+      "correctAnswer": "B",
+      "explanation": "A complete parameter description for a constrained input should specify the type/structure, the exact format with the format string (`YYYY-MM-DD`), a concrete example, which fields are required, and any additional constraints (e.g., no future dates). This leaves no ambiguity for Claude to produce an incorrectly formatted value.",
+      "whyWrongMap": {
+        "A": "Stating 'object with start and end dates' omits the critical format string and example; Claude may still generate `01/15/2024` or a Unix timestamp.",
+        "C": "This is entirely non-informative; it does not describe structure, format, or constraints and will not prevent any formatting errors.",
+        "D": "Claude cannot access external API documentation at inference time; all constraints must be embedded directly in the parameter description."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview"
+      ]
+    },
+    {
+      "id": "q-2.1-medium-5",
+      "taskStatement": "2.1",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "An architect is designing a document tool suite. They propose a single `document_tool` with an `action` enum parameter accepting `create`, `read`, `update`, `delete`, and `summarize`. A colleague argues this should be five separate tools.",
+      "text": "Which argument BEST supports splitting into five separate tools?",
+      "options": {
+        "A": "Five tools will always be faster than one tool because the API processes smaller schemas more quickly.",
+        "B": "Separate tools allow each tool to have a distinct, focused description that precisely conveys its preconditions, side effects, and return shape \u2014 making Claude's selection decision unambiguous and eliminating the need for Claude to also select the correct action value.",
+        "C": "The Anthropic API has a hard limit of one action per tool and will reject schemas with enum parameters.",
+        "D": "Having more tools increases the probability that Claude will call at least one of them."
+      },
+      "correctAnswer": "B",
+      "explanation": "The core argument for splitting is description quality and selection clarity. Each focused tool can have a tailored description that covers its unique behavior (e.g., `delete_document` can warn about irreversibility; `summarize_document` can describe what the summary contains). A mega-tool forces Claude to make two disambiguation decisions: which tool to call AND which action value to pass, compounding the chance of error.",
+      "whyWrongMap": {
+        "A": "Schema size has a negligible effect on API processing time; performance is not the reason to split tools.",
+        "C": "The Anthropic API supports enum parameters and there is no such restriction; splitting tools is a best practice recommendation, not an API enforcement.",
+        "D": "Having more tools does not increase the likelihood of correct tool calls; it could increase noise if the descriptions are not well written."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview"
+      ]
+    },
+    {
+      "id": "q-2.1-hard-1",
+      "taskStatement": "2.1",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "A financial assistant has three tools: `get_account_balance` (returns current balance), `get_transaction_history` (returns paginated past transactions), and `get_pending_transactions` (returns transactions that have not yet settled). Despite good individual descriptions, Claude calls `get_transaction_history` for questions about pending charges, which returns no pending items because it only shows settled transactions.",
+      "text": "Which combination of description changes most precisely solves this three-way disambiguation problem?",
+      "options": {
+        "A": "Add 'This is the most commonly used tool' to `get_transaction_history` to boost its priority.",
+        "B": "Add a routing system prompt that tells Claude to always prefer `get_pending_transactions` when the word 'pending' appears in the user message.",
+        "C": "Add cross-references: in `get_transaction_history` add '\u2014 does NOT include pending or unsettled charges; use get_pending_transactions for those'; in `get_pending_transactions` add '\u2014 for charges not yet settled or still processing; these will NOT appear in get_transaction_history'; in `get_account_balance` add '\u2014 reflects settled balance only, may not reflect pending charges'.",
+        "D": "Merge `get_transaction_history` and `get_pending_transactions` into one tool with a `status` filter parameter."
+      },
+      "correctAnswer": "C",
+      "explanation": "When tools have overlapping semantic domains, cross-referencing between descriptions is the most precise technique. Explicitly naming sister tools and their boundaries within each description creates a web of mutual disambiguation: each tool actively repels queries meant for another by naming the alternative. This is far more robust than keyword routing, merging, or artificial priority signals.",
+      "whyWrongMap": {
+        "A": "Claiming a tool is 'most commonly used' is not a semantic description of its boundaries; it does not help Claude understand when NOT to use it, and it may cause Claude to over-call it.",
+        "B": "Keyword-matching system prompts are brittle: users rarely use exact keywords like 'pending', and a routing instruction does not fix the underlying description quality; it patches one surface symptom while leaving the root cause unaddressed.",
+        "D": "Merging creates a mode-parameter tool that reintroduces disambiguation at the parameter level and loses the ability to write distinct, focused descriptions for settled vs. pending queries."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use"
+      ]
+    },
+    {
+      "id": "q-2.1-hard-2",
+      "taskStatement": "2.1",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "A developer exposes a `run_sql_query` tool. The tool description says: 'Runs a SQL query against the database.' During a red-team exercise, the model is observed using this tool to execute `DROP TABLE users` when asked to 'clean up test data'. The developer wants to fix this through tool interface design, not post-hoc output filtering.",
+      "text": "Which tool interface change best addresses the safety boundary at the description level?",
+      "options": {
+        "A": "Split into `run_read_query` (SELECT only, description explicitly states it executes read-only SELECT statements and will error on any DDL or DML) and `run_write_query` (INSERT/UPDATE only, description explicitly states it does not accept DROP, TRUNCATE, or ALTER statements), and remove the generic `run_sql_query` tool.",
+        "B": "Rename the tool to `run_safe_sql_query` to signal intent.",
+        "C": "Add a `confirm` boolean parameter that Claude must set to `true` before the query executes.",
+        "D": "Move all SQL execution to a system prompt instruction that lists forbidden SQL keywords."
+      },
+      "correctAnswer": "A",
+      "explanation": "Splitting by read/write with explicit DDL/DML exclusions baked into the descriptions encodes safety boundaries at the interface level. The read tool's description tells Claude it can only be used for SELECT, preventing it from even attempting destructive DDL. The write tool's description further restricts to INSERT/UPDATE. This defense-in-depth approach makes the safety constraint part of the tool's semantic identity, not a runtime filter.",
+      "whyWrongMap": {
+        "B": "Adding 'safe' to the name is aspirational but provides no actual constraint; the description still does not say what is forbidden, so Claude cannot know that DROP is disallowed.",
+        "C": "A `confirm` parameter does not prevent Claude from generating a `DROP TABLE` statement; it only adds an extra field that Claude may set to `true` if it believes the action is requested, providing a false sense of safety.",
+        "D": "System prompt keyword lists are brittle and can be circumvented by obfuscation or paraphrase; they also do not document the tool's interface contract for developers reading the schema."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/build-with-claude/computer-use"
+      ]
+    },
+    {
+      "id": "q-2.1-hard-3",
+      "taskStatement": "2.1",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "An architect is designing a tool suite for a customer support agent. The suite includes `lookup_customer`, `update_customer_profile`, `create_support_ticket`, `escalate_ticket`, and `send_customer_email`. Usage logs show Claude frequently chains `lookup_customer` \u2192 `send_customer_email` without creating a ticket first, even for issues that require follow-up tracking.",
+      "text": "Which description strategy best encodes the required workflow order as a soft constraint within the tool interface?",
+      "options": {
+        "A": "Remove `send_customer_email` from the tool suite and handle email sending outside the agent loop.",
+        "B": "Add a `ticket_id` required parameter to `send_customer_email` so the tool call fails at the API level without a ticket ID.",
+        "C": "Set the tool `input_schema` for `send_customer_email` to `null` to prevent Claude from calling it autonomously.",
+        "D": "In the `send_customer_email` description, add: 'Use only after a support ticket has been created for the issue being communicated. If no ticket exists for this interaction, call create_support_ticket first.' In `create_support_ticket`, add: 'Creates a ticket that tracks this customer issue \u2014 call this before sending any follow-up email about the issue.'"
+      },
+      "correctAnswer": "D",
+      "explanation": "Encoding workflow preconditions in the description is the recommended technique for guiding tool call sequencing. By explicitly stating 'call create_support_ticket first' in the email tool's description, and cross-referencing the email tool in the ticket tool's description, Claude receives the ordering constraint as part of its selection signal. This is a soft constraint that guides behavior without breaking the interface for cases where a ticket legitimately already exists.",
+      "whyWrongMap": {
+        "A": "Removing a capability to enforce workflow order is a heavy-handed approach that reduces agent functionality; the goal is to guide sequencing, not eliminate the email capability.",
+        "B": "Adding a required `ticket_id` parameter is a valid hard enforcement technique, but the question asks specifically about description-level strategy. Additionally, this would break legitimate use cases where an existing ticket ID must be looked up before passing it, without providing Claude the workflow context it needs.",
+        "C": "Setting `input_schema` to null is not a valid Anthropic API pattern for restricting tool invocation and would likely cause a schema validation error."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use"
+      ]
+    },
+    {
+      "id": "q-2.1-hard-4",
+      "taskStatement": "2.1",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "A team builds a research assistant with 20 tools spanning web search, document management, calendar access, email, code execution, and database queries. They notice the overall tool-call accuracy degrades as they add more tools, even when each tool has a well-written individual description.",
+      "text": "Which architectural strategy best addresses description overload in a large tool suite?",
+      "options": {
+        "A": "Increase `max_tokens` to 8192 on every API call to give Claude more space to reason through all 20 tool descriptions.",
+        "B": "Dynamically inject only the subset of tools relevant to the current task context rather than passing all 20 tools on every call, using a lightweight routing layer that selects the appropriate toolset based on intent classification.",
+        "C": "Write longer descriptions for each tool so that more detail helps Claude disambiguate.",
+        "D": "Assign a numeric relevance score to each tool and include it in the tool name, e.g., `95_search_web`."
+      },
+      "correctAnswer": "B",
+      "explanation": "When a large number of tools are present, even high-quality individual descriptions create a signal-to-noise problem: Claude must consider many tool descriptions simultaneously, and the probability of cross-tool confusion grows. The architectural solution is to dynamically scope the tool context \u2014 inject only the tools relevant to the current intent. This is a well-documented pattern in agentic system design: a lightweight classifier or router selects the active toolset per turn, dramatically reducing the disambiguation surface.",
+      "whyWrongMap": {
+        "A": "`max_tokens` controls output length, not the model's reasoning capacity over input; injecting all 20 tool descriptions into the context is a context-length problem, not a generation-length problem, and more output tokens do not help.",
+        "C": "Longer descriptions per tool add more tokens to the context, worsening the overload problem rather than solving it; the issue is the number of tools competing for attention, not the per-tool description quality.",
+        "D": "Numeric relevance scores in tool names are not parsed as priority signals by Claude; tool selection is based on description semantics, and cluttering names with scores reduces readability without providing a selection benefit."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents-and-tools/build-effective-agents"
+      ]
+    },
+    {
+      "id": "q-2.2-easy-1",
+      "taskStatement": "2.2",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "An MCP tool handler receives a request to look up a user by ID. The ID provided in the tool call arguments is not a valid integer \u2014 it is the string `\"abc\"`. The tool must signal this failure to the Claude agent.",
+      "text": "Which MCP response structure correctly signals a tool-level error back to the Claude agent?",
+      "options": {
+        "A": "Return `{ \"isError\": false, \"content\": [{ \"type\": \"text\", \"text\": \"Error: invalid ID\" }] }`",
+        "B": "Return an empty `content` array with no `isError` flag set.",
+        "C": "Raise an unhandled exception and let the MCP transport layer return a JSON-RPC parse error.",
+        "D": "Return `{ \"isError\": true, \"content\": [{ \"type\": \"text\", \"text\": \"Validation error: user ID must be an integer, received 'abc'\" }] }`"
+      },
+      "correctAnswer": "D",
+      "explanation": "The MCP specification requires setting `isError: true` in the tool result to indicate a tool-level failure. The `content` array should carry a human-readable message that explains what went wrong and guides the model toward a corrective action. Option D satisfies both requirements.",
+      "whyWrongMap": {
+        "A": "Setting `isError: false` while embedding an error message in the content creates a contradictory signal. The model treats `isError: false` as a successful result and may act on the error text as if it were valid data.",
+        "B": "An empty content array with no `isError` flag is an ambiguous success response. The agent has no mechanism to detect that a failure occurred and will proceed as if the tool returned nothing.",
+        "C": "Unhandled exceptions propagate as transport-level JSON-RPC errors, not as tool-level errors. Claude cannot reason about transport errors in the same way it reasons about `isError: true` results \u2014 the failure is invisible to the model's planning loop."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#handling-tool-use-and-tool-results",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp"
+      ]
+    },
+    {
+      "id": "q-2.2-easy-2",
+      "taskStatement": "2.2",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "A developer is categorizing errors that can occur in an MCP tool that reads files from a remote storage service. Possible failures include: the requested file does not exist, the caller lacks read permission, and an unexpected disk I/O failure occurred.",
+      "text": "Which error category mapping is correct according to standard MCP error classification?",
+      "options": {
+        "A": "File does not exist \u2192 `not_found`; no read permission \u2192 `permission`; disk I/O failure \u2192 `internal`",
+        "B": "File does not exist \u2192 `internal`; no read permission \u2192 `validation`; disk I/O failure \u2192 `not_found`",
+        "C": "File does not exist \u2192 `permission`; no read permission \u2192 `not_found`; disk I/O failure \u2192 `rate_limit`",
+        "D": "File does not exist \u2192 `validation`; no read permission \u2192 `internal`; disk I/O failure \u2192 `permission`"
+      },
+      "correctAnswer": "A",
+      "explanation": "Standard MCP error categories map directly to failure semantics: `not_found` is used when a requested resource does not exist, `permission` is used when the caller is not authorized, and `internal` covers unexpected server-side failures like I/O errors. Correct categorization enables the agent to choose the appropriate recovery strategy.",
+      "whyWrongMap": {
+        "B": "This mapping inverts the categories \u2014 `internal` is not appropriate for a predictable resource-missing scenario, and `not_found` does not describe a disk I/O failure. The agent would attempt wrong recovery strategies based on these categories.",
+        "C": "Mapping a missing file to `permission` suggests the caller is denied access, which is misleading. The agent might try re-authenticating rather than correcting the resource path or informing the user the file is absent.",
+        "D": "Labeling a missing file as `validation` implies the input was malformed rather than missing. The agent would likely prompt the user to fix their input instead of searching for the resource or creating it."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#handling-tool-use-and-tool-results",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp"
+      ]
+    },
+    {
+      "id": "q-2.2-easy-3",
+      "taskStatement": "2.2",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "An MCP tool calls a downstream API that returns a `429 Too Many Requests` response. The tool must relay this failure to the Claude agent in a way that tells the model whether it makes sense to try again.",
+      "text": "Which of the following error responses best communicates that this error is retryable?",
+      "options": {
+        "A": "`{ \"isError\": true, \"content\": [{ \"type\": \"text\", \"text\": \"{\\\"error_type\\\": \\\"internal\\\", \\\"retryable\\\": false, \\\"message\\\": \\\"Rate limit exceeded.\\\"}\" }] }`",
+        "B": "`{ \"isError\": true, \"content\": [{ \"type\": \"text\", \"text\": \"{\\\"error_type\\\": \\\"rate_limit\\\", \\\"retryable\\\": true, \\\"message\\\": \\\"Rate limit exceeded. Retry after 5 seconds.\\\"}\" }] }`",
+        "C": "`{ \"isError\": false, \"content\": [{ \"type\": \"text\", \"text\": \"429 from upstream\" }] }`",
+        "D": "`{ \"isError\": true, \"content\": [{ \"type\": \"text\", \"text\": \"Error occurred.\" }] }`"
+      },
+      "correctAnswer": "B",
+      "explanation": "Option B correctly sets `isError: true`, classifies the error as `rate_limit`, marks it `retryable: true`, and provides actionable guidance (retry after 5 seconds). This structured payload allows the agent to automatically schedule a retry without requiring human intervention.",
+      "whyWrongMap": {
+        "A": "Classifying a rate-limit error as `internal` and marking it non-retryable is doubly incorrect. The agent will treat a transient, retryable condition as a permanent failure and will not attempt a retry even though one would succeed.",
+        "C": "Setting `isError: false` for a failure is a protocol violation. The raw `429` string in the content does not carry machine-readable retry metadata, so the agent cannot determine a correct recovery strategy.",
+        "D": "While `isError: true` is correct, the message 'Error occurred' gives the agent no information about the error category, retryability, or recommended wait time. The model cannot make an informed decision about how to proceed."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#handling-tool-use-and-tool-results",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp"
+      ]
+    },
+    {
+      "id": "q-2.2-easy-4",
+      "taskStatement": "2.2",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "An MCP tool that queries an internal HR database fails because the requesting agent's service account does not have permission to access salary records. A developer must write the error message that will be returned in the `content` array.",
+      "text": "Which error message best follows the MCP guidance of guiding the model's next action without leaking sensitive information?",
+      "options": {
+        "A": "\"Access denied to salary records for service account `svc-agent-prod` (ACL rule 14 blocked read on table `hr.salaries`).\"",
+        "B": "\"Database error: SELECT on hr.salaries failed with ORA-01031: insufficient privileges for user svc-agent-prod@10.0.0.5.\"",
+        "C": "\"Permission denied: the agent does not have access to this resource. Contact your administrator to request the `hr:salary:read` permission.\"",
+        "D": "\"An error occurred.\""
+      },
+      "correctAnswer": "C",
+      "explanation": "Option C conveys the permission category clearly, avoids exposing internal account names, ACL rule IDs, or database details, and gives the model an actionable next step (escalate to an administrator). This matches guidance to write error messages that guide the model without leaking sensitive infrastructure details.",
+      "whyWrongMap": {
+        "A": "This message leaks the internal service account name and a specific ACL rule identifier. Exposing these details in an error message is a security risk \u2014 they can reveal system internals to any party that can observe the agent's output.",
+        "B": "Including the raw database error string exposes the database vendor, table schema, username, and internal IP address. This is a significant information-disclosure vulnerability and violates the principle of not leaking sensitive data in error messages.",
+        "D": "An uninformative message gives the model no signal about what went wrong or what to do next. The agent is likely to retry or hallucinate a solution rather than escalating appropriately."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#handling-tool-use-and-tool-results",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp"
       ]
     },
     {
@@ -75,11 +445,111 @@
       ]
     },
     {
+      "id": "q-2.2-medium-2",
+      "taskStatement": "2.2",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "A team is designing a structured error metadata schema for all MCP tools in their platform. They want Claude to be able to programmatically distinguish error categories, determine retryability, and receive a human-readable explanation \u2014 all from a single error response.",
+      "text": "Which structured error metadata schema best supports the agent's ability to reason about failures and take appropriate recovery actions?",
+      "options": {
+        "A": "`{ \"error_type\": \"validation\", \"retryable\": false, \"message\": \"Field 'email' must be a valid email address.\", \"details\": { \"field\": \"email\", \"received\": \"not-an-email\" } }`",
+        "B": "`{ \"code\": 400, \"message\": \"Bad input\" }`",
+        "C": "`{ \"status\": \"error\", \"description\": \"The input was incorrect. Please try again.\" }`",
+        "D": "`{ \"error\": true, \"type\": 3, \"hint\": \"fix input\" }`"
+      },
+      "correctAnswer": "A",
+      "explanation": "Option A provides all four key components of structured error metadata: a machine-readable `error_type` for categorical routing, a `retryable` boolean so the agent knows whether to retry, a human-readable `message` explaining the failure, and a `details` object with field-level context for precise correction. This enables the agent to take targeted, informed action.",
+      "whyWrongMap": {
+        "B": "An HTTP-style numeric code and a vague message do not convey retryability or field-level details. The agent must guess whether to retry and has no structured path to correct the specific invalid input.",
+        "C": "A plain-language description without machine-readable fields forces the agent to parse natural language to determine category and retryability, which is fragile and inconsistent across different error conditions.",
+        "D": "Using an opaque numeric type (e.g., `3`) instead of a named string requires the agent to consult external documentation, and a vague hint like 'fix input' gives no actionable guidance on what to actually fix."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#handling-tool-use-and-tool-results",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp"
+      ]
+    },
+    {
+      "id": "q-2.2-medium-3",
+      "taskStatement": "2.2",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "A Claude agent calls an MCP tool `create_order` which internally calls a payment processor. The payment processor returns a `card_declined` error. The developer must decide whether to classify this as retryable or non-retryable and write an appropriate error message.",
+      "text": "Which error classification and message is most appropriate for a card-declined failure?",
+      "options": {
+        "A": "Retryable; message: \"Payment failed temporarily. Retry the order in a few seconds.\"",
+        "B": "Retryable; message: \"An internal error occurred. The system will automatically retry.\"",
+        "C": "Non-retryable; message: \"Error code CVD-4042 from Stripe: insufficient_funds for card ending 4242.\"",
+        "D": "Non-retryable; message: \"Card declined. Please ask the user to provide a different payment method or check their card details.\""
+      },
+      "correctAnswer": "D",
+      "explanation": "A card-declined error is a permanent failure for that specific payment attempt \u2014 retrying with the same card will not succeed. Classifying it as non-retryable and guiding the agent to request an alternative payment method is the correct action. The message avoids leaking card details or processor-specific error codes.",
+      "whyWrongMap": {
+        "A": "Card declines are not transient network errors \u2014 retrying the same declined card will produce the same result. Marking this retryable causes the agent to loop uselessly without resolving the underlying problem.",
+        "B": "Classifying a card decline as a retryable internal error is doubly wrong: the error is permanent (not internal), and automatic retries will not resolve a declined card. This causes unnecessary retries and delays user resolution.",
+        "C": "While non-retryable is correct, option C leaks sensitive financial data (the last four digits of the card and the Stripe error code). This violates the guidance to avoid exposing sensitive information in error messages."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#handling-tool-use-and-tool-results",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp"
+      ]
+    },
+    {
+      "id": "q-2.2-medium-4",
+      "taskStatement": "2.2",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "An MCP tool that provisions cloud resources fails because the user's account has reached its quota for virtual machines. The developer must write an error response. The quota limit is a hard organizational policy, not a temporary rate limit.",
+      "text": "How should the developer classify and communicate this quota-exceeded failure?",
+      "options": {
+        "A": "Error type `rate_limit`, retryable `true`; message: \"VM quota exceeded. Retry after the quota window resets.\"",
+        "B": "Error type `permission`, retryable `false`; message: \"Your account has reached its VM quota. Contact your cloud administrator to request a quota increase.\"",
+        "C": "Error type `internal`, retryable `true`; message: \"Resource provisioning failed due to a system constraint. Retrying shortly.\"",
+        "D": "Error type `not_found`, retryable `false`; message: \"Virtual machine resource not found in this region.\""
+      },
+      "correctAnswer": "B",
+      "explanation": "A hard organizational quota is an authorization/policy boundary rather than a transient rate limit or missing resource. Classifying it as `permission` with `retryable: false` accurately reflects that the current account is not authorized to exceed its quota. The message directs the agent to escalate to an administrator, which is the only viable next action.",
+      "whyWrongMap": {
+        "A": "`rate_limit` implies a time-based throttle that will reset automatically, which is incorrect for a hard quota enforced by organizational policy. Marking it retryable would cause the agent to loop indefinitely waiting for a reset that never comes.",
+        "C": "Classifying a policy-driven quota error as `internal` and retryable is misleading on both counts. The agent will attempt automatic retries expecting a transient server issue to resolve, when in fact an administrator action is required.",
+        "D": "`not_found` implies the requested resource class does not exist in the system. Misclassifying a quota error this way causes the agent to search for the resource in alternative locations rather than escalating the quota issue."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#handling-tool-use-and-tool-results",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp"
+      ]
+    },
+    {
+      "id": "q-2.2-medium-5",
+      "taskStatement": "2.2",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "A developer is reviewing two candidate error messages for an MCP tool that searches a user directory. The tool returns an error when no users match the search criteria. Option X: `\"No users found matching query: SELECT * FROM users WHERE email LIKE '%@example.com' AND role='admin'\"`. Option Y: `\"No users found matching the search criteria. Try broadening your search filters.\"`",
+      "text": "Which message better follows MCP error message best practices, and why?",
+      "options": {
+        "A": "Option X, because including the SQL query helps the agent understand exactly what was executed and reformulate a better query.",
+        "B": "Option X, because transparency about internal operations allows the agent to debug issues more effectively.",
+        "C": "Option Y, because it communicates the outcome without leaking internal implementation details like the SQL query structure or table schema.",
+        "D": "Neither option is correct \u2014 a not_found condition should not use `isError: true` since returning zero results is a valid outcome, not an error."
+      },
+      "correctAnswer": "C",
+      "explanation": "Option Y communicates the relevant outcome (no results) and provides an actionable suggestion (broaden filters) without exposing the underlying SQL query, table name, or schema. Leaking raw SQL statements in error messages is a security risk and violates the MCP guidance to not expose sensitive internal details.",
+      "whyWrongMap": {
+        "A": "Exposing raw SQL queries reveals the database schema, table names, and query patterns. This is a significant information-disclosure risk even if it appears helpful. The agent can reformulate search parameters without access to the underlying SQL.",
+        "B": "Transparency about internal operations is a debugging concern that belongs in server-side logs, not in messages returned to the agent. The agent does not need to know the database implementation to make a better tool call.",
+        "D": "Whether a zero-result search should use `isError: true` depends on the tool contract. If the tool is expected to always return at least one result and the absence indicates a failure to satisfy the request, `isError: true` is appropriate. The option conflates protocol mechanics with message quality."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#handling-tool-use-and-tool-results",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp"
+      ]
+    },
+    {
       "id": "q-2.2-hard-1",
       "taskStatement": "2.2",
       "domainId": 2,
       "difficulty": "hard",
-      "scenario": "Your MCP tool `query_database` can fail in two distinct ways: a transient connection timeout, and a permanent schema validation error caused by a bad user query. The orchestrating Claude agent must handle these differently — retrying on transient failures and escalating on permanent ones.",
+      "scenario": "Your MCP tool `query_database` can fail in two distinct ways: a transient connection timeout, and a permanent schema validation error caused by a bad user query. The orchestrating Claude agent must handle these differently \u2014 retrying on transient failures and escalating on permanent ones.",
       "text": "What is the best practice for structuring MCP tool error responses to enable the agent to distinguish transient from permanent failures?",
       "options": {
         "A": "Use two different MCP error codes in the JSON-RPC error object: a retryable code (e.g., -32001) and a permanent code (e.g., -32002), so Claude can branch on the numeric code.",
@@ -100,27 +570,306 @@
       ]
     },
     {
+      "id": "q-2.2-hard-2",
+      "taskStatement": "2.2",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "A security audit of an MCP server reveals that the `authenticate_user` tool returns the following error when credentials are wrong: `{ \"isError\": true, \"content\": [{ \"type\": \"text\", \"text\": \"{\\\"error_type\\\": \\\"permission\\\", \\\"message\\\": \\\"Password incorrect for user admin@company.com. Failed attempts: 2/5. Account locks after 5 attempts.\\\"}\" }] }`. The auditor flags this as a security vulnerability.",
+      "text": "What specific security problem does this error response introduce, and what is the correct remediation?",
+      "options": {
+        "A": "The error uses `permission` instead of `validation`; fix by changing the error type to `validation` since invalid credentials are an input error.",
+        "B": "The `isError: true` flag exposes that an authentication mechanism exists; fix by returning `isError: false` with a neutral message so attackers cannot confirm authentication endpoints.",
+        "C": "The message is too short and does not provide enough context for the agent to retry correctly; add the correct password hash format requirements to the error message.",
+        "D": "The message confirms the username exists and reveals the account lockout policy and current attempt count, enabling enumeration and targeted brute-force attacks; fix by returning a generic message like `\"Authentication failed. Please check your credentials.\"`"
+      },
+      "correctAnswer": "D",
+      "explanation": "Returning the specific username, remaining attempt count, and lockout threshold in an authentication error enables user enumeration (confirming the account exists) and provides a roadmap for targeted brute-force attacks. The correct remediation is a generic message that does not confirm whether the username is valid, reveal attempt counts, or disclose lockout policies.",
+      "whyWrongMap": {
+        "A": "The error type classification is a secondary concern compared to the information-disclosure vulnerability. Changing `permission` to `validation` does not eliminate the security risk \u2014 the message still leaks the username confirmation and brute-force roadmap.",
+        "B": "Setting `isError: false` on a genuine authentication failure is a protocol violation that would cause the agent to treat a failed login as success. Authentication endpoints must be discoverable by legitimate clients; obscuring `isError` does not meaningfully protect against enumeration.",
+        "C": "Adding password format hints to an authentication error message worsens the security posture by giving attackers more information about valid credential formats. Error messages for authentication failures should always be more terse, not more verbose."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#handling-tool-use-and-tool-results",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp",
+        "https://docs.anthropic.com/en/docs/claude-code/security"
+      ]
+    },
+    {
+      "id": "q-2.2-hard-3",
+      "taskStatement": "2.2",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "An MCP server exposes a `run_pipeline` tool used by a long-running Claude agent. The tool can fail with five distinct error types. The team wants a retry policy where the agent retries up to 3 times for retryable errors, immediately escalates `permission` errors to a human, silently skips `not_found` errors, and aborts the entire pipeline on `internal` errors.",
+      "text": "Which error response schema design best supports all four routing rules without requiring the agent to parse natural-language error messages?",
+      "options": {
+        "A": "Return `isError: true` with a structured content payload containing `error_type` (one of: `validation`, `permission`, `not_found`, `rate_limit`, `internal`), `retryable` (boolean), and `action_hint` (one of: `retry`, `escalate`, `skip`, `abort`) fields.",
+        "B": "Return a single `isError: true` with a `message` field. Encode the routing rule as a prefix in the message string (e.g., `\"[RETRY]\"` or `\"[ESCALATE]\"`) and instruct the agent in the system prompt to branch on the prefix.",
+        "C": "Use four different tool names (`run_pipeline_safe`, `run_pipeline_retriable`, `run_pipeline_skip`, `run_pipeline_abort`) and route errors by which tool name appeared in the failed call.",
+        "D": "Return `isError: true` and set the HTTP status code of the MCP transport response to 429 for rate limits, 403 for permissions, 404 for not-found, and 500 for internal errors. Instruct the agent to branch on the HTTP code."
+      },
+      "correctAnswer": "A",
+      "explanation": "A structured content payload with explicit `error_type`, `retryable`, and `action_hint` fields gives the agent three independent machine-readable signals to route decisions without parsing strings. Each field serves a distinct purpose: `error_type` identifies the failure class, `retryable` drives the retry loop, and `action_hint` encodes the specific pipeline action. This schema is maintainable, testable, and requires no system-prompt heuristics.",
+      "whyWrongMap": {
+        "B": "Encoding routing logic as string prefixes is brittle: prefix formats can diverge across tool implementations, and any change to the prefix breaks the agent's branching logic without a schema version bump. It also requires embedding routing logic in the system prompt, making it hard to maintain and test independently.",
+        "C": "Creating separate tool names for each error routing path conflates the tool's functional identity with its error-handling behavior. The agent must select a tool based on an error outcome it has not yet observed, which is a circular design problem. Tool proliferation also increases schema complexity without benefit.",
+        "D": "MCP runs over JSON-RPC, not direct HTTP. Transport-level HTTP codes are not propagated into the model's tool result context in standard MCP implementations. Even where HTTP is the transport, using status codes for application-level business logic violates the separation of transport and application layers."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#handling-tool-use-and-tool-results",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents"
+      ]
+    },
+    {
+      "id": "q-2.2-hard-4",
+      "taskStatement": "2.2",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "An engineering team is building an MCP tool `execute_trade` for a financial services agent. The tool can produce five outcomes: success, a validation error (bad symbol format), a permission error (account not authorized to trade this instrument), a not-found error (symbol does not exist), and an internal error (exchange connectivity failure). A junior developer proposes returning all non-success outcomes as `isError: true` with only a human-readable string message and no structured fields.",
+      "text": "What is the most complete and accurate critique of the junior developer's proposal?",
+      "options": {
+        "A": "The proposal is acceptable for simple agents but should be upgraded to structured fields for production use because structured fields slightly improve performance.",
+        "B": "The proposal is correct for human-facing error display but should add a numeric error code field so the agent can branch programmatically, similar to HTTP status codes.",
+        "C": "The proposal is flawed only because it does not set `isError: true` consistently; once that is fixed, a human-readable message is sufficient for all five outcomes.",
+        "D": "The proposal is fundamentally flawed because: (1) relying on Claude to parse natural-language error strings makes error handling brittle and non-deterministic; (2) without a `retryable` field, the agent cannot distinguish the exchange connectivity failure (retryable) from the symbol-not-found error (non-retryable); (3) financial systems require audit-quality structured error logs that natural-language strings cannot reliably support."
+      },
+      "correctAnswer": "D",
+      "explanation": "The junior developer's proposal has three distinct, independent flaws. First, language models do not parse error strings with deterministic logic \u2014 the same string can produce different agent behaviors across models, temperatures, and context states. Second, without an explicit `retryable` boolean, the agent cannot reliably distinguish a transient exchange connectivity outage from a permanent symbol-not-found condition. Third, in regulated financial contexts, audit trails require structured, machine-parsable error records; free-text strings cannot be reliably indexed, queried, or aggregated for compliance reporting.",
+      "whyWrongMap": {
+        "A": "Framing the issue as a 'performance' concern understates the severity. The problem is one of correctness, security, and compliance \u2014 not performance. In a financial trading context, a misclassified retryable error could cause duplicate trade submissions with real monetary consequences.",
+        "B": "Adding a numeric code is an improvement over pure strings, but HTTP-style numeric codes are not the recommended MCP pattern. Named `error_type` strings are more readable, self-documenting, and avoid the need for an external code-to-meaning lookup table. The option also does not address the retryability gap.",
+        "C": "The proposal already implies `isError: true` is used; the option misidentifies the problem. The actual flaws are the lack of machine-readable categorical fields and retryability metadata, not a missing `isError` flag."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#handling-tool-use-and-tool-results",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents"
+      ]
+    },
+    {
+      "id": "q-2.3-easy-1",
+      "taskStatement": "2.3",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "A developer is configuring an agent that must always call at least one tool before returning a response. The agent has four tools available and the developer wants to prevent the model from answering from its parametric knowledge alone.",
+      "text": "Which `tool_choice` setting ensures the model always invokes at least one tool?",
+      "options": {
+        "A": "`{\"type\": \"auto\"}`",
+        "B": "`{\"type\": \"any\"}`",
+        "C": "`{\"type\": \"tool\", \"name\": \"search\"}`",
+        "D": "Omitting `tool_choice` entirely"
+      },
+      "correctAnswer": "B",
+      "explanation": "Setting `tool_choice` to `{\"type\": \"any\"}` forces the model to call at least one tool from the provided list before responding. The model still selects which tool to use, but it cannot skip tool use entirely. This is the correct setting when you need guaranteed grounding in external data rather than parametric knowledge.",
+      "whyWrongMap": {
+        "A": "`auto` allows the model to decide whether to call a tool at all. If the model believes it can answer from training data it will bypass all tools, defeating the developer's requirement.",
+        "C": "A forced tool name (`{\"type\": \"tool\", \"name\": \"search\"}`) guarantees that one specific tool is called, not merely that some tool is called. This is a stricter constraint than required and prevents the model from selecting the most appropriate tool.",
+        "D": "Omitting `tool_choice` defaults to `auto` behavior, giving the model full discretion to skip tool use, which violates the stated requirement."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#controlling-claudes-output",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#tool-use-best-practices"
+      ]
+    },
+    {
+      "id": "q-2.3-easy-2",
+      "taskStatement": "2.3",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "An architect is designing a multi-agent pipeline. A subagent is responsible solely for querying a read-only product catalog. The coordinator agent, however, can both read the catalog and write new orders.",
+      "text": "What is the primary security principle that justifies giving the subagent access to fewer tools than the coordinator?",
+      "options": {
+        "A": "Separation of concerns",
+        "B": "Defense in depth",
+        "C": "Fail-fast design",
+        "D": "Principle of least privilege"
+      },
+      "correctAnswer": "D",
+      "explanation": "The principle of least privilege states that each component should have only the permissions necessary to perform its specific function. Giving the read-only subagent access to write tools it does not need increases the blast radius of any mistake or prompt injection. Scoped tool access per agent is the direct application of this principle in agentic systems.",
+      "whyWrongMap": {
+        "A": "Separation of concerns is about structuring code or systems so that each module handles a distinct responsibility. While related, it does not specifically address limiting access rights to reduce risk.",
+        "B": "Defense in depth is a layered security strategy, but it describes the overall architecture pattern rather than the specific justification for limiting a single agent's tool access.",
+        "C": "Fail-fast design is about detecting and surfacing errors early. It is an engineering robustness principle, not a security access-control principle."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#security-and-trust",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#tool-use-in-agentic-contexts"
+      ]
+    },
+    {
+      "id": "q-2.3-easy-3",
+      "taskStatement": "2.3",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "A team has built a structured-data extraction pipeline. They pass a document to Claude and want it to return a JSON object matching a specific schema every time, with no prose commentary. They have defined a single `extract_data` tool whose parameters mirror the target schema.",
+      "text": "Which `tool_choice` configuration guarantees that Claude always populates the `extract_data` tool and never responds with free text?",
+      "options": {
+        "A": "`{\"type\": \"tool\", \"name\": \"extract_data\"}`",
+        "B": "`{\"type\": \"auto\"}`",
+        "C": "`{\"type\": \"any\"}`",
+        "D": "No `tool_choice` is needed; the system prompt instruction is sufficient"
+      },
+      "correctAnswer": "A",
+      "explanation": "Forcing `tool_choice` to `{\"type\": \"tool\", \"name\": \"extract_data\"}` makes Claude populate that exact tool on every turn, effectively using the tool's parameter schema as a structured output template. This is the canonical Anthropic pattern for guaranteed structured output extraction.",
+      "whyWrongMap": {
+        "B": "`auto` allows Claude to decide whether to use a tool. For documents the model considers straightforward it may return plain text, breaking the downstream JSON parser.",
+        "C": "`any` forces tool use but lets Claude choose which tool. If additional tools exist in the context, Claude might call a different one. Even with a single tool, `any` is weaker than an explicit named forced call.",
+        "D": "System prompt instructions can encourage a behavior but do not provide a hard API-level guarantee. Claude may still produce text responses in edge cases, making this unreliable for a structured extraction pipeline."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#controlling-claudes-output",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#forcing-tool-use"
+      ]
+    },
+    {
+      "id": "q-2.3-easy-4",
+      "taskStatement": "2.3",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "A developer equips a general-purpose assistant agent with 30 different tools spanning calendar management, email, code execution, database queries, file operations, and web search. After deployment, users report that the agent frequently selects the wrong tool or chains unnecessary tool calls for simple requests.",
+      "text": "According to Anthropic's guidance on tool distribution, what is the most likely root cause of the agent's poor tool selection?",
+      "options": {
+        "A": "The agent's system prompt is too short",
+        "B": "The model's context window is too small for the conversation history",
+        "C": "The tools are missing required parameters in their JSON schemas",
+        "D": "Too many tools create selection confusion, making it harder for the model to identify the most appropriate tool"
+      },
+      "correctAnswer": "D",
+      "explanation": "Anthropic's documentation explicitly warns that providing too many tools degrades the model's ability to select the right one. When the tool list is large and diverse, Claude must reason over many candidates simultaneously, increasing the chance of a suboptimal or incorrect selection. The recommended pattern is to scope tool sets tightly per agent role.",
+      "whyWrongMap": {
+        "A": "A short system prompt can reduce context but is not the described failure mode. The symptom\u2014wrong tool selection across many capabilities\u2014points to tool proliferation, not prompt length.",
+        "B": "Context window exhaustion would manifest as truncated conversations or errors, not as systematic wrong-tool selection on presumably simple requests.",
+        "C": "Missing required parameters would cause schema validation errors or tool call failures, not the pattern of selecting the wrong tool or making unnecessary chains of calls."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#best-practices-for-tool-definitions",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#designing-effective-agents"
+      ]
+    },
+    {
       "id": "q-2.3-medium-1",
       "taskStatement": "2.3",
       "domainId": 2,
       "difficulty": "medium",
-      "scenario": "You are building a multi-agent pipeline where an orchestrator delegates sub-tasks to a specialized `data_analyst` subagent. The orchestrator must guarantee that the subagent always uses its `run_sql_query` tool to answer questions rather than generating a SQL result from memory.",
-      "text": "Which `tool_choice` configuration should the orchestrator pass when invoking the `data_analyst` subagent to enforce tool usage?",
+      "scenario": "A multi-agent research pipeline has a coordinator agent and three specialized subagents: a web-search agent, a database-query agent, and a report-generation agent. The coordinator must decide which subagent to delegate to based on the user's intent. All three subagents are implemented as tools on the coordinator.",
+      "text": "What `tool_choice` setting should the coordinator use, and what setting should each subagent use when executing its specialized task?",
       "options": {
-        "A": "`{\"type\": \"auto\"}` — lets Claude decide whether a tool is needed based on the question.",
-        "B": "`{\"type\": \"any\"}` — forces Claude to call at least one tool from the provided list before responding.",
-        "C": "`{\"type\": \"tool\", \"name\": \"run_sql_query\"}` — forces Claude to call exactly the specified tool.",
-        "D": "`{\"type\": \"none\"}` — disables tool use so Claude relies entirely on its trained knowledge."
+        "A": "Coordinator: `auto`; each subagent: `{\"type\": \"tool\", \"name\": \"<its own tool>\"}`",
+        "B": "Coordinator: `any`; each subagent: `auto`",
+        "C": "Coordinator: `auto`; each subagent: `auto`",
+        "D": "Coordinator: `{\"type\": \"tool\", \"name\": \"delegate\"}`; each subagent: `any`"
       },
-      "correctAnswer": "C",
-      "explanation": "Setting `tool_choice` to `{\"type\": \"tool\", \"name\": \"run_sql_query\"}` forces the model to invoke that specific tool, guaranteeing that answers are grounded in real query results rather than hallucinated data.",
+      "correctAnswer": "A",
+      "explanation": "The coordinator should use `auto` so it can decide intelligently which subagent to invoke based on context. Each subagent, however, should use a forced `tool_choice` for its own single capability tool so it always executes its specialized function rather than attempting to answer from parametric knowledge. This design matches coordinator-level reasoning with subagent-level reliability.",
       "whyWrongMap": {
-        "A": "`auto` allows Claude to skip tool use entirely if it believes it can answer from context. This is too permissive when the goal is to guarantee fresh, query-backed results.",
-        "B": "`any` forces the model to call some tool, but does not pin which one. If the subagent has multiple tools available, it might call a different one and still not execute a SQL query.",
-        "D": "`none` explicitly disables all tool use, which is the opposite of the desired behavior and would prevent any SQL query from running."
+        "B": "Setting the coordinator to `any` forces it to call at least one subagent but prevents it from ever responding directly, which breaks workflows where the coordinator needs to synthesize a final answer without additional delegation. Setting subagents to `auto` allows them to skip their tool, defeating the purpose of specialization.",
+        "C": "Using `auto` for both coordinator and subagents allows subagents to decide not to use their tool. A web-search subagent that answers from memory rather than running a real search undermines the grounding guarantee the pipeline requires.",
+        "D": "Forcing the coordinator to a single `delegate` tool prevents it from routing to the correct specialized subagent. A coordinator needs to choose between multiple delegation targets, which requires `auto` or at minimum `any`."
       },
       "references": [
-        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#controlling-claudes-output"
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#controlling-claudes-output",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#multi-agent-architectures"
+      ]
+    },
+    {
+      "id": "q-2.3-medium-2",
+      "taskStatement": "2.3",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "An agent is being built to assist customer support representatives. It has access to five tools: `lookup_order`, `issue_refund`, `escalate_to_human`, `send_email`, and `update_shipping_address`. A security review flags that the model should never be able to issue a refund without an explicit human confirmation step.",
+      "text": "Which tool distribution and `tool_choice` design best enforces the human-in-the-loop requirement for refunds?",
+      "options": {
+        "A": "Keep all five tools on the agent and add a system prompt instruction that says 'always confirm before refunding'",
+        "B": "Remove `issue_refund` from the agent's tool list and route all refund requests through a separate confirmation workflow before calling a restricted refund agent",
+        "C": "Set `tool_choice` to `{\"type\": \"tool\", \"name\": \"issue_refund\"}` so the model explicitly calls the refund tool when needed",
+        "D": "Add a `confirm_action` boolean parameter to `issue_refund` and instruct the agent to always set it to `false` first"
+      },
+      "correctAnswer": "B",
+      "explanation": "Removing a high-risk tool from an agent's tool list is the strongest architectural control. System prompt instructions can be overridden by adversarial inputs or model drift. The correct pattern per Anthropic's safety guidance is to restrict access at the tool provisioning level: the agent physically cannot call `issue_refund` because it is not in its tool list. A separate, human-gated workflow handles the confirmation before the restricted refund agent receives the call.",
+      "whyWrongMap": {
+        "A": "System prompt instructions are a soft control. Prompt injection attacks or sufficiently unusual inputs can cause the model to bypass them. This approach does not provide a hard architectural guarantee.",
+        "C": "Forcing `tool_choice` to `issue_refund` would cause the model to call the refund tool on every turn, which is the opposite of the desired behavior and would create uncontrolled refund issuance.",
+        "D": "Adding a boolean parameter that the agent controls does not enforce human confirmation. The model can set `confirm_action: true` without any human involvement, providing only an illusion of safety."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#security-and-trust",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#human-in-the-loop"
+      ]
+    },
+    {
+      "id": "q-2.3-medium-3",
+      "taskStatement": "2.3",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "A pipeline developer notices that when their agent is given `tool_choice: auto` and a large tool list, it occasionally calls `web_search` for questions that should be answered by the internal `knowledge_base_query` tool. Switching to `tool_choice: any` did not fix the problem.",
+      "text": "What is the most effective architectural change to improve correct tool selection without switching to forced tool choice?",
+      "options": {
+        "A": "Increase the model's temperature so it explores more options before selecting",
+        "B": "Add a post-processing step that detects wrong tool calls and automatically retries",
+        "C": "Segment the agent into specialized subagents, each with a smaller, focused tool set relevant to its domain",
+        "D": "Rename the tools to have longer, more descriptive names"
+      },
+      "correctAnswer": "C",
+      "explanation": "When a large heterogeneous tool list causes selection confusion, the architectural remedy is to decompose the single agent into specialized subagents. Each subagent receives only the tools relevant to its domain (e.g., the internal-knowledge subagent gets `knowledge_base_query`; the external-research subagent gets `web_search`). A coordinator routes requests to the appropriate subagent, eliminating the multi-tool ambiguity problem at its root.",
+      "whyWrongMap": {
+        "A": "Increasing temperature increases randomness in sampling. It does not improve the model's reasoning about which tool is most appropriate and would likely make selection less consistent, not more.",
+        "B": "A retry loop addresses symptoms rather than the root cause. It also adds latency and cost, and if the model consistently misidentifies the right tool, retries will not reliably converge on the correct answer.",
+        "D": "Longer tool names can marginally improve disambiguation but do not address the fundamental problem of a large tool list overwhelming the model's selection reasoning. This is a superficial fix."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#designing-effective-agents",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#best-practices-for-tool-definitions"
+      ]
+    },
+    {
+      "id": "q-2.3-medium-4",
+      "taskStatement": "2.3",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "A developer is implementing a two-step agentic workflow. In step one, Claude should always call `gather_context` to retrieve relevant background information. In step two, Claude should reason over that information and choose whether to call `finalize_report`, `request_more_data`, or neither if it determines no action is needed.",
+      "text": "Which pair of `tool_choice` settings correctly models this two-step workflow?",
+      "options": {
+        "A": "Step 1: `{\"type\": \"any\"}`; Step 2: `{\"type\": \"any\"}`",
+        "B": "Step 1: `{\"type\": \"auto\"}`; Step 2: `{\"type\": \"tool\", \"name\": \"finalize_report\"}`",
+        "C": "Step 1: `{\"type\": \"tool\", \"name\": \"gather_context\"}`; Step 2: `{\"type\": \"auto\"}`",
+        "D": "Step 1: `{\"type\": \"any\"}`; Step 2: `{\"type\": \"tool\", \"name\": \"request_more_data\"}`"
+      },
+      "correctAnswer": "C",
+      "explanation": "Step 1 requires a guaranteed call to a specific tool, which maps exactly to the forced `{\"type\": \"tool\", \"name\": \"gather_context\"}` setting. Step 2 requires flexible reasoning where the model may or may not call a tool, which maps to `auto`. Pairing forced with auto across the two steps correctly captures the described requirements.",
+      "whyWrongMap": {
+        "A": "Using `any` for both steps forces Claude to call some tool in step 2, which violates the requirement that Claude may determine no action is needed. `any` prevents a no-tool response.",
+        "B": "Using `auto` for step 1 allows Claude to skip `gather_context` if it thinks it already has enough context, breaking the mandatory data-gathering guarantee. Step 2 forcing `finalize_report` prevents Claude from choosing `request_more_data` or no action.",
+        "D": "Using `any` for step 1 forces tool use but does not guarantee `gather_context` specifically\u2014Claude could call a different available tool. Step 2 forcing `request_more_data` prevents Claude from ever finalizing the report."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#controlling-claudes-output",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#agentic-workflows"
+      ]
+    },
+    {
+      "id": "q-2.3-medium-5",
+      "taskStatement": "2.3",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "An architect is designing tool access for a coordinator agent and its two subagents. The coordinator routes tasks and synthesizes final answers. Subagent A handles file I/O operations; Subagent B handles API calls to external services. The coordinator does not directly perform file or API operations.",
+      "text": "Which tool distribution correctly applies the principle of least privilege in this architecture?",
+      "options": {
+        "A": "Coordinator: all tools; Subagent A: `read_file`, `write_file`; Subagent B: `call_api`, `parse_response`",
+        "B": "Coordinator: no tools; Subagent A: all tools; Subagent B: all tools",
+        "C": "Coordinator: `delegate_to_subagent_a`, `delegate_to_subagent_b`; Subagent A: `read_file`, `write_file`; Subagent B: `call_api`, `parse_response`",
+        "D": "Coordinator: `read_file`, `write_file`, `call_api`, `parse_response`, `delegate_to_subagent_a`, `delegate_to_subagent_b`; Subagents: no tools"
+      },
+      "correctAnswer": "C",
+      "explanation": "The coordinator only needs routing capability, so it receives only the delegation tools. Each subagent receives exactly the tools required for its specialized domain and nothing more. This is the textbook application of least privilege: no agent has access to tools it does not need, minimizing the blast radius of any compromise or misbehavior.",
+      "whyWrongMap": {
+        "A": "Giving the coordinator all tools violates least privilege. If the coordinator is compromised or makes an error, it can directly perform file and API operations that should be gated through subagents.",
+        "B": "Giving subagents all tools means each subagent can perform operations outside its domain. Subagent A could make API calls and Subagent B could write files, eliminating the isolation benefit of the specialized architecture.",
+        "D": "Centralizing all tools on the coordinator with no tools on subagents eliminates the subagent specialization entirely and creates a single point of failure and excessive privilege on the coordinator."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#security-and-trust",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#multi-agent-architectures"
       ]
     },
     {
@@ -128,24 +877,202 @@
       "taskStatement": "2.3",
       "domainId": 2,
       "difficulty": "hard",
-      "scenario": "A complex agentic system has three specialized subagents: `researcher`, `writer`, and `fact_checker`. Each subagent has access to a different set of tools. The orchestrator must route tasks without exposing tools irrelevant to each subagent's role.",
-      "text": "What is the correct architectural approach for tool distribution in this multi-agent system?",
+      "scenario": "A financial services firm is building an agentic workflow where a Claude coordinator orchestrates three subagents: a `RiskAnalysisAgent` (tools: `calculate_var`, `fetch_market_data`), a `ComplianceAgent` (tools: `check_regulation`, `log_decision`), and an `ExecutionAgent` (tools: `place_order`, `cancel_order`). A security audit finds that a prompt injection in incoming market data could potentially cause the `ExecutionAgent` to place unauthorized orders.",
+      "text": "Which combination of architectural controls most comprehensively mitigates the prompt injection risk to the `ExecutionAgent`?",
       "options": {
-        "A": "Pass the full unified tool list to all three subagents and rely on detailed system prompt instructions to tell each agent to ignore tools outside its role.",
-        "B": "Provide each subagent with only its role-specific tools at the API level (i.e., different `tools` arrays per API call), and document each tool's purpose in its description.",
-        "C": "Use a single `router_agent` with access to all tools; have it call tools on behalf of specialized agents and relay results, eliminating the need for per-agent tool configuration.",
-        "D": "Expose all tools to all subagents but use `tool_choice: {\"type\": \"none\"}` for agents that should not call tools in a given turn, toggling it dynamically."
+        "A": "Add input sanitization to market data before it reaches the coordinator, and use `tool_choice: auto` on the `ExecutionAgent` so it decides whether to act",
+        "B": "Set `tool_choice: {\"type\": \"tool\", \"name\": \"place_order\"}` on the `ExecutionAgent` so it always places orders predictably, and log all decisions with `log_decision`",
+        "C": "Grant the coordinator access to all tools so it can intercept any erroneous `ExecutionAgent` calls before they are executed",
+        "D": "Isolate the `ExecutionAgent` with no shared context from the `RiskAnalysisAgent`, require an explicit human-confirmation signal before any `place_order` call, and scope the `ExecutionAgent`'s tool list to only `place_order` and `cancel_order` with no access to raw market data tools"
       },
-      "correctAnswer": "B",
-      "explanation": "Anthropic recommends providing each agent only the tools it needs for its specific role. This enforces least-privilege at the API level, reduces the model's decision overhead, and prevents accidental invocation of out-of-scope tools regardless of prompt instructions.",
+      "correctAnswer": "D",
+      "explanation": "Comprehensive prompt injection mitigation requires layered controls: (1) context isolation prevents tainted data from the `RiskAnalysisAgent` reaching the `ExecutionAgent` directly; (2) a human-confirmation gate creates a hard architectural interrupt before any order is placed; (3) scoping the `ExecutionAgent`'s tool list to only execution tools\u2014and denying it market data tools\u2014eliminates the vector by which injected data could influence its decisions. This is defense in depth applied to tool distribution.",
       "whyWrongMap": {
-        "A": "Relying on system prompt instructions to suppress irrelevant tools is a soft guardrail. Claude may still call an out-of-scope tool if it infers it would be helpful, and the approach scales poorly as tool counts grow.",
-        "C": "Centralizing all tool calls in a single router agent creates a bottleneck, increases latency, and violates the principle of agent specialization. It also concentrates risk — a failure in the router blocks all downstream agents.",
-        "D": "Using `tool_choice: none` to suppress tools still exposes the full tool list to the model's context window, consuming tokens and increasing the chance of hallucinated tool calls in subsequent turns when the restriction is lifted."
+        "A": "Input sanitization reduces risk but is not sufficient alone\u2014sophisticated injections can evade sanitization. Using `auto` on the `ExecutionAgent` gives the model discretion but provides no hard guarantee against an injected instruction that successfully overrides that discretion.",
+        "B": "Forcing `place_order` on every `ExecutionAgent` turn means every invocation places an order regardless of context, which is catastrophic in production. This setting is the opposite of what is needed for a safe execution path.",
+        "C": "Giving the coordinator all tools maximizes the coordinator's privilege, creating a larger attack surface. An injected instruction that compromises the coordinator would now have access to all capabilities, including `place_order`."
       },
       "references": [
-        "https://docs.anthropic.com/en/docs/build-with-claude/agents",
-        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#controlling-claudes-output"
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#security-and-trust",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#prompt-injection",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#human-in-the-loop"
+      ]
+    },
+    {
+      "id": "q-2.3-hard-2",
+      "taskStatement": "2.3",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "An architect must design a dynamic tool-provisioning system where a coordinator agent can spawn subagents on demand. Each subagent instance should receive only the tools relevant to the specific subtask it was spawned for, determined at runtime based on the task classification. The coordinator classifies tasks into three categories: 'data-retrieval', 'data-transformation', and 'data-publishing'.",
+      "text": "Which design best implements dynamic least-privilege tool provisioning in this multi-agent system?",
+      "options": {
+        "A": "Pre-define three subagent configurations\u2014one per task category\u2014each with a hard-coded tool list; the coordinator selects the appropriate pre-defined configuration when spawning a subagent instance",
+        "B": "Define one universal subagent with all tools and rely on system prompt instructions to restrict which tools it may call for each task category",
+        "C": "Give all subagents the same base tool list and use `tool_choice: any` to force them to always call a tool, ensuring they don't skip necessary operations",
+        "D": "Give the coordinator the ability to dynamically append tools to a subagent's tool list after spawning, adding only the tools the coordinator deems necessary based on runtime context"
+      },
+      "correctAnswer": "A",
+      "explanation": "Pre-defining three distinct configurations with hard-coded, minimal tool lists per task category is the safest and most architecturally sound approach. The coordinator selects a configuration\u2014it does not construct one dynamically\u2014which means the tool sets are reviewed and approved at design time, not runtime. This prevents a compromised coordinator from granting excessive tools to a subagent and maintains least privilege as a static, auditable property of the system.",
+      "whyWrongMap": {
+        "B": "A universal subagent with all tools and system-prompt-based restrictions is the weakest design. System prompt instructions are a soft control that can be bypassed by injections or model errors. The subagent always possesses the capability to misuse tools even if instructed not to.",
+        "C": "Giving all subagents the same base tool list eliminates role-based isolation. A data-retrieval subagent should not have publishing tools; uniform tool lists across all categories violates least privilege.",
+        "D": "Allowing the coordinator to dynamically append tools at runtime is dangerous. A compromised or manipulated coordinator could grant a subagent tools outside its intended scope, and dynamic tool grants are difficult to audit and govern."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#security-and-trust",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#multi-agent-architectures",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#best-practices-for-tool-definitions"
+      ]
+    },
+    {
+      "id": "q-2.3-hard-3",
+      "taskStatement": "2.3",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "A developer is building a structured pipeline with three sequential stages: (1) an extraction stage where Claude must always call `parse_document` to extract fields; (2) a validation stage where Claude should call `validate_schema` if the extracted data looks non-trivial, but may skip it for trivially valid data; (3) an output stage where Claude must always call exactly `emit_result` to write the final record. The developer wants to use the minimum necessary constraint at each stage.",
+      "text": "Which `tool_choice` sequence\u2014[Stage 1, Stage 2, Stage 3]\u2014applies the minimum necessary constraint at each stage?",
+      "options": {
+        "A": "`[auto, auto, auto]`",
+        "B": "`[{\"type\":\"tool\",\"name\":\"parse_document\"}, any, {\"type\":\"tool\",\"name\":\"emit_result\"}]`",
+        "C": "`[any, any, {\"type\":\"tool\",\"name\":\"emit_result\"}]`",
+        "D": "`[{\"type\":\"tool\",\"name\":\"parse_document\"}, auto, {\"type\":\"tool\",\"name\":\"emit_result\"}]`"
+      },
+      "correctAnswer": "D",
+      "explanation": "Stage 1 requires a guaranteed call to a specific tool (`parse_document`), so forced tool choice is the minimum necessary constraint. Stage 2 requires conditional tool use\u2014Claude should decide based on context\u2014so `auto` is the minimum constraint (it allows both calling and not calling the tool). Stage 3 requires a guaranteed call to a specific tool (`emit_result`), so forced tool choice again. Option D is the only sequence that satisfies all three requirements with the minimum constraint at each stage.",
+      "whyWrongMap": {
+        "A": "Using `auto` for stages 1 and 3 allows Claude to skip `parse_document` and `emit_result`, breaking the mandatory execution guarantee in both stages. The pipeline would silently produce incomplete results.",
+        "B": "Using `any` for stage 2 is an over-constraint. It forces Claude to always call some validation tool even for trivially valid data where the developer explicitly wants the model to be able to skip validation. `auto` is the correct minimum constraint for that stage.",
+        "C": "Using `any` for stage 1 forces tool use but does not guarantee `parse_document` specifically if other tools are in context. Using `any` for stage 2 forces Claude to call some tool even when the data is trivially valid, violating the minimum-constraint principle for that stage."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#controlling-claudes-output",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#forcing-tool-use"
+      ]
+    },
+    {
+      "id": "q-2.3-hard-4",
+      "taskStatement": "2.3",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "A team is migrating a monolithic agent (24 tools, frequent wrong-tool selections) to a hierarchical multi-agent architecture. The new design must preserve all 24 capabilities while fixing tool selection reliability. The team proposes two alternatives: Alternative X groups tools into 4 domain-specific subagents of 6 tools each, with a coordinator that routes via 4 delegation tools. Alternative Y creates 24 single-tool subagents, with a coordinator that routes via 24 delegation tools.",
+      "text": "Evaluating both alternatives against Anthropic's tool distribution guidance, which statement is most accurate?",
+      "options": {
+        "A": "Alternative Y is superior because each subagent has exactly one tool, eliminating all within-subagent selection ambiguity",
+        "B": "Alternative X is superior because it reduces within-subagent selection ambiguity while keeping the coordinator's routing decision space manageable (4 choices vs 24)",
+        "C": "Both alternatives are equivalent because the total number of tools in the system is the same in both cases",
+        "D": "Alternative Y is superior because having more agents increases parallelism and therefore throughput"
+      },
+      "correctAnswer": "B",
+      "explanation": "Alternative X correctly applies Anthropic's guidance at two levels: (1) each subagent has 6 focused domain tools, which is a manageable set that reduces within-subagent selection confusion; (2) the coordinator has only 4 routing choices, which is a small enough set to make high-confidence routing decisions. Alternative Y eliminates within-subagent confusion but pushes all the selection complexity to the coordinator, which now faces 24 options\u2014recreating the original selection confusion problem at the routing layer.",
+      "whyWrongMap": {
+        "A": "Alternative Y trades within-subagent confusion for coordinator confusion. The coordinator now has 24 delegation tools to choose from, which is the same size as the original monolithic tool list. The selection problem is relocated, not solved.",
+        "C": "The total number of tools in the system is irrelevant; what matters is how many tools any single agent must reason over simultaneously. The two alternatives differ significantly in coordinator selection complexity.",
+        "D": "Parallelism is a separate concern from tool selection reliability. Alternative Y may enable more parallelism in some scenarios, but it does not improve selection accuracy and introduces coordinator overload. The question asks about tool distribution guidance, not throughput optimization."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#designing-effective-agents",
+        "https://docs.anthropic.com/en/docs/build-with-claude/agents#multi-agent-architectures",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/implement-tool-use#best-practices-for-tool-definitions"
+      ]
+    },
+    {
+      "id": "q-2.4-easy-1",
+      "taskStatement": "2.4",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "A developer wants to add an MCP server that is only available when working inside a specific project repository. They do not want the server to appear in other projects they work on.",
+      "text": "Where should the developer place the MCP server configuration so that it is scoped exclusively to the current project?",
+      "options": {
+        "A": ".mcp.json at the project root",
+        "B": "~/.claude/settings.json",
+        "C": "~/.claude/mcp-servers.json",
+        "D": "/etc/claude/mcp.json"
+      },
+      "correctAnswer": "A",
+      "explanation": "Claude Code uses a `.mcp.json` file at the project root for project-scoped MCP server configuration. This file is loaded only when Claude Code is launched from within that project directory, ensuring the servers defined there are not exposed in other projects.",
+      "whyWrongMap": {
+        "B": "~/.claude/settings.json stores user-level Claude Code settings, not MCP server definitions. Placing MCP config here would not scope it to a single project.",
+        "C": "~/.claude/mcp-servers.json (or equivalent user-scope config under ~/.claude/) applies to all projects for the current user \u2014 the opposite of project-scoped behavior.",
+        "D": "/etc/claude/ is not a recognized Claude Code configuration path and would not be loaded by Claude Code under any normal operating conditions."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/mcp",
+        "https://docs.anthropic.com/en/docs/claude-code/settings"
+      ]
+    },
+    {
+      "id": "q-2.4-easy-2",
+      "taskStatement": "2.4",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "A team wants every Claude Code session on their developer machines to have access to an internal Slack MCP server regardless of which project is currently open. The server configuration should persist across all projects for each individual user.",
+      "text": "Which configuration scope and location should the team instruct each developer to use for the Slack MCP server?",
+      "options": {
+        "A": "Project-scoped: .mcp.json at the root of each repository",
+        "B": "System-scoped: /usr/local/etc/claude/mcp.json",
+        "C": "Environment-scoped: export MCP_SERVERS=slack in the shell profile",
+        "D": "User-scoped: the MCP configuration stored under ~/.claude/"
+      },
+      "correctAnswer": "D",
+      "explanation": "User-scoped MCP server configuration is stored under ~/.claude/ and applies to all Claude Code sessions for that user, regardless of which project directory is active. This is the correct scope for servers that should always be available.",
+      "whyWrongMap": {
+        "A": "Project-scoped .mcp.json only activates when Claude Code runs in that specific project directory. Duplicating the config in every repository is error-prone and violates the DRY principle.",
+        "B": "Claude Code does not define a system-scoped /usr/local/etc/claude/mcp.json configuration path. This path would be silently ignored.",
+        "C": "Claude Code does not support an MCP_SERVERS environment variable for defining server configurations. Environment variables are used for expanding secrets inside .mcp.json, not for defining server lists."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/mcp",
+        "https://docs.anthropic.com/en/docs/claude-code/settings"
+      ]
+    },
+    {
+      "id": "q-2.4-easy-3",
+      "taskStatement": "2.4",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "A developer is writing a .mcp.json file and needs to include a secret API key for an MCP server without hardcoding the key value in the file. The key is already set as an environment variable named ACME_API_KEY on the developer's machine.",
+      "text": "Which syntax should the developer use inside .mcp.json to reference the environment variable ACME_API_KEY?",
+      "options": {
+        "A": "\"apiKey\": \"$ACME_API_KEY\"",
+        "B": "\"apiKey\": \"env:ACME_API_KEY\"",
+        "C": "\"apiKey\": \"${ACME_API_KEY}\"",
+        "D": "\"apiKey\": \"process.env.ACME_API_KEY\""
+      },
+      "correctAnswer": "C",
+      "explanation": "Claude Code supports environment variable expansion inside .mcp.json using the ${ENV_VAR} syntax. At load time, Claude Code substitutes the placeholder with the runtime value of the named environment variable.",
+      "whyWrongMap": {
+        "A": "The bare $VARIABLE syntax is a shell convention that Claude Code's JSON parser does not expand. The literal string \"$ACME_API_KEY\" would be passed to the server unchanged.",
+        "B": "\"env:VARIABLE\" is not a recognized expansion syntax in Claude Code's .mcp.json handling. It would be treated as a literal string.",
+        "D": "process.env.VARIABLE is Node.js source code syntax, not a JSON configuration value. It has no meaning inside a .mcp.json file."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/mcp",
+        "https://docs.anthropic.com/en/docs/claude-code/settings"
+      ]
+    },
+    {
+      "id": "q-2.4-easy-4",
+      "taskStatement": "2.4",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "An architect is explaining MCP resource types to a new team member. The team member asks what makes MCP resources different from MCP tools in terms of how Claude interacts with them.",
+      "text": "Which statement correctly distinguishes MCP resources from MCP tools?",
+      "options": {
+        "A": "Resources execute server-side logic and can modify state; tools expose read-only data.",
+        "B": "Resources and tools are functionally identical; the distinction is purely cosmetic naming.",
+        "C": "Resources are streamed in real time over SSE; tools are only available over stdio transport.",
+        "D": "Resources are read-only data that the model can access; tools are callable functions that can execute logic and produce side-effects."
+      },
+      "correctAnswer": "D",
+      "explanation": "In the MCP specification, resources represent read-only data (files, database records, API snapshots) that a server exposes for the model to read. Tools are callable functions that can execute arbitrary logic, including writes and side-effects. The distinction is fundamental to how Claude reasons about safety.",
+      "whyWrongMap": {
+        "A": "This reverses the definition. Resources are read-only; tools are the construct that can execute logic and cause side-effects.",
+        "B": "The resource/tool distinction is not cosmetic. It carries semantic meaning about mutability and side-effects that the model uses to decide when it is safe to act autonomously.",
+        "C": "The transport type (stdio vs SSE) is independent of whether a primitive is a resource or a tool. Both resources and tools can be served over either transport."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp",
+        "https://modelcontextprotocol.io/docs/concepts/resources"
       ]
     },
     {
@@ -153,23 +1080,226 @@
       "taskStatement": "2.4",
       "domainId": 2,
       "difficulty": "medium",
-      "scenario": "A developer wants to add a custom MCP server that exposes internal company APIs to Claude Code. They have already built and tested the server locally at `npx my-company-mcp-server`.",
-      "text": "What is the correct way to register this local MCP server so Claude Code can discover and use its tools?",
+      "scenario": "A team is building a filesystem MCP server that needs to expose individual files as resources. They want clients to be able to request any file by providing its path, rather than enumerating every file upfront in a static resource list.",
+      "text": "Which MCP feature should the server implement to allow clients to construct file resource URIs dynamically from a path parameter?",
       "options": {
-        "A": "Add the server's tool definitions directly to the Claude Code system prompt using the `/tools` slash command.",
-        "B": "Add an entry to the `mcpServers` object in the project's `.claude/claude.json` (or user-level config) with the `command` and optional `args` fields, then restart Claude Code.",
-        "C": "Place the MCP server binary in the Claude Code plugin directory (`~/.claude/plugins/`) and it will be auto-discovered on next launch.",
-        "D": "Set an environment variable `CLAUDE_MCP_SERVER=npx my-company-mcp-server` before launching Claude Code; it reads this variable to discover servers."
+        "A": "A tool named `read_file` that accepts a path parameter and returns file contents",
+        "B": "A static resource list that the client filters client-side using a glob pattern",
+        "C": "An SSE subscription endpoint that pushes new file URIs to connected clients as files are created",
+        "D": "A resource template with a URI pattern such as \"file://{path}\" that expands to individual resource URIs"
       },
-      "correctAnswer": "B",
-      "explanation": "Claude Code discovers MCP servers through the `mcpServers` configuration object in `.claude/claude.json` at the project or user level. Each entry specifies the `command` (and optional `args` and `env`) used to launch the server process.",
+      "correctAnswer": "D",
+      "explanation": "MCP resource templates let a server declare a URI template (e.g., \"file://{path}\") that clients can expand with concrete parameter values to construct valid resource URIs on demand. This avoids enumerating every possible resource and supports dynamic, parameterized access patterns.",
       "whyWrongMap": {
-        "A": "Claude Code does not have a `/tools` slash command for registering MCP servers. The system prompt is for behavioral instructions, not for server registration.",
-        "C": "Claude Code does not have a `~/.claude/plugins/` auto-discovery directory. There is no plugin drop-in mechanism; all MCP servers must be explicitly declared in the configuration file.",
-        "D": "There is no `CLAUDE_MCP_SERVER` environment variable supported by Claude Code for MCP server discovery. Server configuration is file-based, not environment-variable-based."
+        "A": "A tool could return file contents, but tools are callable functions that may have side-effects. The correct primitive for read-only data access is a resource (or resource template), not a tool.",
+        "B": "Static resource lists require the server to enumerate every resource upfront. Client-side glob filtering still depends on a complete list being transmitted, which is impractical for large or dynamic filesystems.",
+        "C": "SSE subscriptions relate to server-sent event transport and real-time notifications, not to the parameterized construction of resource URIs. They solve a different problem."
       },
       "references": [
-        "https://docs.anthropic.com/en/docs/claude-code/mcp"
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp",
+        "https://modelcontextprotocol.io/docs/concepts/resources#resource-templates"
+      ]
+    },
+    {
+      "id": "q-2.4-medium-2",
+      "taskStatement": "2.4",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "A DevOps engineer is configuring a .mcp.json file for a local development environment. The MCP server is a Node.js script that reads a GitHub token from the environment. The engineer wants to launch the server as a child process managed by Claude Code.",
+      "text": "Which MCP server type and .mcp.json structure correctly configures a locally-spawned process server that communicates over standard input/output?",
+      "options": {
+        "A": "type: \"sse\" with a url field pointing to http://localhost:3000/sse",
+        "B": "type: \"stdio\" with a command field (e.g., \"node\") and an args array pointing to the server script",
+        "C": "type: \"http\" with a baseUrl field and an Authorization header containing the GitHub token",
+        "D": "type: \"pipe\" with a pipeName field identifying the named pipe the server listens on"
+      },
+      "correctAnswer": "B",
+      "explanation": "The stdio server type instructs Claude Code to spawn the MCP server as a child process and communicate with it over stdin/stdout. The .mcp.json entry requires a `command` (the executable) and an `args` array (arguments including the script path). This is the standard pattern for locally-run MCP servers.",
+      "whyWrongMap": {
+        "A": "The sse type is for connecting to an already-running remote server that exposes an SSE endpoint. It does not spawn a local process and is inappropriate when the server should be managed as a child process.",
+        "C": "\"http\" is not a defined MCP server type in the Claude Code .mcp.json schema. HTTP-based communication with an external server is handled through the sse type.",
+        "D": "\"pipe\" (named pipe) is not a defined MCP server type in Claude Code's configuration. The two supported types are stdio and sse."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/mcp",
+        "https://modelcontextprotocol.io/docs/concepts/transports"
+      ]
+    },
+    {
+      "id": "q-2.4-medium-3",
+      "taskStatement": "2.4",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "A platform team runs a shared MCP server as a long-lived microservice accessible over the network. Multiple developers should be able to connect their Claude Code sessions to it without each developer running a local copy of the server process.",
+      "text": "Which MCP server type and configuration approach is most appropriate for connecting Claude Code to this centrally-hosted MCP service?",
+      "options": {
+        "A": "stdio type \u2014 each developer's Claude Code spawns the server binary locally using a shared network path",
+        "B": "sse type \u2014 each developer's .mcp.json or user config points to the server's SSE endpoint URL",
+        "C": "stdio type \u2014 the server binary is containerized and pulled fresh on each Claude Code startup",
+        "D": "grpc type \u2014 the server exposes a gRPC interface that Claude Code connects to using a service definition file"
+      },
+      "correctAnswer": "B",
+      "explanation": "The SSE (Server-Sent Events) transport type is designed for connecting to a remotely-hosted MCP server over HTTP. Developers configure the server's SSE endpoint URL in their .mcp.json or user-scoped MCP config, and Claude Code maintains a persistent connection to the shared service without spawning any local process.",
+      "whyWrongMap": {
+        "A": "The stdio type spawns a local child process. Even if the binary is on a network share, each developer would run their own isolated process rather than connecting to a shared service, defeating the purpose of a central server.",
+        "C": "Pulling and spawning a fresh container on each startup still means each developer runs an isolated local process. It does not provide a shared, long-lived remote service.",
+        "D": "gRPC is not a defined MCP transport type. Claude Code's MCP implementation supports stdio and SSE transports only."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/mcp",
+        "https://modelcontextprotocol.io/docs/concepts/transports#server-sent-events-sse"
+      ]
+    },
+    {
+      "id": "q-2.4-medium-4",
+      "taskStatement": "2.4",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "A developer has added a new MCP server entry to .mcp.json but notices that Claude Code is silently passing the literal string \"${DB_PASSWORD}\" to the server instead of the actual database password. The DB_PASSWORD environment variable is confirmed to be set in the developer's shell session.",
+      "text": "What is the most likely cause of the variable not being expanded, and how should it be resolved?",
+      "options": {
+        "A": "The variable name contains an underscore, which is not supported in ${} expansion; rename it to DBPASSWORD.",
+        "B": "Claude Code only expands environment variables that are listed in an explicit allowlist in settings.json; add DB_PASSWORD to that list.",
+        "C": "The environment variable is set in the interactive shell but may not be exported to Claude Code's process environment; verify it is exported and accessible to the Claude Code process.",
+        "D": "The .mcp.json file is using a non-standard expansion syntax; the correct syntax is ${DB_PASSWORD} and the file may be using a different placeholder format such as %DB_PASSWORD%."
+      },
+      "correctAnswer": "D",
+      "explanation": "Claude Code expands environment variables in .mcp.json using the ${VARIABLE_NAME} syntax exclusively. If the file uses a different placeholder format (e.g., %VAR%, $VAR, or {{VAR}}), expansion will not occur and the literal string is passed through. Verifying the placeholder syntax matches ${DB_PASSWORD} is the first thing to check when the literal placeholder appears in the server's input.",
+      "whyWrongMap": {
+        "A": "Underscores are valid in POSIX environment variable names and are fully supported in ${} expansion. Renaming the variable would not fix the problem.",
+        "B": "Claude Code does not require an explicit allowlist of environment variable names in settings.json before expansion occurs. Any variable present in the process environment is eligible for expansion.",
+        "C": "While verifying the variable is exported is a reasonable debugging step, the scenario states the variable is confirmed set. A syntax mismatch is a more specific and direct explanation for why the literal placeholder string is passed through unchanged."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/mcp",
+        "https://docs.anthropic.com/en/docs/claude-code/settings"
+      ]
+    },
+    {
+      "id": "q-2.4-medium-5",
+      "taskStatement": "2.4",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "During an agentic workflow, Claude Code's connection to a stdio-type MCP server drops unexpectedly mid-task. The server process has exited with a non-zero code. The agent still has several tool calls queued against that server.",
+      "text": "Which statement best describes how Claude Code handles the lifecycle of a stdio MCP server and what an architect should design for in this failure scenario?",
+      "options": {
+        "A": "Claude Code spawns the stdio server process at session start and is responsible for its lifecycle; if the process exits unexpectedly, tool calls to that server will fail and the agent should be designed to handle MCP tool errors gracefully.",
+        "B": "Claude Code keeps a pool of pre-warmed server processes and automatically substitutes a spare when one exits; no special handling is needed.",
+        "C": "Claude Code automatically restarts a crashed stdio server up to three times before surfacing an error; the agent does not need to handle restarts explicitly.",
+        "D": "For stdio servers, Claude Code spawns a new process per tool call and discards it afterward, so a crashed process only affects the single in-flight call."
+      },
+      "correctAnswer": "A",
+      "explanation": "Claude Code spawns stdio MCP servers as child processes at session start and manages their lifecycle for the duration of the session. If a server process exits unexpectedly, subsequent tool calls against it will fail. Robust agent workflows must handle MCP tool errors (e.g., via isError: true responses or transport-level failures) and include recovery logic such as retries or fallback paths.",
+      "whyWrongMap": {
+        "B": "Claude Code does not maintain a process pool or hot spares for MCP servers. Each configured server has a single process instance per session.",
+        "C": "Claude Code does not implement an automatic three-retry restart policy for crashed stdio servers. Restart behavior depends on the specific implementation; agents must not assume automatic recovery.",
+        "D": "Claude Code does not spawn a new process per tool call for stdio servers. The process is long-lived for the session, so a crash affects all subsequent calls, not just the in-flight one."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/mcp",
+        "https://modelcontextprotocol.io/docs/concepts/transports#stdio"
+      ]
+    },
+    {
+      "id": "q-2.4-hard-1",
+      "taskStatement": "2.4",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "An enterprise team has both a project-scoped .mcp.json at the repository root and a user-scoped MCP server configuration under ~/.claude/. Both configurations define an MCP server with the same name \"docs-search\" but pointing to different endpoints. A developer opens Claude Code in the project directory and invokes the docs-search server.",
+      "text": "Which server will Claude Code use, and what principle governs the resolution of this naming conflict?",
+      "options": {
+        "A": "The user-scoped server wins because user configuration has higher trust than project configuration.",
+        "B": "Claude Code raises a configuration error and refuses to start until the conflict is resolved manually.",
+        "C": "The project-scoped server in .mcp.json wins because project-scoped configuration takes precedence over user-scoped configuration for the active project.",
+        "D": "Both servers are loaded under namespaced identifiers (e.g., project::docs-search and user::docs-search) and the model chooses between them based on context."
+      },
+      "correctAnswer": "C",
+      "explanation": "Claude Code applies a precedence hierarchy where project-scoped configuration (.mcp.json) overrides user-scoped configuration (~/.claude/) for servers with the same name when the project is active. This allows project maintainers to pin specific server versions or endpoints without being overridden by a developer's personal defaults.",
+      "whyWrongMap": {
+        "A": "User-scoped configuration does not have higher precedence than project-scoped configuration. The precedence order is designed so that the most specific (project) scope wins over the more general (user) scope.",
+        "B": "Claude Code does not halt on naming conflicts between scopes. It resolves them deterministically using its precedence rules rather than requiring manual intervention.",
+        "D": "Claude Code does not expose namespaced identifiers for same-named servers from different scopes. The conflict is resolved by scope precedence, not by presenting both to the model simultaneously."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/mcp",
+        "https://docs.anthropic.com/en/docs/claude-code/settings"
+      ]
+    },
+    {
+      "id": "q-2.4-hard-2",
+      "taskStatement": "2.4",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "An architect is designing a multi-agent pipeline where a Claude Code orchestrator delegates subtasks to sub-agents. Each sub-agent needs access to a secure credentials MCP server whose API key must never appear in any file committed to version control. The pipeline runs in a CI environment where secrets are injected as environment variables at runtime.",
+      "text": "Which combination of .mcp.json design decisions correctly satisfies both the security requirement (no secrets in version control) and the runtime availability requirement (secrets accessible to the server process)?",
+      "options": {
+        "A": "Use ${API_KEY} expansion syntax in .mcp.json for the API key value; commit .mcp.json without the secret; inject API_KEY as a CI environment variable at runtime.",
+        "B": "Hardcode the API key in .mcp.json and add .mcp.json to .gitignore so it is never committed.",
+        "C": "Store the API key in a separate secrets.json file referenced by .mcp.json via a file:// URI; commit .mcp.json but gitignore secrets.json.",
+        "D": "Base64-encode the API key and store the encoded value in .mcp.json; decode it inside the server startup script before use."
+      },
+      "correctAnswer": "A",
+      "explanation": "Using ${API_KEY} in .mcp.json keeps the secret out of the file entirely. The .mcp.json can be safely committed because it contains only a placeholder. At CI runtime, the secret is injected as an environment variable and Claude Code expands it before passing configuration to the server process. This is the canonical pattern for secret management with .mcp.json.",
+      "whyWrongMap": {
+        "B": "Adding .mcp.json to .gitignore prevents accidental commits but does not solve the root problem: the secret is still stored in plaintext on disk. It also breaks the CI pipeline because the file would need to be recreated on each runner, negating the benefit of storing it in the repo.",
+        "C": "Referencing an external secrets.json via a file URI is not supported by .mcp.json's configuration schema. Even if it were, it introduces a separate secret file that must be managed, distributed, and secured independently.",
+        "D": "Base64 encoding is not encryption. The encoded value is trivially reversible and provides no meaningful security. Committing a base64-encoded secret to version control is equivalent to committing the plaintext secret."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/mcp",
+        "https://docs.anthropic.com/en/docs/claude-code/settings"
+      ]
+    },
+    {
+      "id": "q-2.4-hard-3",
+      "taskStatement": "2.4",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "A team exposes a large internal knowledge base through an MCP server. They have modeled individual articles as MCP resources and implemented a URI template \"kb://articles/{articleId}\". An agent workflow needs to let Claude retrieve any article by ID and also search for articles matching a query string.",
+      "text": "Which design correctly separates the read-only data access pattern from the query/computation pattern according to MCP primitive semantics?",
+      "options": {
+        "A": "Implement both retrieval and search as MCP resources with URI templates: \"kb://articles/{articleId}\" for retrieval and \"kb://search/{query}\" for search.",
+        "B": "Implement both as MCP tools: `get_article(id)` and `search_articles(query)`, since tools are more flexible and can handle both read and compute operations.",
+        "C": "Implement article retrieval as a resource template \"kb://articles/{articleId}\" and article search as an MCP tool `search_articles(query: string)` that executes the search logic and returns results.",
+        "D": "Implement search as an MCP prompt that injects a pre-built query into the conversation, and retrieval as a resource template."
+      },
+      "correctAnswer": "C",
+      "explanation": "MCP resources (and resource templates) represent read-only, addressable data \u2014 fetching a known article by ID is a pure read with no side-effects, making the resource template \"kb://articles/{articleId}\" the semantically correct primitive. Search involves executing query logic and computing results, which is a function \u2014 the correct primitive is an MCP tool. Mixing these semantics confuses the model's safety reasoning.",
+      "whyWrongMap": {
+        "A": "Modeling search as a resource template conflates data retrieval with query execution. A URI template implies that the resource at \"kb://search/machine+learning\" pre-exists; in reality the result set is computed on demand. Using a tool makes the computational nature explicit.",
+        "B": "While tools are flexible enough to implement both patterns, using a tool for pure read operations sacrifices the semantic clarity that resources provide. Claude can make better autonomous decisions when read-only access is clearly marked as a resource rather than a potentially side-effecting tool.",
+        "D": "MCP prompts are pre-defined message templates injected into the conversation context, not a mechanism for executing queries. Using a prompt for search would require the model to then call another primitive to actually execute the search, adding unnecessary indirection."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/agents-and-tools/mcp",
+        "https://modelcontextprotocol.io/docs/concepts/resources",
+        "https://modelcontextprotocol.io/docs/concepts/tools"
+      ]
+    },
+    {
+      "id": "q-2.4-hard-4",
+      "taskStatement": "2.4",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "An architect is comparing stdio and SSE transport types for a new MCP server that will be used by Claude Code agents running inside Docker containers in a Kubernetes cluster. The server must handle concurrent connections from multiple agent replicas and must survive individual agent pod restarts without losing server-side state.",
+      "text": "Which transport type is most appropriate for this deployment topology, and what is the key architectural reason?",
+      "options": {
+        "A": "stdio \u2014 it is more secure because communication stays within the process boundary and never traverses the network.",
+        "B": "SSE \u2014 it operates over HTTP, allowing multiple agent replicas to connect to a single long-lived server process over the network, decoupling server lifecycle from individual agent pod lifecycles.",
+        "C": "stdio \u2014 Kubernetes can use shared memory volumes to allow multiple pods to connect to the same stdio process.",
+        "D": "SSE \u2014 it automatically shards connections across multiple server replicas using built-in load balancing, providing horizontal scalability without configuration."
+      },
+      "correctAnswer": "B",
+      "explanation": "The SSE transport runs over HTTP(S), enabling a centrally-deployed MCP server to accept connections from multiple clients simultaneously. In a Kubernetes environment, a single MCP server Deployment can serve many agent pods, and the server's lifecycle is independent of any individual agent pod. When an agent pod restarts, it reconnects to the server over HTTP \u2014 the server retains its state. stdio, by contrast, binds a server process to a single client process and cannot be shared across pods.",
+      "whyWrongMap": {
+        "A": "While stdio does keep communication in-process, this is a security property, not a scalability property. A stdio server is bound to a single parent process and cannot accept connections from multiple Kubernetes pods simultaneously.",
+        "C": "Kubernetes shared memory volumes (emptyDir with medium: Memory) are node-local and not accessible across pods on different nodes. More fundamentally, stdio communication is line-based stdin/stdout, not a shared memory protocol \u2014 this description is architecturally incorrect.",
+        "D": "SSE does not include built-in connection sharding or load balancing. Load balancing across multiple SSE server replicas requires an external load balancer (e.g., a Kubernetes Service). The key advantage of SSE in this scenario is network accessibility and decoupled lifecycles, not automatic sharding."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/mcp",
+        "https://modelcontextprotocol.io/docs/concepts/transports#server-sent-events-sse",
+        "https://modelcontextprotocol.io/docs/concepts/transports#stdio"
       ]
     },
     {
@@ -177,23 +1307,324 @@
       "taskStatement": "2.5",
       "domainId": 2,
       "difficulty": "easy",
-      "scenario": "A Claude Code agent needs to find all TypeScript files in a large monorepo that import from a specific internal library `@company/auth`. The agent must then read one specific file identified by its exact path.",
-      "text": "Which combination of Claude Code built-in tools is most appropriate for this two-step task?",
+      "scenario": "An agent needs to locate all TypeScript files in a project before beginning a refactoring task. The project has hundreds of files spread across many nested directories. The agent has not yet opened any files.",
+      "text": "Which tool is most appropriate for discovering all TypeScript files by their file name pattern before reading any content?",
       "options": {
-        "A": "Use Glob to find the TypeScript files, then use Read to read the specific file.",
-        "B": "Use Grep to find the TypeScript files containing the import, then use Read to read the specific file.",
-        "C": "Use Glob to find the TypeScript files, then use Grep to read the specific file.",
-        "D": "Use Read for both steps: first to scan all `.ts` files, then to read the target file."
+        "A": "Glob with pattern `**/*.ts` to find all TypeScript files by name",
+        "B": "Grep with pattern `\\.ts$` to search file contents for TypeScript syntax",
+        "C": "Bash with `find . -name '*.ts'` to recursively list TypeScript files",
+        "D": "Read on the root directory to list all files recursively"
       },
-      "correctAnswer": "B",
-      "explanation": "Grep is designed to search file contents by pattern — it will efficiently find all `.ts` files that contain `@company/auth` imports. Read is then the correct tool to retrieve the full content of the identified file at a known path.",
+      "correctAnswer": "A",
+      "explanation": "Glob is the purpose-built tool for finding files by name pattern. The pattern `**/*.ts` matches all TypeScript files in any subdirectory. Glob returns results sorted by modification time, making it ideal as the first step in incremental codebase understanding (Glob \u2192 Read \u2192 Grep).",
       "whyWrongMap": {
-        "A": "Glob matches files by name pattern (e.g., `**/*.ts`), not by content. It cannot filter files based on whether they contain a specific import statement, so it would return all TypeScript files regardless of their imports.",
-        "C": "Grep is the correct first step, but it cannot be used as a substitute for Read. Grep returns matching lines with context, not the full file content needed for a subsequent analysis step.",
-        "D": "Read retrieves the content of a single file at a known path. Using it to 'scan' multiple files is not how the tool works — it does not accept glob patterns or perform content-based filtering across multiple files."
+        "B": "Grep searches file CONTENTS by regex, not file names. Using Grep to find TypeScript files would require files to already be known and would search inside them, not discover them by extension.",
+        "C": "While Bash `find` would work, the guidelines explicitly state to use Glob instead of `find` commands. Glob is the dedicated, optimized tool for this purpose and provides a better experience.",
+        "D": "Read is for reading file contents, not for listing directories. It cannot discover files by name pattern across a project tree."
       },
       "references": [
-        "https://docs.anthropic.com/en/docs/claude-code/overview"
+        "https://docs.anthropic.com/en/docs/claude-code/overview",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/tool-use"
+      ]
+    },
+    {
+      "id": "q-2.5-easy-2",
+      "taskStatement": "2.5",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "An agent is asked to fix a bug in an existing function inside `/src/utils/parser.ts`. The file is approximately 300 lines long and only one function needs to change. The agent has already read the file.",
+      "text": "Which tool should the agent use to modify only the buggy function without rewriting the entire file?",
+      "options": {
+        "A": "Write, because it ensures the entire file is replaced with the corrected version",
+        "B": "Bash with a `sed` command to perform an in-place substitution",
+        "C": "Grep to locate the function, then Write to replace the whole file",
+        "D": "Edit, because it sends only the diff and is designed for modifying existing files"
+      },
+      "correctAnswer": "D",
+      "explanation": "Edit is explicitly designed for modifying existing files and sends only the diff rather than the entire file content. This is more efficient and precise for targeted changes. The agent has already read the file, satisfying Edit's prerequisite of reading before editing.",
+      "whyWrongMap": {
+        "A": "Write is for creating new files or complete rewrites. Using Write for a small targeted fix is wasteful and risks accidentally overwriting content if the full file content is not perfectly reproduced.",
+        "B": "The guidelines state to avoid using `sed` or `awk` as Bash commands. Edit is the dedicated tool for file modification and provides a better, reviewable experience.",
+        "C": "Using Grep plus Write is an inefficient two-step anti-pattern. Edit handles targeted modifications directly without requiring a full file rewrite."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/overview",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/tool-use"
+      ]
+    },
+    {
+      "id": "q-2.5-easy-3",
+      "taskStatement": "2.5",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "An agent needs to find all files in a codebase that import a specific module named `AuthService`. The agent wants to see which files reference this module by searching inside file contents.",
+      "text": "Which tool should the agent use to find all files containing the string `AuthService` across the codebase?",
+      "options": {
+        "A": "Read each file individually and check for the string manually",
+        "B": "Bash with `ls -R` to list all files and then manually inspect each one",
+        "C": "Grep with pattern `AuthService` to search file contents for the import reference",
+        "D": "Glob with pattern `**/*AuthService*` to find files named after the service"
+      },
+      "correctAnswer": "C",
+      "explanation": "Grep searches file CONTENTS by regex pattern, making it the correct tool to find all files that contain a specific string like `AuthService`. It returns matching files efficiently without requiring individual file reads.",
+      "whyWrongMap": {
+        "A": "Reading each file individually to search for a string is the most inefficient approach possible and defeats the purpose of having a dedicated content-search tool like Grep.",
+        "B": "Using `ls -R` via Bash to list files then manually inspect each one is extremely inefficient. The guidelines say to use Grep for content search instead of shell commands.",
+        "D": "Glob finds files by NAME pattern. The pattern `**/*AuthService*` would only find files whose names contain `AuthService`, not files that import it in their content."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/overview",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/tool-use"
+      ]
+    },
+    {
+      "id": "q-2.5-easy-4",
+      "taskStatement": "2.5",
+      "domainId": 2,
+      "difficulty": "easy",
+      "scenario": "An agent is creating a brand-new configuration file at `/config/database.yaml`. This file does not yet exist in the project. The agent has all the required content ready.",
+      "text": "Which tool is correct for creating this new file?",
+      "options": {
+        "A": "Edit, since it can create files if the target path does not exist",
+        "B": "Write, because it is designed to create new files or perform complete rewrites",
+        "C": "Bash with `echo` or `cat <<EOF` to write the content to the new file path",
+        "D": "Grep to verify the file does not exist, then Edit to create it"
+      },
+      "correctAnswer": "B",
+      "explanation": "Write is the correct tool for creating new files. It is designed specifically for this use case \u2014 creating files that do not yet exist \u2014 as well as for complete rewrites of existing files.",
+      "whyWrongMap": {
+        "A": "Edit is for modifying existing files. It requires the agent to have already read the file, and it sends a diff. It is not designed to create files from scratch.",
+        "C": "The guidelines explicitly state to avoid using `echo` or `cat <<EOF` Bash commands for writing files. Write is the dedicated tool for this purpose.",
+        "D": "Using Grep to verify non-existence is unnecessary overhead. Write handles new file creation directly. Grep searches content; it cannot confirm file existence in the same way as attempting a Read."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/overview",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/tool-use"
+      ]
+    },
+    {
+      "id": "q-2.5-medium-1",
+      "taskStatement": "2.5",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "An agent must rename a variable `userToken` to `accessToken` in every occurrence throughout a 600-line file `/src/auth/middleware.ts`. The agent has already read the file and confirmed it contains 47 occurrences of `userToken`.",
+      "text": "Which Edit tool parameter is most appropriate for replacing all 47 occurrences in a single operation?",
+      "options": {
+        "A": "Use Edit with `replace_all: true` to change every instance of `userToken` to `accessToken`",
+        "B": "Call Edit 47 times, once per occurrence, to ensure each replacement is handled individually",
+        "C": "Use Write to rewrite the entire 600-line file with all replacements applied",
+        "D": "Use Bash with `sed -i 's/userToken/accessToken/g'` to perform the global substitution"
+      },
+      "correctAnswer": "A",
+      "explanation": "Edit supports a `replace_all` parameter that changes every instance of the `old_string` in the file. This is the correct tool for renaming a variable across all occurrences \u2014 it is described as useful for renaming variables or strings across a file.",
+      "whyWrongMap": {
+        "B": "Calling Edit 47 times is extremely inefficient and error-prone. The `replace_all` parameter exists precisely to handle this scenario in a single operation.",
+        "C": "Write is reserved for new files or complete rewrites. Using Write for a variable rename risks introducing errors if the full file content is not perfectly reconstructed, and is semantically wrong for this targeted change.",
+        "D": "The guidelines state to avoid `sed` and `awk` Bash commands. Edit with `replace_all: true` is the dedicated, preferred approach and provides a reviewable diff."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/overview",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/tool-use"
+      ]
+    },
+    {
+      "id": "q-2.5-medium-2",
+      "taskStatement": "2.5",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "An agent is investigating a TypeScript error and needs to understand which files export a class called `DatabaseConnection`. It knows the class definition begins with `export class DatabaseConnection` but does not know which files contain it.",
+      "text": "Which Grep configuration would most accurately find files containing the class declaration?",
+      "options": {
+        "A": "Glob with pattern `**/*DatabaseConnection*.ts` to find files named after the class",
+        "B": "Grep with `pattern: 'DatabaseConnection'` and `output_mode: 'files_with_matches'`",
+        "C": "Bash with `grep -r 'export class DatabaseConnection' --include='*.ts'`",
+        "D": "Grep with `pattern: 'export class DatabaseConnection'`, `type: 'ts'`, and `output_mode: 'files_with_matches'`"
+      },
+      "correctAnswer": "D",
+      "explanation": "Grep with the specific pattern `export class DatabaseConnection`, filtered to TypeScript files using `type: 'ts'`, and `output_mode: 'files_with_matches'` is the most precise approach. It searches file contents for the exact export declaration and limits scope to TypeScript files, reducing noise.",
+      "whyWrongMap": {
+        "A": "Glob finds files by NAME pattern. Files are not typically named `DatabaseConnection.ts` just because they export that class. This would miss the majority of relevant files.",
+        "B": "While this would work, searching for just `DatabaseConnection` without the `export class` prefix and without a type filter matches occurrences in imports, comments, and other file types, producing noisier results than option D.",
+        "C": "The guidelines explicitly state to use the Grep tool instead of running `grep` as a Bash command. The dedicated Grep tool is optimized for correct permissions and provides a better experience."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/overview",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/tool-use"
+      ]
+    },
+    {
+      "id": "q-2.5-medium-3",
+      "taskStatement": "2.5",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "An agent is asked to understand a new, unfamiliar codebase before making changes. The codebase has over 500 files. The agent needs to identify the key files, understand their structure, and find relevant patterns before touching any code.",
+      "text": "Which sequence of tools best implements the recommended incremental codebase understanding workflow?",
+      "options": {
+        "A": "Bash `ls -R` \u2192 Read each file \u2192 Grep for patterns",
+        "B": "Read the root index file \u2192 Write a summary \u2192 Grep for any gaps",
+        "C": "Glob to find files by name \u2192 Read to understand key files \u2192 Grep to search for patterns",
+        "D": "Grep for known patterns \u2192 Glob for related files \u2192 Read selected files"
+      },
+      "correctAnswer": "C",
+      "explanation": "The recommended incremental codebase understanding workflow is explicitly: Glob to find files \u2192 Read to understand \u2192 Grep to search. This sequence moves from broad discovery (file names) to deep understanding (file content) to targeted pattern search (content regex).",
+      "whyWrongMap": {
+        "A": "Using `ls -R` via Bash is explicitly discouraged; Glob should be used instead of `find` or `ls` commands. This sequence also skips the name-pattern-based discovery that Glob provides.",
+        "B": "Reading only the root index file is too narrow a starting point for a 500-file codebase. Write has no role in the understanding phase. This sequence skips the systematic discovery that Glob enables.",
+        "D": "Starting with Grep assumes you already know patterns to search for, which is not true when approaching an unfamiliar codebase. Glob first provides the structural map needed to guide subsequent Grep searches."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/overview",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/tool-use"
+      ]
+    },
+    {
+      "id": "q-2.5-medium-4",
+      "taskStatement": "2.5",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "An agent attempts to use Edit to modify `/src/config/settings.ts`, but the Edit tool returns an error stating it cannot proceed because the file was not read first. The file is 150 lines long.",
+      "text": "What is the correct way to resolve this error and proceed with the edit?",
+      "options": {
+        "A": "Use Grep to retrieve the specific lines needed, then call Edit without reading the full file",
+        "B": "Switch to Write instead, since Write does not require a prior Read",
+        "C": "Use Read to read the file first, then call Edit with the appropriate `old_string` and `new_string`",
+        "D": "Use Bash to cat the file contents before calling Edit"
+      },
+      "correctAnswer": "C",
+      "explanation": "Edit requires the agent to have read the file at least once in the conversation before editing. The correct resolution is to call Read on the file first to satisfy this prerequisite, then call Edit with the exact text to replace (`old_string`) and the replacement (`new_string`).",
+      "whyWrongMap": {
+        "A": "Grep returns matching lines but does not constitute 'reading the file' in the way Edit requires. Edit needs the full context of the file to ensure `old_string` is unique and accurately matched.",
+        "B": "Write is for new files or complete rewrites, not targeted edits. Using Write to avoid reading first would require rewriting all 150 lines perfectly, which is error-prone and semantically incorrect for a targeted change.",
+        "D": "The guidelines state to use the Read tool instead of `cat` Bash commands. The Read tool provides the same file content in a structured way that satisfies the Edit prerequisite."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/overview",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/tool-use"
+      ]
+    },
+    {
+      "id": "q-2.5-medium-5",
+      "taskStatement": "2.5",
+      "domainId": 2,
+      "difficulty": "medium",
+      "scenario": "An agent needs to run a database migration script that exists at `/scripts/migrate.sh` and capture its output to verify success. The script takes approximately 10 seconds to run and the agent must confirm the output before proceeding.",
+      "text": "Which approach correctly uses Bash for this command while ensuring the output is captured for verification?",
+      "options": {
+        "A": "Use Grep on the script file to verify its contents before deciding whether to run it",
+        "B": "Use Read to open the script file and parse whether it will succeed without executing it",
+        "C": "Use Bash with `run_in_background: true` since the task does not need the result immediately",
+        "D": "Use Bash to execute `bash /scripts/migrate.sh` and capture the output synchronously, since 10 seconds is well within the 2-minute default timeout"
+      },
+      "correctAnswer": "D",
+      "explanation": "Bash is the correct tool for executing shell commands. A 10-second migration script is well within the 2-minute default timeout (120,000ms). Running it synchronously ensures the output is immediately available for verification of success. Background execution would be appropriate only if the result is not needed immediately.",
+      "whyWrongMap": {
+        "A": "Using Grep to inspect the script's contents before running it may be a useful safety check, but it does not execute the migration. Grep alone cannot accomplish the task of running the script and capturing output.",
+        "B": "Read retrieves file contents for reading; it cannot execute scripts or predict runtime behavior. Parsing a migration script statically is not a reliable substitute for running it.",
+        "C": "`run_in_background: true` is appropriate only when the result is not needed immediately. Since the agent needs to verify success from the output, synchronous execution is required."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/overview",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/tool-use"
+      ]
+    },
+    {
+      "id": "q-2.5-hard-1",
+      "taskStatement": "2.5",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "An agent needs to edit a function in `/src/services/payment.ts`. When it calls Edit, the tool returns an error: 'old_string is not unique in the file'. The agent had intended to replace the line `return null;` but this exact string appears 12 times across different functions in the 900-line file.",
+      "text": "What is the correct strategy to resolve the uniqueness error without using Write to rewrite the entire file?",
+      "options": {
+        "A": "Use Bash with `sed -n` to identify the line number, then use Edit with the line number as a reference",
+        "B": "Use Grep with context flags to locate the exact function, then expand the `old_string` to include enough surrounding lines from that function to make it unique",
+        "C": "Use `replace_all: true` on the string `return null;` to change all 12 occurrences simultaneously",
+        "D": "Use Read to re-read the file, then use Write with the full corrected content since Edit cannot handle non-unique strings"
+      },
+      "correctAnswer": "B",
+      "explanation": "When `old_string` is not unique, the correct strategy is to expand it to include more surrounding context \u2014 enough lines from the specific function to make it unique in the file. Grep with context flags (-A/-B/-C) helps identify the exact surrounding text in the target function, which is then used as the `old_string` in the Edit call.",
+      "whyWrongMap": {
+        "A": "Edit does not support line number references. The `old_string` must be the exact text to replace. Bash `sed` is also discouraged. The correct approach is to use more context in the `old_string`.",
+        "C": "`replace_all: true` would replace all 12 occurrences of `return null;`, not just the one in the target function. This would incorrectly modify the behavior of 11 other functions in the file.",
+        "D": "Using Write to rewrite a 900-line file to avoid a uniqueness error is the least preferred approach. It is error-prone, sends the entire file content, and violates the principle of using Edit for targeted modifications."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/overview",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/tool-use"
+      ]
+    },
+    {
+      "id": "q-2.5-hard-2",
+      "taskStatement": "2.5",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "An agent is asked to refactor a 1,200-line monolithic file `/src/api/router.ts` into multiple smaller files organized by feature. The refactoring will create 8 new files and completely restructure the original. The agent has read the original file.",
+      "text": "Which combination of tools and sequence is most appropriate for this large-scale refactoring task?",
+      "options": {
+        "A": "Use Glob to re-discover all files first, then Grep to find all import patterns, then Write for new files, then Edit for the original",
+        "B": "Use Edit 8 times with `replace_all: true` to split the content across multiple targets",
+        "C": "Use Bash to run a custom Node.js script that splits the file programmatically, then use Read to verify results",
+        "D": "Use Write to create each of the 8 new feature files, then use Write again to rewrite the original file with only its remaining content"
+      },
+      "correctAnswer": "D",
+      "explanation": "Write is the correct tool for creating new files. Since 8 new files are being created from scratch, Write is used for each. The original file is being completely restructured (not a targeted edit), so Write is also appropriate for the complete rewrite of the original. This is exactly the use case Write is designed for: creating new files and complete rewrites.",
+      "whyWrongMap": {
+        "A": "This sequence is overly complex. The agent has already read the original file, so re-running Glob is unnecessary. While Grep for import patterns could be useful, the described workflow adds unnecessary steps before the core Write operations.",
+        "B": "Edit with `replace_all: true` is for replacing strings within a single file, not for splitting content across multiple new files. Edit cannot create new files.",
+        "C": "While Bash could run a script, this adds unnecessary complexity. The agent already has the content from reading the original file and can use Write directly. Bash scripts for file manipulation are the kind of workaround that dedicated tools like Write are meant to replace."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/overview",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/tool-use"
+      ]
+    },
+    {
+      "id": "q-2.5-hard-3",
+      "taskStatement": "2.5",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "An agent is running a long-running test suite via Bash that takes an estimated 8 minutes to complete. The agent also needs to simultaneously use Read and Grep to analyze other files while waiting for the test results. The Bash timeout is set to its 10-minute maximum.",
+      "text": "What is the correct approach for managing the long-running test command while continuing other work in parallel?",
+      "options": {
+        "A": "Set the Bash timeout to 600,000ms (10 minutes) and block all other tool calls until the tests complete",
+        "B": "Run the test command with `run_in_background: true`, then proceed with Read and Grep calls, and wait for the background task notification before reviewing test results",
+        "C": "Split the test suite into smaller chunks using Bash and run each chunk sequentially to avoid timeout issues",
+        "D": "Use Grep to search for test files and predict pass/fail status without running the tests"
+      },
+      "correctAnswer": "B",
+      "explanation": "When a long-running command does not need its result immediately and parallel work is needed, `run_in_background: true` is the correct approach. The agent is then notified when the background task completes, allowing other tool calls (Read, Grep) to proceed concurrently. The guidelines explicitly state this pattern for long-running commands.",
+      "whyWrongMap": {
+        "A": "Blocking all other tool calls for 8 minutes is wasteful. The agent can use the waiting time productively for Read and Grep operations. Setting a long timeout and blocking is appropriate only when the result is immediately needed for the next step.",
+        "C": "Splitting the test suite adds unnecessary complexity and changes the execution semantics. The background execution flag is the clean, idiomatic solution to this problem.",
+        "D": "Static analysis via Grep cannot predict test outcomes. Tests must be executed to determine pass/fail status. This approach fundamentally fails to accomplish the stated task."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/overview",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/tool-use"
+      ]
+    },
+    {
+      "id": "q-2.5-hard-4",
+      "taskStatement": "2.5",
+      "domainId": 2,
+      "difficulty": "hard",
+      "scenario": "An agent is asked to audit an entire monorepo for security vulnerabilities. The monorepo contains 2,000+ files across 15 packages. The agent must find all uses of `eval()`, all `innerHTML` assignments, and all hardcoded strings matching common API key patterns. Performance and thoroughness are equally important.",
+      "text": "Which multi-tool strategy is most efficient and thorough for this security audit?",
+      "options": {
+        "A": "Use Read on every file sequentially, building a list of findings as each file is processed",
+        "B": "Use Glob to list all 2,000+ files, then use Grep once per file for each of the three patterns",
+        "C": "Run three parallel Grep calls \u2014 one per pattern \u2014 each with `output_mode: 'files_with_matches'` and appropriate glob filters, then Read only the flagged files for deeper analysis",
+        "D": "Use Bash with three separate `grep -r` commands for each pattern, piping results to a summary file"
+      },
+      "correctAnswer": "C",
+      "explanation": "Running three parallel Grep calls (one per pattern) across the entire codebase with `output_mode: 'files_with_matches'` is the most efficient approach. This leverages Grep's content-search capability at scale, avoids reading files that contain no vulnerabilities, and parallelizes the three independent searches. Only flagged files then need deeper Read-based analysis.",
+      "whyWrongMap": {
+        "A": "Reading every one of 2,000+ files sequentially is extremely inefficient. The vast majority will not contain the target patterns. Grep is designed precisely to avoid this by scanning content across many files quickly.",
+        "B": "Using Glob to list all files then calling Grep once per file is a N\u00d73 operation (2,000 files \u00d7 3 patterns = 6,000 Grep calls). Running three broad Grep searches across the entire codebase is far more efficient than scoping each Grep to a single file.",
+        "D": "The guidelines state to use the Grep tool instead of `grep` Bash commands. Three Bash `grep -r` commands also cannot run in parallel within a single Bash call in the same way that three separate Grep tool calls can be parallelized."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/claude-code/overview",
+        "https://docs.anthropic.com/en/docs/agents-and-tools/tool-use"
       ]
     }
   ]

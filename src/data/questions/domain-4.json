@@ -6,174 +6,223 @@
       "taskStatement": "4.1",
       "domainId": 4,
       "difficulty": "easy",
-      "scenario": "A developer is writing a system prompt for a customer support bot and wants Claude to always respond in a polite, professional tone and limit answers to 150 words.",
-      "text": "Which of the following best exemplifies the principle of designing prompts with explicit criteria?",
+      "scenario": "A developer is writing a prompt that instructs Claude to flag uncertain responses. The first version says 'flag uncertain items.' A colleague suggests replacing it with 'flag items where your confidence is below 0.8.'",
+      "text": "Why is the revised instruction superior for production use?",
       "options": {
-        "A": "\"Be helpful and answer customer questions.\"",
-        "B": "\"You are a customer support agent. Respond politely and professionally. Limit every response to 150 words or fewer. Do not discuss competitor products.\"",
-        "C": "\"Try to keep responses short and stay on topic.\"",
-        "D": "\"Answer questions as best you can and keep the customer happy.\""
+        "A": "It is shorter and therefore easier for Claude to parse.",
+        "B": "It replaces a subjective judgment call with an objective, measurable threshold, reducing inconsistency across runs.",
+        "C": "Claude automatically tracks numeric confidence scores internally, so the number triggers a built-in API feature.",
+        "D": "Qualitative guidance is always wrong and should never appear in prompts."
       },
       "correctAnswer": "B",
-      "explanation": "Option B contains explicit, measurable criteria—tone (polite/professional), length (≤150 words), and a topic boundary (no competitor products)—leaving no ambiguity about expected behavior. Explicit criteria reduce variance and make evaluation straightforward.",
+      "explanation": "Explicit numeric thresholds eliminate the ambiguity inherent in words like 'uncertain.' Different runs \u2014 or different models \u2014 may interpret 'uncertain' differently, leading to inconsistent flagging behavior. By specifying a concrete threshold (< 0.8), the criterion becomes deterministic and reproducible, which is essential for production reliability.",
       "whyWrongMap": {
-        "A": "Too vague; 'helpful' is subjective and provides no measurable constraint.",
-        "C": "'Short' and 'on topic' are subjective and do not give Claude a precise target to optimize for.",
-        "D": "'As best you can' and 'keep happy' are ambiguous and cannot be objectively evaluated or enforced."
+        "A": "Prompt length is not the reason; the benefit is precision, not brevity. The quantitative version is actually longer.",
+        "C": "Claude does not expose raw internal confidence scores through an API parameter; the developer must instruct Claude to output a self-assessed confidence value as part of its response.",
+        "D": "Qualitative guidance has legitimate uses (e.g., tone, style), but for flagging decisions where consistency matters, quantitative criteria are preferred."
       },
       "references": [
-        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview",
-        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct"
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples"
       ]
     },
     {
-      "id": "q-4.2-medium-1",
-      "taskStatement": "4.2",
+      "id": "q-4.1-easy-2",
+      "taskStatement": "4.1",
       "domainId": 4,
-      "difficulty": "medium",
-      "scenario": "An engineering team is building a data-extraction pipeline that must classify support tickets into exactly three categories: 'Billing', 'Technical', or 'General'. They notice Claude occasionally returns category names in unexpected formats (e.g., 'billing issue', 'tech support').",
-      "text": "Which few-shot prompting strategy is MOST effective for enforcing consistent output format in this scenario?",
+      "difficulty": "easy",
+      "scenario": "A content moderation system uses the prompt: 'Remove content that seems harmful.' After deployment, reviewers notice that Claude removes some borderline satire and ignores some explicit threats.",
+      "text": "What is the PRIMARY cause of these inconsistent moderation decisions?",
       "options": {
-        "A": "Include a single example at the start of the system prompt demonstrating the desired category label.",
-        "B": "Provide 3–5 input/output examples in the human turn that each demonstrate the exact expected category label, followed by the actual ticket to classify.",
-        "C": "Instruct Claude in the system prompt to 'always use one of the three allowed category names' without examples.",
-        "D": "Use a longer system prompt that describes each category in detail, relying on Claude's understanding without any examples."
+        "A": "Claude's temperature setting is too high.",
+        "B": "The system prompt is too short and needs to be at least 500 words.",
+        "C": "Claude cannot perform content moderation without a fine-tuned model.",
+        "D": "The prompt lacks explicit criteria defining what constitutes 'harmful,' so Claude interprets the term differently depending on context."
       },
-      "correctAnswer": "B",
-      "explanation": "Few-shot examples placed immediately before the task in the human turn serve as the strongest formatting signal; multiple diverse examples (3–5) cover edge cases and pattern-match the exact tokens Claude should emit. This is the canonical few-shot technique documented by Anthropic.",
+      "correctAnswer": "D",
+      "explanation": "The word 'harmful' is a vague, context-dependent qualifier. Without explicit criteria \u2014 such as specific categories of prohibited content, example cases, or decision rules \u2014 Claude applies its own judgment, which varies by context and results in inconsistent outcomes. Replacing vague qualifiers with explicit rubrics (e.g., 'remove content that contains direct threats of physical violence or instructions for illegal activity') produces consistent behavior.",
       "whyWrongMap": {
-        "A": "A single example is often insufficient to suppress format drift across diverse inputs; more examples improve consistency.",
-        "C": "Natural-language instructions alone are weaker than concrete examples because they don't demonstrate the exact output token sequence expected.",
-        "D": "Detailed descriptions help with understanding but do not anchor the output format the way concrete input/output pairs do."
+        "A": "Temperature affects creativity and randomness in generation, not the interpretation of evaluation criteria. Setting temperature to 0 would reduce variance but would not resolve the ambiguity of 'harmful.'",
+        "B": "Prompt length is not the issue; a 500-word prompt with equally vague language would produce the same problem. Precision matters more than length.",
+        "C": "Claude is capable of content moderation tasks via prompting; a fine-tuned model is not required to achieve consistent results when criteria are explicit."
       },
       "references": [
-        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
-        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview"
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/chain-of-thought"
       ]
     },
     {
-      "id": "q-4.3-medium-1",
-      "taskStatement": "4.3",
+      "id": "q-4.1-easy-3",
+      "taskStatement": "4.1",
       "domainId": 4,
-      "difficulty": "medium",
-      "scenario": "A fintech application requires Claude to extract transaction details (amount, currency, merchant, date) from unstructured receipt text and return them as a structured object that will be inserted directly into a database.",
-      "text": "What is the recommended approach to enforce structured output from Claude in production systems?",
+      "difficulty": "easy",
+      "scenario": "You are designing a prompt to classify customer feedback as 'Positive,' 'Neutral,' or 'Negative.' You want consistent results.",
+      "text": "Which classification instruction is most likely to produce consistent results across many different feedback samples?",
       "options": {
-        "A": "Ask Claude to 'respond only with valid JSON' in the system prompt and parse the raw text response.",
-        "B": "Define a tool with a JSON schema that describes the required fields, call Claude with tool_choice set to force tool use, and read the structured result from the tool_use content block.",
-        "C": "Use regular expressions to extract fields from Claude's free-text response after each call.",
-        "D": "Instruct Claude to wrap its JSON output in XML tags and parse between the tags."
-      },
-      "correctAnswer": "B",
-      "explanation": "Anthropic's tool use feature is the canonical mechanism for guaranteed structured output: the JSON schema constrains the shape of the response at the API level, and setting tool_choice to the specific tool forces Claude to populate the schema fields. This eliminates parsing ambiguity present in free-text approaches.",
-      "whyWrongMap": {
-        "A": "Claude may still deviate from valid JSON with natural-language caveats; relying on text parsing is fragile compared to schema-enforced tool use.",
-        "C": "Regex post-processing is brittle, maintenance-heavy, and fails silently when Claude reformats its output.",
-        "D": "XML tag parsing is an improvement over raw text but still relies on prompt compliance rather than schema enforcement, making it less reliable than tool use."
-      },
-      "references": [
-        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview",
-        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/forcing-tool-use"
-      ]
-    },
-    {
-      "id": "q-4.3-hard-1",
-      "taskStatement": "4.3",
-      "domainId": 4,
-      "difficulty": "hard",
-      "scenario": "A developer defines a tool schema with a required field `confidence_score` typed as `number` with a minimum of 0 and maximum of 1. During testing, they observe that Claude sometimes returns confidence values outside the declared range when the model is uncertain.",
-      "text": "Which combination of measures BEST ensures the `confidence_score` field always falls within the [0, 1] range?",
-      "options": {
-        "A": "Add the constraint only to the tool description string; Claude will read it and comply.",
-        "B": "Declare `minimum: 0` and `maximum: 1` in the JSON schema for the tool parameter AND add an explicit note in the tool description reinforcing the range constraint.",
-        "C": "After receiving the tool result, validate the value in application code and raise an error if out of range, without modifying the schema.",
-        "D": "Switch from tool use to asking Claude to return JSON in a code block and validate with a JSON schema library in post-processing."
-      },
-      "correctAnswer": "B",
-      "explanation": "Combining JSON schema constraints (minimum/maximum) with a natural-language reminder in the tool description creates redundant enforcement: the schema shapes the structured output at the model level while the description provides semantic context that reduces out-of-range responses. Neither mechanism alone is as robust as both together.",
-      "whyWrongMap": {
-        "A": "Description strings alone carry no machine-enforced constraint; the model may still violate them especially under distributional shift.",
-        "C": "Application-side validation catches errors but does not prevent them; a retry loop without schema constraints will likely produce the same out-of-range values.",
-        "D": "Code-block JSON parsing is more fragile than tool use, and post-processing validation alone does not reduce the frequency of invalid outputs at the source."
-      },
-      "references": [
-        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview",
-        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct"
-      ]
-    },
-    {
-      "id": "q-4.4-medium-1",
-      "taskStatement": "4.4",
-      "domainId": 4,
-      "difficulty": "medium",
-      "scenario": "A content moderation pipeline calls Claude to label user posts. Occasionally Claude returns an unexpected label not in the allowed set, causing downstream JSON deserialization errors.",
-      "text": "Which validation and retry strategy BEST handles out-of-schema responses without degrading pipeline throughput?",
-      "options": {
-        "A": "Catch deserialization errors, log them, and skip those posts permanently to keep throughput high.",
-        "B": "Validate the response against the expected label set immediately after each call; on failure, retry the request up to N times with an updated prompt that provides the invalid response as a negative example and explicitly restates the allowed labels.",
-        "C": "Increase the max_tokens limit so Claude has more space to reason through the correct label.",
-        "D": "Run every post through Claude twice by default and take a majority vote, regardless of whether the first response was valid."
-      },
-      "correctAnswer": "B",
-      "explanation": "Immediate validation followed by targeted retries that include the invalid output as a negative few-shot example is the recommended feedback-loop pattern: it directly signals to Claude what went wrong and anchors the retry to the correct output space, maximizing first-pass accuracy on retries while only adding latency to the small fraction of failing calls.",
-      "whyWrongMap": {
-        "A": "Silently skipping failures violates error-handling requirements and produces an incomplete moderation dataset.",
-        "C": "max_tokens controls response length, not label accuracy; increasing it will not constrain the output to the allowed set.",
-        "D": "Double-calling every post doubles cost and latency even when the first response is valid, which is wasteful and does not target the root cause."
-      },
-      "references": [
-        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
-        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview"
-      ]
-    },
-    {
-      "id": "q-4.5-medium-1",
-      "taskStatement": "4.5",
-      "domainId": 4,
-      "difficulty": "medium",
-      "scenario": "A legal tech company needs to summarize 10,000 case documents overnight. Each document is independent and averages 4,000 tokens. The team wants to minimize total processing time while staying within API rate limits.",
-      "text": "Which batch processing strategy BEST balances throughput and rate-limit compliance?",
-      "options": {
-        "A": "Send all 10,000 requests simultaneously in a single burst and rely on the API to queue them.",
-        "B": "Process documents sequentially one at a time to guarantee no rate limits are hit.",
-        "C": "Use the Anthropic Batches API to submit all documents in one batch job, which processes requests asynchronously and offers higher throughput than the standard synchronous API.",
-        "D": "Concatenate all documents into a single large prompt and request one summarization covering all cases."
+        "A": "Classify the feedback based on your overall sense of the customer's mood.",
+        "B": "Classify as Positive if overall sentiment is good, Negative if bad, otherwise Neutral.",
+        "C": "Classify as Positive if the feedback contains praise or thanks with no complaints; Negative if the feedback contains at least one explicit complaint or request for a refund; otherwise Neutral.",
+        "D": "Use your best judgment to decide whether the feedback is positive, neutral, or negative."
       },
       "correctAnswer": "C",
-      "explanation": "The Anthropic Message Batches API is designed for exactly this use case: large volumes of independent, asynchronous requests. It provides higher throughput limits than the synchronous API and processes items in parallel on Anthropic's infrastructure, making it the optimal choice for overnight batch jobs.",
+      "explanation": "Option C provides explicit, observable criteria for each class: the presence of praise/thanks without complaints for Positive, and the presence of a complaint or refund request for Negative. These criteria can be applied mechanically, reducing reliance on subjective interpretation. Options A, B, and D rely on vague qualifiers ('overall sense,' 'good,' 'best judgment') that introduce inconsistency.",
       "whyWrongMap": {
-        "A": "A simultaneous burst will immediately trigger rate-limit errors (429s) because the synchronous API enforces requests-per-minute and tokens-per-minute ceilings.",
-        "B": "Sequential processing is the slowest strategy and will take far longer than necessary, likely exceeding the overnight window for 10,000 documents.",
-        "D": "Concatenating all documents into one prompt would vastly exceed the context window (200K tokens max) and produce a single combined summary rather than per-document summaries."
+        "A": "'Overall sense of mood' is entirely subjective and will vary across inputs with similar wording, leading to high variance in borderline cases.",
+        "B": "'Good' and 'bad' are qualitative descriptors that do not define observable signals, making this criterion nearly as vague as saying 'classify correctly.'",
+        "D": "'Best judgment' defers entirely to Claude's internal heuristics, which may shift with context, token position, or prior conversation, making results unreproducible."
       },
       "references": [
-        "https://docs.anthropic.com/en/docs/build-with-claude/message-batches",
-        "https://docs.anthropic.com/en/docs/build-with-claude/rate-limits"
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples"
       ]
     },
     {
-      "id": "q-4.6-hard-1",
-      "taskStatement": "4.6",
+      "id": "q-4.1-easy-4",
+      "taskStatement": "4.1",
       "domainId": 4,
-      "difficulty": "hard",
-      "scenario": "A software company is building an automated code review system where one Claude instance generates a code change, a second Claude instance critiques it for bugs and security issues, and a third instance synthesizes the feedback into a final approved diff.",
-      "text": "In this multi-pass review architecture, what is the PRIMARY risk to output quality and how should it be mitigated?",
+      "difficulty": "easy",
+      "scenario": "A prompt engineer defines the following rubric for grading a short essay on a scale of 1\u20135: '5 = excellent, 4 = good, 3 = average, 2 = poor, 1 = very poor.'",
+      "text": "What is the main weakness of this rubric for automated grading?",
       "options": {
-        "A": "Token cost is the primary risk; mitigate by reducing the context passed to each instance.",
-        "B": "The critique instance may echo the generator's framing due to anchoring bias; mitigate by running the critique instance without showing it the generator's reasoning, only the code artifact itself.",
-        "C": "The synthesis instance will always prefer the generator's original code; mitigate by giving the synthesis instance a higher temperature.",
-        "D": "Multi-instance architectures always produce slower responses; mitigate by merging all three passes into a single call."
+        "A": "The labels (excellent, good, average, poor, very poor) are qualitative and do not specify observable criteria, making grading inconsistent.",
+        "B": "The scale should use letters (A\u2013F) instead of numbers.",
+        "C": "Five-point scales are too granular; a binary pass/fail would be more reliable.",
+        "D": "Claude cannot assign numeric scores and will always return text labels instead."
       },
-      "correctAnswer": "B",
-      "explanation": "In multi-agent review pipelines, presenting the critique model with the generator's internal reasoning or justifications creates anchoring bias—the reviewer is more likely to rationalize rather than independently challenge the original output. Isolating the critique instance to evaluate only the artifact (the code diff) encourages genuinely independent analysis, which is the design principle behind split-role multi-pass architectures.",
+      "correctAnswer": "A",
+      "explanation": "Words like 'excellent' and 'poor' are relative and undefined. Two essays that different evaluators would grade differently may both receive a 4 depending on Claude's contextual interpretation. A strong rubric ties each score to observable, measurable criteria \u2014 for example, '5 = thesis is clearly stated in the first paragraph, all three required arguments are supported with evidence, no grammatical errors.'",
       "whyWrongMap": {
-        "A": "Reducing context passed to each instance degrades quality and is the wrong trade-off; the goal is to preserve independent judgment, not to save tokens at the expense of accuracy.",
-        "C": "Higher temperature increases randomness rather than independence and could introduce new bugs; synthesis quality depends on reasoning quality, not sampling entropy.",
-        "D": "Collapsing three passes into one prompt eliminates the independent review benefit and reintroduces the single-model limitations the architecture was designed to overcome."
+        "B": "Letter vs. number scale is a cosmetic difference that does not resolve the underlying problem of undefined criteria.",
+        "C": "Scale granularity is a design choice based on requirements; a five-point scale is not inherently unreliable \u2014 the problem is the absence of criteria, not the number of levels.",
+        "D": "Claude can output numeric scores when instructed to do so; this is not a capability limitation."
       },
       "references": [
-        "https://docs.anthropic.com/en/docs/build-with-claude/agents",
-        "https://docs.anthropic.com/en/docs/build-with-claude/agents#multi-agent-architectures"
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct"
+      ]
+    },
+    {
+      "id": "q-4.1-medium-1",
+      "taskStatement": "4.1",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A financial services company uses Claude to extract named entities from regulatory filings. The current prompt says: 'Extract all important entities from the filing.' Reviewers find that Claude sometimes extracts company names but misses jurisdiction codes and monetary amounts, and vice versa.",
+      "text": "Which prompt revision will MOST reliably improve extraction completeness and consistency?",
+      "options": {
+        "A": "Add 'Be thorough' to the existing instruction.",
+        "B": "Replace the vague instruction with an explicit enumeration: 'Extract the following entity types: (1) company names, (2) jurisdiction codes (e.g., US-NY, EU-DE), (3) monetary amounts with currency symbols.'",
+        "C": "Ask Claude to read the filing twice before extracting.",
+        "D": "Switch to a larger model \u2014 the extraction misses are a model capacity issue, not a prompting issue."
+      },
+      "correctAnswer": "B",
+      "explanation": "Explicit enumeration of entity types removes ambiguity about what 'important' means. By listing each category with examples, the prompt defines the extraction task precisely, so Claude applies the same criteria to every filing. 'Be thorough' adds no new information about which entities matter. Re-reading increases token cost without resolving the definitional gap. Model size is not the cause \u2014 the prompt is underspecified.",
+      "whyWrongMap": {
+        "A": "'Be thorough' is a qualitative intensifier that does not define what should be extracted; it may improve recall marginally but will not fix systematic category omissions.",
+        "C": "Re-reading the filing may catch some missed tokens but does not teach Claude which entity types to look for; the same categories will be inconsistently applied.",
+        "D": "This is a prompt design failure, not a model capacity limitation. A smaller model with explicit criteria will outperform a larger model with vague criteria for well-defined extraction tasks."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples"
+      ]
+    },
+    {
+      "id": "q-4.1-medium-2",
+      "taskStatement": "4.1",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A developer wants Claude to generate product descriptions. The prompt says: 'Write a good product description for the following item.' After reviewing 50 outputs, marketing finds wide variation in length (50\u2013400 words), tone (casual to formal), and feature emphasis.",
+      "text": "Which set of explicit criteria would BEST address all three sources of variation?",
+      "options": {
+        "A": "Add: 'Write a very good product description.'",
+        "B": "Add: 'Use a professional tone.'",
+        "C": "Add: 'Write exactly 120 words. Use a friendly, conversational tone. Lead with the primary benefit, then list three key features as bullet points, and close with a call to action.'",
+        "D": "Add: 'Write a description that customers will enjoy reading.'"
+      },
+      "correctAnswer": "C",
+      "explanation": "Option C addresses all three observed variations with explicit, measurable constraints: a word count (120) eliminates length variation, a defined tone descriptor ('friendly, conversational') reduces tone drift, and a structural template (benefit \u2192 bullets \u2192 CTA) standardizes feature emphasis. Options A and D add subjective qualifiers. Option B addresses only tone, leaving length and structure uncontrolled.",
+      "whyWrongMap": {
+        "A": "Intensifying the adjective ('very good') provides no structural guidance and will not reduce variance in length, tone, or feature selection.",
+        "B": "Tone guidance alone does not constrain length or feature emphasis; the other two sources of variation remain unaddressed.",
+        "D": "'Customers will enjoy reading' is a vague outcome statement that gives Claude no actionable criteria for length, tone, or structure."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/chain-of-thought"
+      ]
+    },
+    {
+      "id": "q-4.1-medium-3",
+      "taskStatement": "4.1",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "An analyst team uses a prompt: 'Summarize the key risks in this earnings call transcript.' They find the summaries are helpful but hard to compare across calls because risk descriptions vary in specificity, category, and order.",
+      "text": "Which prompt design change would BEST enable structured, comparable risk summaries?",
+      "options": {
+        "A": "Ask Claude to 'be more structured.'",
+        "B": "Use a lower temperature to make responses more consistent.",
+        "C": "Ask Claude to sort risks alphabetically.",
+        "D": "Specify a rubric: 'Identify risks in exactly these four categories in order: (1) Market Risk, (2) Operational Risk, (3) Regulatory Risk, (4) Financial Risk. For each category, state whether a risk was mentioned (Yes/No) and provide a one-sentence summary if Yes.'"
+      },
+      "correctAnswer": "D",
+      "explanation": "A fixed schema with defined categories, a binary presence indicator, and a length constraint (one sentence) ensures every summary has the same structure and level of specificity. This makes outputs directly comparable across calls. 'Be more structured' is vague. Temperature affects randomness, not schema adherence. Alphabetical sorting addresses order but not category coverage or specificity.",
+      "whyWrongMap": {
+        "A": "'Be more structured' is a qualitative instruction that does not define a structure; Claude will invent a structure that varies across calls.",
+        "B": "Reducing temperature to 0 minimizes token-level randomness but does not impose a schema; two calls with different risk profiles will still produce differently shaped summaries.",
+        "C": "Alphabetical sorting ensures a consistent order within a response but does not standardize categories, presence indicators, or sentence-level specificity across calls."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples"
+      ]
+    },
+    {
+      "id": "q-4.1-medium-4",
+      "taskStatement": "4.1",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A developer asks Claude to flag potential bugs in code reviews. The original prompt says: 'Flag any code that looks buggy.' After one month, engineers complain that Claude flags obvious style issues as bugs and misses null-pointer risks.",
+      "text": "Which explicit-criteria revision would BEST reduce false positives and false negatives for this task?",
+      "options": {
+        "A": "Change the prompt to: 'Flag code that looks very buggy.'",
+        "B": "Ask Claude to flag bugs and add 'ignore style issues' at the end of the prompt.",
+        "C": "Replace Claude with a static analysis linter.",
+        "D": "Change the prompt to: 'Flag lines that contain: (a) unhandled null/undefined dereferences, (b) off-by-one errors in loop bounds, or (c) uncaught exceptions from external calls. Do NOT flag style issues, naming conventions, or formatting.'"
+      },
+      "correctAnswer": "D",
+      "explanation": "Option D does two things simultaneously: it defines a positive list of bug categories (reducing false negatives by naming specific risk patterns) and an explicit exclusion list (reducing false positives by prohibiting style flags). This is the classic rubric pattern \u2014 tell the model exactly what to look for and exactly what to ignore. Option B is an improvement but does not define which bug categories to include. Option A adds no new information.",
+      "whyWrongMap": {
+        "A": "Adding 'very' intensifies the qualifier but does not define what 'buggy' means, so false positives and false negatives remain driven by Claude's implicit interpretation.",
+        "B": "Excluding style is an improvement, but without a positive list of bug types, Claude still has discretion in what it flags, leaving false negatives unaddressed.",
+        "C": "Replacing Claude with a linter may be appropriate in some contexts but is not a prompt design solution; the question asks how to improve the prompt."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/chain-of-thought"
+      ]
+    },
+    {
+      "id": "q-4.1-medium-5",
+      "taskStatement": "4.1",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A legal team wants Claude to assess whether contract clauses are 'acceptable,' 'requires review,' or 'unacceptable.' The first version of the prompt provides only these three labels with no definitions. After testing, they find borderline clauses land in different categories across runs.",
+      "text": "What technique would MOST reduce inter-run inconsistency for borderline clauses?",
+      "options": {
+        "A": "Provide a few-shot rubric: define each label with explicit criteria and include two to three example clauses per category showing how the criteria are applied.",
+        "B": "Run the same clause through Claude five times and take the majority vote.",
+        "C": "Instruct Claude to always default to 'requires review' when uncertain.",
+        "D": "Use a longer system prompt with more background information about contract law."
+      },
+      "correctAnswer": "A",
+      "explanation": "A few-shot rubric combines two powerful techniques: explicit criteria (telling Claude what each label means in observable terms) and worked examples (anchoring Claude's interpretation with ground-truth classifications). Together, they constrain the decision boundary around borderline cases. Majority voting reduces variance but does not improve accuracy and multiplies cost. Defaulting to 'requires review' inflates false positives. More legal background does not define the decision rule.",
+      "whyWrongMap": {
+        "B": "Majority voting is a statistical approach to variance reduction; it does not fix the underlying ambiguity and costs five times as much per assessment.",
+        "C": "Defaulting borderline cases to 'requires review' reduces false negatives but does not improve accuracy \u2014 acceptable clauses will be unnecessarily escalated, increasing legal team workload.",
+        "D": "Background information about contract law increases Claude's domain knowledge but does not define which observable clause features map to each label, leaving the decision rule ambiguous."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct"
       ]
     },
     {
@@ -181,25 +230,1727 @@
       "taskStatement": "4.1",
       "domainId": 4,
       "difficulty": "hard",
-      "scenario": "A healthcare organization is deploying Claude to assist nurses with medication dosage calculations. The system prompt must prevent Claude from making definitive clinical recommendations while still being genuinely useful for lookup and arithmetic tasks.",
-      "text": "Which prompt design approach BEST satisfies both utility and safety constraints simultaneously?",
+      "scenario": "A medical information system uses Claude to triage symptom descriptions into: 'Seek emergency care,' 'Schedule appointment within 48 hours,' and 'Self-care appropriate.' The current prompt defines each category with a one-sentence qualitative description. In evaluation, 22% of borderline cases are miscategorized. The team proposes two remedies: (Remedy 1) Add 10 few-shot examples covering edge cases. (Remedy 2) Replace qualitative descriptions with explicit rule-based criteria (e.g., 'Seek emergency care if: chest pain + shortness of breath, or loss of consciousness, or bleeding that cannot be stopped within 10 minutes').",
+      "text": "In a high-stakes medical triage application, which approach is more appropriate and why?",
       "options": {
-        "A": "Instruct Claude: 'Do not answer any medical questions.' This ensures safety by broadly refusing all clinical content.",
-        "B": "Include no safety constraints and rely on Claude's built-in safety training to refuse inappropriate requests.",
-        "C": "Provide explicit criteria that define the permitted task scope (dosage arithmetic, formulary lookup, unit conversion), an explicit list of out-of-scope actions (definitive clinical decisions, drug interaction diagnosis), and require Claude to append a disclaimer on every response directing nurses to verify with a licensed pharmacist.",
-        "D": "Use a high temperature setting to make responses more varied and exploratory, reducing the chance of overconfident outputs."
+        "A": "Remedy 1 only \u2014 examples are more reliable than rules in ambiguous medical domains because they let the model generalize from ground truth.",
+        "B": "Remedy 2 only \u2014 explicit rule-based criteria are more auditable and controllable in high-stakes settings; examples risk encoding the wrong edge cases.",
+        "C": "Both remedies combined \u2014 explicit rules define the decision boundary while examples anchor borderline interpretation, and both are essential for safety-critical classification.",
+        "D": "Neither \u2014 Claude should not be used for medical triage regardless of prompt design."
       },
       "correctAnswer": "C",
-      "explanation": "Effective safety-preserving prompts define both what Claude SHOULD do (in-scope tasks) and what it SHOULD NOT do (out-of-scope actions) with explicit criteria, then add a mandatory disclaimer that routes final accountability to a licensed professional. This approach maximizes utility within a clearly bounded safe operating envelope.",
+      "explanation": "In high-stakes classification, neither approach alone is sufficient. Explicit rules (Remedy 2) provide auditability, stakeholder accountability, and direct control over decision boundaries \u2014 critical for regulatory compliance and error analysis. Few-shot examples (Remedy 1) anchor Claude's interpretation of borderline cases that fall between rule categories. Together they form a complete rubric: rules define the decision space, examples demonstrate application at the boundaries. Using only rules leaves interpretation gaps; using only examples risks overfitting to the demonstrated cases while missing systematic edge cases not covered by examples.",
       "whyWrongMap": {
-        "A": "A blanket refusal of all medical questions eliminates the utility the system was deployed to provide and is an over-restriction that renders the tool useless.",
-        "B": "Relying solely on default safety training without application-layer constraints does not customize the model's behavior for the specific clinical context and regulatory requirements.",
-        "D": "Temperature controls sampling randomness, not factual accuracy or scope compliance; a high temperature would increase the risk of hallucinated dosage values, directly worsening patient safety."
+        "A": "Examples alone are insufficient for safety-critical tasks because the model may generalize in unintended directions for cases not covered by the examples; explicit rules ensure systematic coverage of known high-risk symptom patterns.",
+        "B": "Rules alone leave interpretation gaps for cases that partially satisfy multiple rule sets or fall between categories; examples are necessary to anchor borderline interpretation and reduce the 22% miscategorization rate on edge cases.",
+        "D": "The question asks about prompt design; dismissing LLM use categorically is outside scope. Many regulated medical AI systems use LLMs with appropriate safeguards, explicit criteria, and human-in-the-loop review."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/chain-of-thought"
+      ]
+    },
+    {
+      "id": "q-4.1-hard-2",
+      "taskStatement": "4.1",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "An architect designs a multi-step pipeline: (Step 1) Claude extracts claims from a news article. (Step 2) A second Claude call classifies each claim as 'Verified,' 'Unverified,' or 'Disputed.' (Step 3) A third Claude call generates a bias-flagging report. The team finds that Step 2 has high false positive rates for 'Disputed,' and Step 3 generates inconsistently structured reports. They have a budget for one prompt redesign sprint.",
+      "text": "Which redesign strategy delivers the highest ROI by addressing the root cause of both problems?",
+      "options": {
+        "A": "Redesign Step 3's prompt to include explicit report structure requirements; Step 2 false positives are acceptable in a fact-checking pipeline.",
+        "B": "Redesign Step 2's prompt with explicit classification criteria (e.g., 'Disputed = at least two authoritative sources make contradictory claims with citations') and add a structured output schema to Step 3.",
+        "C": "Merge Steps 2 and 3 into a single prompt to reduce error propagation between steps.",
+        "D": "Add a human review gate between Steps 2 and 3 to catch Step 2 false positives before they pollute Step 3."
+      },
+      "correctAnswer": "B",
+      "explanation": "Step 2's false positives in 'Disputed' propagate into Step 3's inputs, causing both the incorrect classification and the structural inconsistency in reports (because Step 3 must handle more 'Disputed' items than expected, altering its output shape). By fixing Step 2's criteria (explicit definition of 'Disputed' grounded in source evidence), false positives decrease and Step 3 receives cleaner, more consistent inputs. Adding an explicit schema to Step 3 simultaneously resolves report structure inconsistency. This two-part fix addresses both root causes within one sprint. Merging steps increases prompt complexity without resolving the definitional gap. Human review adds latency without fixing the upstream criteria.",
+      "whyWrongMap": {
+        "A": "Fixing only Step 3's structure while accepting Step 2 false positives leaves the pipeline producing well-formatted reports with incorrect content \u2014 which may be worse than inconsistently structured correct reports.",
+        "C": "Merging Steps 2 and 3 into one prompt increases context length and task complexity; it may reduce some error propagation but does not fix the missing explicit criteria for 'Disputed,' which is the root cause.",
+        "D": "Human review is a control measure, not a design solution; it adds cost and latency but leaves the false positive root cause unaddressed, requiring indefinite human intervention."
       },
       "references": [
         "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/chain-of-thought",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples"
+      ]
+    },
+    {
+      "id": "q-4.1-hard-3",
+      "taskStatement": "4.1",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A startup uses Claude to automatically generate acceptance criteria for user stories. The initial prompt: 'Write acceptance criteria for this user story.' After 200 stories, QA finds that 35% of generated criteria are either too vague to test ('the system should be fast'), duplicate existing criteria, or miss error-path scenarios entirely.",
+      "text": "A senior architect proposes a rubric-based prompt that instructs Claude to: (i) generate exactly 4\u20136 criteria per story, (ii) follow the 'Given/When/Then' format, (iii) include at least one error-path scenario, and (iv) flag any criterion that cannot be expressed as a pass/fail test with confidence < 0.8. Which of the following BEST describes why criterion (iv) is architecturally valuable compared to simply saying 'make criteria testable'?",
+      "options": {
+        "A": "Criterion (iv) is redundant because following Given/When/Then format automatically guarantees testability.",
+        "B": "Criterion (iv) creates a machine-readable signal (the flag) that downstream tooling, CI pipelines, or human reviewers can act on without re-reading the criterion, while 'make criteria testable' produces no actionable output artifact.",
+        "C": "Criterion (iv) instructs Claude to refuse to generate criteria it is unsure about, reducing overall output volume.",
+        "D": "Criterion (iv) is harmful because it teaches Claude to express self-doubt, which will reduce confidence in all criteria including clearly testable ones."
+      },
+      "correctAnswer": "B",
+      "explanation": "The key architectural insight is that criterion (iv) externalizes Claude's uncertainty as a structured, actionable signal (a flag) rather than leaving it as an implicit quality of the text. A criterion like 'the system should respond quickly' may pass syntactic Given/When/Then formatting while still being untestable. The flag creates an explicit artifact that CI tooling can count, QA teams can filter on, and dashboards can track \u2014 enabling automated quality gates without re-parsing the criterion text. 'Make criteria testable' is an internal instruction that changes Claude's generation behavior but produces no machine-readable output. The flag transforms a qualitative intent into a quantitative, actionable interface.",
+      "whyWrongMap": {
+        "A": "Given/When/Then format ensures structural consistency but does not guarantee testability; a vague 'Given the system is fast / When a request is made / Then it should respond quickly' satisfies the format while remaining unmeasurable.",
+        "C": "The instruction is to flag criteria with confidence < 0.8, not to refuse generation; Claude still produces the criterion but attaches a machine-readable signal, preserving output completeness while exposing quality issues.",
+        "D": "Expressing calibrated uncertainty about specific criteria does not infect confidence in clearly testable ones; confidence flags are per-criterion and do not propagate across the full output."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/chain-of-thought"
+      ]
+    },
+    {
+      "id": "q-4.1-hard-4",
+      "taskStatement": "4.1",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A compliance team evaluates whether vendor contracts meet company policy. They have three prompt variants under consideration: (Variant A) 'Assess whether this contract complies with our vendor policy.' (Variant B) 'Assess compliance. Flag any clause that violates policy. Output: compliant=true/false, violations=list of clause numbers.' (Variant C) 'For each of the following 8 policy requirements (listed below with pass/fail criteria for each), determine whether the contract satisfies the requirement. Output a table: Requirement | Status (Pass/Fail) | Confidence (0\u20131) | Evidence (verbatim quote). Flag the overall contract as non-compliant if any requirement scores Fail or has confidence < 0.75.'",
+      "text": "A new compliance auditor asks why Variant C is used instead of Variant A or B despite being much longer. What is the MOST architecturally complete explanation?",
+      "options": {
+        "A": "Variant C is longer, so it gives Claude more context, which always improves accuracy.",
+        "B": "Variant C decomposes a complex judgment into a structured checklist with per-requirement criteria, explicit confidence thresholds, evidence anchoring, and a deterministic aggregation rule \u2014 together these ensure reproducibility, auditability, and calibrated false positive management that Variants A and B cannot provide.",
+        "C": "Variant C avoids false positives entirely by requiring verbatim evidence quotes.",
+        "D": "Variants A and B would cause Claude to hallucinate policy requirements, whereas Variant C lists them explicitly."
+      },
+      "correctAnswer": "B",
+      "explanation": "Variant C's superiority rests on four interlocking design decisions: (1) Decomposition \u2014 each of the 8 requirements is assessed independently, preventing one complex clause from dominating the overall assessment; (2) Explicit per-requirement criteria \u2014 pass/fail is defined for each requirement, not inferred from vague policy language; (3) Evidence anchoring \u2014 verbatim quotes tether each finding to specific contract text, enabling auditor verification; (4) Confidence thresholds with a deterministic aggregation rule \u2014 the < 0.75 flag transforms calibrated uncertainty into a machine-readable signal and defines exactly when the overall contract is flagged. Variants A and B lack decomposition, evidence, and confidence management. Variant C is not merely longer \u2014 its length encodes a complete, auditable methodology.",
+      "whyWrongMap": {
+        "A": "Length alone does not improve accuracy; more context is valuable only when it encodes relevant constraints. A longer prompt with vague criteria would still produce inconsistent results.",
+        "C": "Evidence quotes reduce hallucination risk and improve auditability but do not eliminate false positives; confidence thresholds and explicit per-requirement criteria are equally important components of false positive management.",
+        "D": "Claude does not hallucinate policy requirements when given a vague prompt \u2014 it applies its own interpretation of what constitutes a violation, which is a consistency problem, not a hallucination problem per se. Variant C solves the consistency problem by explicitly defining each requirement."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/chain-of-thought",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples"
+      ]
+    },
+    {
+      "id": "q-4.2-easy-1",
+      "taskStatement": "4.2",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "A developer is building a customer-support bot and notices that Claude's responses vary wildly in tone and length when handling refund requests \u2014 sometimes terse, sometimes multi-paragraph. They have not yet used any examples in their prompt.",
+      "text": "What is the PRIMARY purpose of adding few-shot examples to this prompt?",
+      "options": {
+        "A": "To increase Claude's token budget so it can produce longer responses.",
+        "B": "To demonstrate the desired tone, length, and format through concrete input-output pairs, making Claude's outputs more consistent.",
+        "C": "To replace the system prompt entirely, since examples convey all necessary instructions.",
+        "D": "To prevent Claude from generating any response that was not already shown in the examples."
+      },
+      "correctAnswer": "B",
+      "explanation": "Few-shot examples are input-output demonstrations that calibrate Claude's behavior by showing \u2014 rather than just telling \u2014 the desired format, tone, and length. They act as a formatting contract that anchors Claude's style across varied inputs, directly addressing the consistency problem described.",
+      "whyWrongMap": {
+        "A": "Few-shot examples do not increase Claude's token budget; they actually consume tokens from the context window.",
+        "C": "Examples complement system prompts but should not replace them; system prompts carry instructions that would be awkward or impossible to convey purely through examples.",
+        "D": "Claude is not restricted to only the patterns seen in examples \u2014 it generalizes from them. Examples guide style and format, not constrain the output space to exact replicas."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview"
+      ]
+    },
+    {
+      "id": "q-4.2-easy-2",
+      "taskStatement": "4.2",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "An engineer wants to use few-shot prompting to teach Claude to classify customer emails as 'Billing', 'Technical', or 'General'. She has 200 labeled emails available.",
+      "text": "Which selection strategy will produce the MOST effective few-shot set?",
+      "options": {
+        "A": "Pick the 200 emails at random to maximize diversity.",
+        "B": "Pick the shortest emails to minimize token usage regardless of content.",
+        "C": "Select representative examples from each class plus boundary cases where the correct label is non-obvious.",
+        "D": "Use only emails from the most common class so Claude learns the dominant pattern first."
+      },
+      "correctAnswer": "C",
+      "explanation": "Effective few-shot sets combine representative examples (one or more clear instances of each class) with boundary cases (emails that are ambiguous or sit near a decision boundary). This teaches Claude both the prototypical pattern of each class and how to handle edge cases, yielding the best generalization.",
+      "whyWrongMap": {
+        "A": "Using all 200 examples would consume most of the context window and still include many near-duplicates; quality and diversity matter more than sheer quantity.",
+        "B": "Selecting by length ignores coverage across classes and edge cases; short emails may all be trivially easy cases that do not teach disambiguation.",
+        "D": "Biasing examples toward the most common class will cause Claude to over-predict that class and under-represent rare but important categories."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview"
+      ]
+    },
+    {
+      "id": "q-4.2-easy-3",
+      "taskStatement": "4.2",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "A developer needs Claude to output structured JSON for extracted invoice fields. Without examples, Claude sometimes wraps the JSON in markdown code fences, sometimes includes extra commentary, and sometimes omits optional fields.",
+      "text": "How do few-shot examples MOST directly solve this problem?",
+      "options": {
+        "A": "They force Claude to download the correct JSON schema from the internet.",
+        "B": "They demonstrate the exact output format \u2014 including field presence, quoting style, and absence of prose \u2014 so Claude mirrors the demonstrated structure.",
+        "C": "They increase Claude's internal confidence score, reducing hallucination.",
+        "D": "They add runtime validation that rejects non-conforming responses automatically."
+      },
+      "correctAnswer": "B",
+      "explanation": "Few-shot examples act as format demonstrations. When every example shows bare JSON with specific field names and no surrounding text, Claude learns to match that exact structure. This is far more reliable than prose instructions alone because Claude can directly observe the desired output shape.",
+      "whyWrongMap": {
+        "A": "Claude does not fetch external schemas at inference time; examples are self-contained within the prompt.",
+        "C": "Few-shot examples influence output style, not an internal confidence metric; there is no such score exposed to the prompt.",
+        "D": "Examples in the prompt are input signals, not runtime validators; output validation requires external code, not in-prompt demonstrations."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/tool-use/overview"
+      ]
+    },
+    {
+      "id": "q-4.2-easy-4",
+      "taskStatement": "4.2",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "A team is debating whether to add ten few-shot examples to a simple prompt that asks Claude to translate a single word from English to Spanish. The task has no format ambiguity and the zero-shot performance is already near-perfect.",
+      "text": "What is the BEST decision regarding adding ten few-shot examples here?",
+      "options": {
+        "A": "Always add at least five examples to any prompt as a best practice regardless of performance.",
+        "B": "Add ten examples because more examples always improve reliability.",
+        "C": "Skip the examples; for a simple, unambiguous task where zero-shot already performs well, examples waste tokens without improving output.",
+        "D": "Add examples only if the translations will be reviewed by a human, not in automated pipelines."
+      },
+      "correctAnswer": "C",
+      "explanation": "Few-shot examples cost tokens from the context window and add latency. For a simple, well-defined task where zero-shot performance is already near-perfect, adding examples provides negligible benefit while consuming context and increasing cost. Examples are most valuable when the task has format ambiguity, stylistic requirements, or edge cases that are hard to describe in prose.",
+      "whyWrongMap": {
+        "A": "There is no universal rule requiring a minimum number of examples; the decision should be driven by task complexity and observed performance, not by convention.",
+        "B": "More examples do not monotonically improve reliability \u2014 beyond a certain point they consume context window space that could be used for the actual user input, and can introduce noise.",
+        "D": "Whether responses are reviewed by a human is unrelated to whether few-shot examples help; the relevant factor is task complexity and format ambiguity."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview"
+      ]
+    },
+    {
+      "id": "q-4.2-medium-1",
+      "taskStatement": "4.2",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "An architect is designing a prompt to extract sentiment (Positive / Negative / Neutral) from product reviews. She has assembled five examples, all of which express clearly positive or clearly negative sentiment. There are no ambiguous or mixed-sentiment examples.",
+      "text": "What is the MOST significant risk of this few-shot set design?",
+      "options": {
+        "A": "Claude will always output 'Neutral' because no neutral examples were provided.",
+        "B": "Claude may perform poorly on mixed-sentiment or hedged reviews because the examples do not teach it how to handle the decision boundary between classes.",
+        "C": "Five examples is too few to consume enough tokens to anchor Claude's behavior.",
+        "D": "Claude will memorize the exact wording of the five examples and only respond correctly when the input matches one of them verbatim."
+      },
+      "correctAnswer": "B",
+      "explanation": "Few-shot sets without boundary or edge-case examples fail to teach the model how to handle ambiguous inputs. In sentiment classification, mixed reviews ('The product is amazing but the delivery was terrible') sit on the decision boundary. Without at least one example showing how to resolve such cases, Claude will extrapolate inconsistently from the clear-case examples, reducing real-world accuracy.",
+      "whyWrongMap": {
+        "A": "Claude does not default to under-represented classes; it generalizes from patterns. Without neutral examples, it is more likely to force ambiguous inputs into Positive or Negative, not to default to Neutral.",
+        "C": "Five examples is a reasonable few-shot set size; the problem here is content coverage (missing edge cases), not quantity.",
+        "D": "Claude generalizes from few-shot examples rather than doing exact-match lookup; it applies the demonstrated patterns to novel inputs."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview"
+      ]
+    },
+    {
+      "id": "q-4.2-medium-2",
+      "taskStatement": "4.2",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A developer tests a six-example few-shot prompt for code explanation. He notices that Claude's output quality is good for the first few inputs in a long conversation but degrades significantly after twenty turns.",
+      "text": "What is the MOST likely cause of this degradation, and what is the recommended mitigation?",
+      "options": {
+        "A": "Claude forgets its system prompt after ten turns; the fix is to repeat the system prompt every five turns.",
+        "B": "As the conversation grows, the few-shot examples may scroll out of the effective attention window; the mitigation is to re-inject the examples periodically or switch to a long-context model.",
+        "C": "Claude's temperature rises over a conversation, increasing randomness; lower temperature should be set at the API level.",
+        "D": "The few-shot examples are incompatible with multi-turn conversations; they should be removed and replaced with tool calls."
+      },
+      "correctAnswer": "B",
+      "explanation": "Claude's attention diminishes for tokens far from the end of the context window (the 'lost in the middle' phenomenon). In a long multi-turn conversation, few-shot examples placed early in the system prompt or at the start of the conversation may receive less attention as the dialogue grows. Re-injecting examples at the start of new context windows or using a model with a larger effective context are the standard mitigations.",
+      "whyWrongMap": {
+        "A": "Claude does not 'forget' its system prompt after a fixed number of turns; the issue is attention distribution across a long token sequence, not a hard reset.",
+        "C": "API temperature is a static parameter set at request time and does not change during a conversation; temperature is also not the cause of the described degradation pattern.",
+        "D": "Few-shot examples are perfectly compatible with multi-turn conversations; the issue is context length management, not an architectural incompatibility."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/long-context-tips"
+      ]
+    },
+    {
+      "id": "q-4.2-medium-3",
+      "taskStatement": "4.2",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A prompt engineer is building a code-review assistant. She writes four few-shot examples where all reviewed code snippets are correct and the expected output is always 'LGTM \u2014 no issues found.' She then deploys the assistant and discovers it almost never flags real bugs.",
+      "text": "Which principle of few-shot design does this scenario MOST directly violate?",
+      "options": {
+        "A": "Examples should always be written in the same programming language as the target code.",
+        "B": "Negative examples \u2014 demonstrating how to respond to inputs that should trigger a non-default action \u2014 must be included when the task requires the model to identify failures or deviations.",
+        "C": "At least half of all examples must use tool calls rather than direct text responses.",
+        "D": "Few-shot examples should be randomly sampled from production data rather than hand-crafted."
+      },
+      "correctAnswer": "B",
+      "explanation": "When all few-shot examples show the same output class (here: 'no issues'), Claude learns a strong prior toward that output. For tasks where identifying deviations (bugs, violations, anomalies) is the primary value, the few-shot set must include negative examples \u2014 cases where the correct action is to flag a problem \u2014 so Claude learns both the positive (LGTM) and negative (bug found) response patterns.",
+      "whyWrongMap": {
+        "A": "The programming language of examples is irrelevant to the core problem; the issue is that zero buggy examples were shown, not that the language was wrong.",
+        "C": "There is no requirement that a certain fraction of few-shot examples use tool calls; the appropriate output format depends on the task design.",
+        "D": "Hand-crafted examples are a legitimate and often superior approach to curating a high-quality few-shot set; random sampling can introduce noise and may not cover edge cases."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview"
+      ]
+    },
+    {
+      "id": "q-4.2-medium-4",
+      "taskStatement": "4.2",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A team is constructing a few-shot prompt with eight examples. They arrange the examples so that the first six are all 'approve' decisions and the last two are 'reject' decisions. During testing, Claude approves most borderline cases regardless of actual content.",
+      "text": "What does this outcome MOST likely indicate about example ordering, and what is the recommended fix?",
+      "options": {
+        "A": "The eight examples are too many; reducing to four examples will eliminate the bias.",
+        "B": "Recency bias is causing the early 'approve' block to dominate because Claude attends more strongly to earlier tokens in the prompt.",
+        "C": "Clustering all examples of the same class together creates a sequence-level prior; interleaving classes throughout the example set is the recommended fix.",
+        "D": "The 'reject' examples should be removed so Claude has a consistent signal for all cases."
+      },
+      "correctAnswer": "C",
+      "explanation": "When examples of the same class are grouped together, Claude may learn a sequential pattern ('the last answer was X, so the next answer is probably X') rather than learning the decision logic. Interleaving classes \u2014 alternating 'approve' and 'reject' examples \u2014 prevents this clustering effect and forces Claude to attend to the content of each input rather than the positional pattern of outputs.",
+      "whyWrongMap": {
+        "A": "The problem is the ordering and clustering of examples, not their total count; reducing to four would not fix the underlying class imbalance and clustering issue.",
+        "B": "The mechanism is the opposite: grouping creates a recency or clustering prior, but the effect here is that the larger early block (six 'approve' examples) dominates \u2014 this is a class imbalance and clustering problem, not purely a recency effect.",
+        "D": "Removing 'reject' examples would make the problem worse, leaving Claude with no signal for when to reject; the fix is better distribution, not fewer classes."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview"
+      ]
+    },
+    {
+      "id": "q-4.2-medium-5",
+      "taskStatement": "4.2",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A developer is building a prompt that must handle both very short inputs (one word) and very long inputs (multi-paragraph documents). His current few-shot set contains only medium-length examples of around 50 words each.",
+      "text": "What specific risk does this example set introduce for production inputs, and what is the fix?",
+      "options": {
+        "A": "Claude will refuse very short inputs because they are shorter than any example it was shown.",
+        "B": "The format or depth of Claude's output may not scale appropriately for inputs that differ greatly in length from the examples; adding at least one short-input and one long-input example teaches Claude how to calibrate response length and detail.",
+        "C": "Using only 50-word examples will cause Claude to always produce exactly 50-word outputs regardless of input length.",
+        "D": "Length variation in examples is irrelevant; only the output label matters for few-shot learning."
+      },
+      "correctAnswer": "B",
+      "explanation": "Few-shot examples shape Claude's intuition about how to handle inputs of various characteristics. If all examples are medium-length, Claude has no demonstrated guidance for whether a one-word input should get a one-sentence reply or a full paragraph, or how to handle a multi-paragraph document. Including at least one short-input/short-output example and one long-input/long-output example teaches the expected calibration at both ends of the input spectrum.",
+      "whyWrongMap": {
+        "A": "Claude does not refuse inputs that are shorter or longer than demonstrated examples; it generalizes. The risk is miscalibrated output length or depth, not refusal.",
+        "C": "Claude does not lock onto a fixed token count from examples; it generalizes the style and structure, not the exact length. However, if all examples produce similar-length outputs, Claude may exhibit a mild bias toward that length.",
+        "D": "Input characteristics \u2014 including length \u2014 do influence how Claude calibrates its output. The input side of few-shot examples is as important as the output side for teaching appropriate behavior."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview"
+      ]
+    },
+    {
+      "id": "q-4.2-hard-1",
+      "taskStatement": "4.2",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "An architect is designing a high-throughput financial document processing pipeline. Each request involves a 2,000-token document, and she is considering adding eight few-shot examples (each ~500 tokens of input + output pair) to ensure consistent extraction format. The pipeline processes 10,000 documents per day with a per-token cost model. The zero-shot format consistency rate is 91%, and adding the eight examples raises it to 97%.",
+      "text": "How should the architect evaluate whether to include the eight examples?",
+      "options": {
+        "A": "Always include the examples because 97% is meaningfully higher than 91% and consistency is always worth the cost.",
+        "B": "Never include examples in cost-sensitive pipelines; use fine-tuning exclusively for format consistency.",
+        "C": "Quantify the cost increase (8 \u00d7 500 = 4,000 additional tokens per request \u00d7 10,000 requests/day) against the downstream value of the 6-percentage-point consistency improvement, considering the cost of handling the ~600 additional malformed outputs that would occur without examples.",
+        "D": "Add all eight examples and additionally fine-tune the model so the examples are 'baked in' without runtime token cost, making this a zero-cost improvement."
+      },
+      "correctAnswer": "C",
+      "explanation": "The decision to add few-shot examples in a cost-sensitive pipeline is a trade-off analysis. The eight examples add ~4,000 tokens per request (4M tokens/day at scale). This must be weighed against the value of the 6pp improvement: without examples, roughly 900 documents/day are malformed vs. 300/day with examples \u2014 600 additional downstream failures. If the cost of handling each malformed document exceeds the per-request token surcharge, examples are net positive. The architect must model both sides of this equation rather than defaulting to 'always add' or 'never add'.",
+      "whyWrongMap": {
+        "A": "Consistency improvements are not automatically 'worth it' \u2014 at 10,000 requests/day, 4,000 extra tokens per request represents 40M additional tokens daily, a significant cost that requires explicit justification through downstream value analysis.",
+        "B": "Fine-tuning is not always the right fallback; it requires labeled data, training cost, and retraining cadence. For a 6pp improvement, fine-tuning may have a higher total cost than the token surcharge from few-shot examples, especially for lower-volume scenarios.",
+        "D": "Fine-tuning does not 'bake in' few-shot examples at zero cost; fine-tuning has its own training and inference costs, and combining both few-shot and fine-tuning compounds cost without proportional benefit."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/overview",
+        "https://docs.anthropic.com/en/docs/about-claude/models/overview"
+      ]
+    },
+    {
+      "id": "q-4.2-hard-2",
+      "taskStatement": "4.2",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A team builds a multi-step reasoning prompt for legal contract analysis. They add five few-shot examples that each show the correct final answer but omit the intermediate reasoning steps. During evaluation, Claude produces correct answers on simple contracts but fails on complex multi-clause contracts with conflicting obligations.",
+      "text": "What is the MOST precise diagnosis of the failure mode, and what is the correct fix?",
+      "options": {
+        "A": "Five examples is the wrong number; exactly seven examples are needed for multi-step legal reasoning tasks.",
+        "B": "The examples demonstrate conclusions without demonstrating the reasoning process; for complex tasks, few-shot examples should show complete chain-of-thought \u2014 including intermediate steps \u2014 so Claude learns to apply structured reasoning rather than pattern-matching on surface features.",
+        "C": "Legal contract analysis requires tool calls; few-shot text examples cannot teach reasoning over structured documents.",
+        "D": "The examples are too long and are causing context window overflow; they should be shortened to single-sentence answers."
+      },
+      "correctAnswer": "B",
+      "explanation": "When few-shot examples show only final answers, Claude learns to predict the output distribution but does not learn the intermediate reasoning structure needed for complex inputs. For multi-step or compositional reasoning tasks, examples must include chain-of-thought steps: 'Given clause 3.1 states X and clause 7.2 states Y, there is a conflict... therefore the governing rule is Z.' This teaches Claude the analytical process, not just the answer shape, enabling it to generalize to complex cases that require actual reasoning rather than shallow pattern matching.",
+      "whyWrongMap": {
+        "A": "There is no magic number of examples for any task type; the issue is the quality and structure of the examples (missing reasoning steps), not the count.",
+        "C": "Few-shot text examples are entirely capable of teaching reasoning patterns over documents; tool calls are appropriate for retrieval or external actions, not for demonstrating analytical reasoning.",
+        "D": "Shortening examples to single-sentence answers would exacerbate the problem by removing any remaining reasoning signal; longer, reasoning-complete examples are what is needed."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/chain-of-thought"
+      ]
+    },
+    {
+      "id": "q-4.2-hard-3",
+      "taskStatement": "4.2",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "An engineer is using few-shot prompting to build a content moderation system. She crafts eight examples: six showing acceptable content with the label 'ALLOW' and two showing clearly harmful content with the label 'BLOCK'. During A/B testing, the system has high recall for obvious violations but a 40% false-negative rate on subtle policy violations \u2014 content that is technically borderline but should be blocked per company policy.",
+      "text": "What combination of changes to the few-shot set would MOST effectively reduce the false-negative rate on subtle violations?",
+      "options": {
+        "A": "Replace the two 'BLOCK' examples with ten 'ALLOW' examples to teach the model what is acceptable more thoroughly.",
+        "B": "Add more 'BLOCK' examples that specifically cover subtle and boundary-case violations, include negative examples with brief rationale explaining why borderline content fails policy, and rebalance the class ratio so 'BLOCK' examples represent a higher fraction of the set.",
+        "C": "Switch from few-shot prompting to zero-shot prompting with a detailed policy description, since few-shot examples cannot teach nuanced distinctions.",
+        "D": "Keep the current examples and instead lower the API temperature to 0.0 to make the model more conservative."
+      },
+      "correctAnswer": "B",
+      "explanation": "The false-negative rate on subtle violations is caused by three compounding factors: (1) class imbalance (six 'ALLOW' vs. two 'BLOCK' examples creates a prior toward ALLOW), (2) absence of boundary-case 'BLOCK' examples (only obvious violations were shown), and (3) lack of rationale that would teach Claude which policy dimension is being violated. The fix requires adding 'BLOCK' examples at the decision boundary, providing rationale in each example so Claude learns the policy logic (not just the label), and rebalancing toward more 'BLOCK' representation relative to the current 3:1 imbalance.",
+      "whyWrongMap": {
+        "A": "Adding more 'ALLOW' examples would increase the prior toward ALLOW further, directly worsening the false-negative rate on violations rather than improving it.",
+        "C": "Few-shot examples are well-suited to teaching nuanced distinctions \u2014 in fact, they are often superior to purely descriptive policies for borderline cases. The issue is example quality and class balance, not a fundamental limitation of the technique.",
+        "D": "Temperature affects output randomness/diversity; setting it to 0.0 does not make the model more conservative about policy. A deterministic model that has learned to predict 'ALLOW' for subtle cases will do so even more consistently at temperature 0."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
         "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview",
-        "https://docs.anthropic.com/en/docs/build-with-claude/safety-guardrails"
+        "https://docs.anthropic.com/en/docs/about-claude/models/overview"
+      ]
+    },
+    {
+      "id": "q-4.2-hard-4",
+      "taskStatement": "4.2",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A senior architect is evaluating two prompt designs for a structured data extraction task. Design A uses a detailed 800-word system prompt describing every extraction rule in prose, with zero examples. Design B uses a concise 200-word system prompt and six carefully chosen few-shot examples (three typical cases, two edge cases, one negative example showing what incorrect extraction looks like). Both designs are evaluated on a held-out test set of 500 documents including a mix of typical and atypical formats.",
+      "text": "On which category of test inputs is Design B MOST likely to outperform Design A, and what architectural principle does this illustrate?",
+      "options": {
+        "A": "Design B outperforms on typical cases because six examples are always better than prose rules; the principle is that examples replace instructions.",
+        "B": "Design B outperforms on edge cases and atypical formats because examples directly demonstrate how to apply rules to hard cases, while prose rules require the model to bridge the gap from abstract description to concrete novel input; this illustrates the principle that showing beats telling for ambiguous situations.",
+        "C": "Design A outperforms on all inputs because a more detailed system prompt always dominates few-shot examples.",
+        "D": "Both designs perform identically because the same rules are encoded in both prompts, just in different representations."
+      },
+      "correctAnswer": "B",
+      "explanation": "Prose rules describe what to do but require the model to infer how to apply them to novel inputs. Few-shot examples directly demonstrate application, especially for edge and atypical cases where the mapping from abstract rule to concrete situation is non-trivial. Design B's edge-case and negative examples act as anchors for the decision boundary, while Design A's prose must be interpreted by Claude at inference time. The architectural principle is 'showing beats telling' for tasks with ambiguous or context-sensitive application: examples ground abstract rules in concrete behavior. For purely typical inputs, both designs may perform similarly \u2014 the delta emerges at the boundary.",
+      "whyWrongMap": {
+        "A": "Examples do not replace instructions \u2014 they complement them. Design B works well precisely because it combines a concise instruction base with targeted examples. The principle is complementarity, not replacement.",
+        "C": "A longer system prompt does not automatically outperform a shorter one with examples; verbosity can introduce ambiguity or inconsistency. The empirical question is which encoding generalizes better to hard cases, and examples typically win on edge cases.",
+        "D": "The representations are not equivalent \u2014 prose rules and concrete examples encode information differently and have different generalization properties. Even if the 'same rules' are intended, the model's ability to apply them varies significantly based on encoding format."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-examples",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview",
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/chain-of-thought"
+      ]
+    },
+    {
+      "id": "q-4.3-easy-1",
+      "taskStatement": "4.3",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "A developer wants Claude to always respond with a JSON object containing exactly the fields `name` (string) and `score` (integer). They define a tool called `submit_result` with an `input_schema` matching that structure and call the API.",
+      "text": "Which `tool_choice` configuration guarantees Claude will call `submit_result` and never return a plain-text answer?",
+      "options": {
+        "A": "`{\"type\": \"auto\"}` \u2014 Claude decides whether to call a tool",
+        "B": "`{\"type\": \"any\"}` \u2014 Claude must call at least one of the available tools",
+        "C": "`{\"type\": \"tool\", \"name\": \"submit_result\"}` \u2014 Claude must call exactly this tool",
+        "D": "Omit `tool_choice` entirely and rely on the system prompt to ask for JSON"
+      },
+      "correctAnswer": "C",
+      "explanation": "Setting `tool_choice` to `{\"type\": \"tool\", \"name\": \"submit_result\"}` forces Claude to invoke that specific tool on every turn, guaranteeing the response arrives as a structured `tool_use` block whose `input` conforms to the declared `input_schema`. No other configuration provides this hard guarantee.",
+      "whyWrongMap": {
+        "A": "`auto` lets Claude decide; it may return a text answer instead of calling the tool, breaking downstream parsers that expect structured output.",
+        "B": "`any` forces a tool call but does not pin which tool. If multiple tools are registered, Claude may call a different one, and no specific schema is guaranteed.",
+        "D": "Relying on the system prompt alone is a soft instruction. Claude may still produce free-form text, especially when it judges that a direct answer is more helpful than a tool call."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/tool-use/forcing-tool-use"
+      ]
+    },
+    {
+      "id": "q-4.3-easy-2",
+      "taskStatement": "4.3",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "An architect is designing a tool schema for extracting product data. Some products have a `discount_percent` field and some do not. The team debates whether to mark the field `required` or to allow it to be absent.",
+      "text": "What is the recommended approach for optional fields in a tool `input_schema` to prevent Claude from hallucinating values?",
+      "options": {
+        "A": "Include the field in `required` and set a default value of `0` in the description",
+        "B": "Omit the field from the schema entirely so Claude never knows it exists",
+        "C": "List the field in `properties` but exclude it from the `required` array, and allow `null` via a type union or `nullable` flag",
+        "D": "Add the field to `required` and tell Claude in the system prompt to skip it when unknown"
+      },
+      "correctAnswer": "C",
+      "explanation": "Optional fields should appear in `properties` so Claude knows they exist, but must be absent from `required` so Claude is not forced to produce a value. Combining this with a nullable type (e.g., `[\"number\", \"null\"]`) lets Claude emit `null` when the data is missing rather than fabricating a number, which prevents hallucination.",
+      "whyWrongMap": {
+        "A": "Marking the field `required` forces Claude to always supply it. When the actual value is unknown, Claude will invent a plausible number rather than leave it absent, introducing hallucinated data.",
+        "B": "Omitting the field means Claude cannot return it even when it is genuinely present in the source data, causing silent data loss on products that do have a discount.",
+        "D": "System-prompt instructions conflict with the schema's `required` constraint. The schema enforcement wins at the API level, so Claude will still be compelled to produce a value despite the natural-language instruction."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/tool-use/tool-use-best-practices"
+      ]
+    },
+    {
+      "id": "q-4.3-easy-3",
+      "taskStatement": "4.3",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "A team needs Claude to classify support tickets into one of three categories: `billing`, `technical`, or `other`. They want the API response to contain only one of those exact strings, never a free-form label.",
+      "text": "Which schema pattern best enforces that the `category` field can only contain `billing`, `technical`, or `other`?",
+      "options": {
+        "A": "Type `string` with a description listing the three values as examples",
+        "B": "Type `string` with an `enum` array: `[\"billing\", \"technical\", \"other\"]`",
+        "C": "Type `string` with a `pattern` regex: `^(billing|technical|other)$`",
+        "D": "Type `object` with a boolean field for each category"
+      },
+      "correctAnswer": "B",
+      "explanation": "The `enum` keyword in JSON Schema restricts the field to an explicit set of allowed values. Claude treats the schema as a hard contract; it will only emit one of the listed strings. This is the canonical way to express constrained categorical values in tool schemas.",
+      "whyWrongMap": {
+        "A": "A plain `string` type with examples in the description is a soft hint. Claude may still produce variations like `\"Billing\"` or `\"account issue\"` because the schema does not enforce the constraint at a structural level.",
+        "C": "`pattern` with a regex also works in standard JSON Schema, but `enum` is more explicit, more readable, and is the idiomatic Anthropic-recommended approach for a closed set of known values.",
+        "D": "Using a boolean field per category changes the data model entirely, requires the consumer to iterate fields to find the active category, and does not prevent multiple `true` values simultaneously."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/tool-use/tool-use-best-practices"
+      ]
+    },
+    {
+      "id": "q-4.3-easy-4",
+      "taskStatement": "4.3",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "A developer asks Claude to return a structured invoice object. They add the following to the `messages` array before the API call: `{\"role\": \"assistant\", \"content\": \"{\\\"invoice\\\":\"}`.",
+      "text": "What technique does this represent, and what is its primary benefit?",
+      "options": {
+        "A": "Chain-of-thought injection \u2014 it forces Claude to reason before answering",
+        "B": "Few-shot prompting \u2014 it demonstrates the desired output format with an example",
+        "C": "Assistant response prefilling \u2014 it primes the generation to start in the middle of the target JSON structure",
+        "D": "System prompt override \u2014 it replaces the system prompt with a JSON preamble"
+      },
+      "correctAnswer": "C",
+      "explanation": "Prefilling the assistant turn with a partial JSON string like `{\"invoice\":` steers Claude to continue from that exact position, effectively locking in the opening structure of the response. This is the prefilling technique and is useful for guiding format without relying on tool_use, though it offers weaker guarantees than a forced tool call.",
+      "whyWrongMap": {
+        "A": "Chain-of-thought injection involves prompting Claude to think step-by-step before answering, typically done in the user or system turn, not by seeding a partial assistant message.",
+        "B": "Few-shot prompting places example input/output pairs in earlier conversation turns. A single partial assistant message at the end of the array is not a few-shot example; it is a prefill.",
+        "D": "The `system` role is a separate top-level parameter in the API. Adding an `assistant` message to the `messages` array does not affect or replace the system prompt."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/prefill-claudes-response",
+        "https://docs.anthropic.com/en/docs/tool-use/overview"
+      ]
+    },
+    {
+      "id": "q-4.3-medium-1",
+      "taskStatement": "4.3",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A pipeline uses `tool_choice: {\"type\": \"tool\", \"name\": \"extract_entity\"}` to force structured extraction. The tool schema has `entity_type` (enum: person, org, location) and `confidence` (number 0\u20131) both in `required`. During testing, Claude occasionally sets `confidence` to `1.0` for entities it clearly cannot verify.",
+      "text": "What schema change best reduces fabricated confidence values without losing the field entirely?",
+      "options": {
+        "A": "Move `confidence` out of `required` and add `\"null\"` to its type so Claude can emit `null` when certainty is unavailable",
+        "B": "Change `confidence` from `number` to `string` and use an enum: `[\"low\", \"medium\", \"high\"]`",
+        "C": "Add a `minimum: 0` and `maximum: 1` constraint to prevent out-of-range values",
+        "D": "Remove `confidence` from the schema entirely and compute it post-hoc with a separate heuristic"
+      },
+      "correctAnswer": "A",
+      "explanation": "When a field is `required`, Claude must always supply a value, which creates hallucination pressure for uncertain cases. Making `confidence` optional (removed from `required`) with a nullable type gives Claude a semantically honest escape hatch: it emits the number when genuinely available and `null` when it cannot estimate reliably. This preserves useful signal while eliminating forced fabrication.",
+      "whyWrongMap": {
+        "B": "Switching to an ordinal enum does constrain the value space and reduces false precision, but an enum is still `required` under the original schema. Claude would still be compelled to pick a bucket even when it has no basis for the choice.",
+        "C": "`minimum`/`maximum` constraints prevent out-of-range numbers but do nothing to prevent Claude from defaulting to an extreme value like `1.0` within the valid range when it feels compelled to supply something.",
+        "D": "Removing the field loses the model's signal entirely. When Claude does have genuine confidence information, that signal is valuable and should be captured, not discarded."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/tool-use/tool-use-best-practices",
+        "https://docs.anthropic.com/en/docs/tool-use/overview"
+      ]
+    },
+    {
+      "id": "q-4.3-medium-2",
+      "taskStatement": "4.3",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "An engineer evaluates two approaches for generating structured JSON from Claude: (A) using a tool with `tool_choice` forced, and (B) using a system prompt that says 'Respond only in valid JSON' and then parsing `content[0].text`. The application runs in production where downstream services parse every response.",
+      "text": "Which statement most accurately compares the reliability of these two approaches?",
+      "options": {
+        "A": "Both approaches are equally reliable because Claude follows system prompt instructions as strictly as it follows schemas",
+        "B": "Approach B is more reliable because it avoids the overhead of tool definitions and keeps the response in a single text block",
+        "C": "Approach A provides stronger guarantees because the schema is enforced at the API level, while Approach B relies on natural-language compliance that can fail under edge cases",
+        "D": "Approach B is more reliable for nested JSON because tool schemas cannot express nested object structures"
+      },
+      "correctAnswer": "C",
+      "explanation": "Tool use with a forced `tool_choice` and a well-defined `input_schema` is enforced structurally: the API rejects responses that do not conform. Natural-language instructions like 'respond only in valid JSON' are soft constraints \u2014 Claude generally respects them but may deviate when it encounters ambiguous inputs, very long contexts, or situations where it judges a direct answer more helpful. For production pipelines where every parse must succeed, the tool-use approach is the correct choice.",
+      "whyWrongMap": {
+        "A": "Schema constraints and natural-language instructions are not equivalent. Schemas are validated mechanically; instructions depend on the model's judgment and can be overridden by competing pressures in the prompt.",
+        "B": "The overhead of a tool definition is negligible compared to the cost of a single downstream parse failure in production. Reliability, not overhead, is the deciding factor.",
+        "D": "Tool schemas fully support nested objects by using `type: object` within `properties`. Deeply nested structures are expressible and commonly used in production tool schemas."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/tool-use/forcing-tool-use"
+      ]
+    },
+    {
+      "id": "q-4.3-medium-3",
+      "taskStatement": "4.3",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A schema for a `create_report` tool includes a nested `author` object with `name` (required string) and `email` (optional string). The outer schema has `title` and `author` both in `required`. An API consumer reports that some responses include `\"author\": {}` with an empty object.",
+      "text": "What is the most likely cause, and what schema fix prevents it?",
+      "options": {
+        "A": "Claude cannot handle nested objects; flatten `author_name` and `author_email` into top-level fields",
+        "B": "`author` is required at the top level but its inner `required` array only lists `name`. Claude satisfies the outer constraint by emitting a minimal valid object. Add `\"additionalProperties\": false` to the `author` sub-schema to prevent empty objects.",
+        "C": "The `author` object has no `required` array at all for its inner properties, so Claude may emit an empty object `{}` that still satisfies the outer `required` constraint. Add `name` to the inner `required` array.",
+        "D": "Empty objects appear when `tool_choice` is set to `auto` instead of forced. Switch to `{\"type\": \"tool\", \"name\": \"create_report\"}`."
+      },
+      "correctAnswer": "C",
+      "explanation": "JSON Schema `required` is scoped per object. If the `author` sub-schema defines `name` and `email` in `properties` but has no `required` array, an empty object `{}` is technically valid. Adding `\"required\": [\"name\"]` to the `author` sub-schema ensures Claude must supply at least the author's name, eliminating the empty-object case.",
+      "whyWrongMap": {
+        "A": "Flattening is a structural workaround that loses semantic clarity and is unnecessary. Claude handles nested objects correctly when the inner schema is complete.",
+        "B": "`additionalProperties: false` prevents unknown keys from appearing but does not enforce the presence of known keys. An empty `{}` has no additional properties and would still pass this constraint; it does nothing to require `name`.",
+        "D": "The empty-object issue is a schema completeness problem, not a `tool_choice` problem. Forcing the tool call changes when the tool is invoked but has no effect on the completeness of the inner object once Claude does call it."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/tool-use/tool-use-best-practices"
+      ]
+    },
+    {
+      "id": "q-4.3-medium-4",
+      "taskStatement": "4.3",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A developer prefills the assistant turn with `{\"results\": [` to guide Claude into generating a JSON array. In testing the output is correct, but intermittently Claude closes the array prematurely with `]}` after two items even when the source text contains five entities.",
+      "text": "What is the most likely root cause of early array termination when using assistant prefilling?",
+      "options": {
+        "A": "Prefilling is incompatible with arrays; only objects can be prefilled",
+        "B": "The `max_tokens` limit is too low, causing Claude to terminate generation before completing all items",
+        "C": "Prefilling bypasses the tokenizer, which corrupts JSON after the second item",
+        "D": "Prefilling locks the response format but still relies on Claude's natural-language judgment for content; Claude may decide two items are sufficient based on the prompt context"
+      },
+      "correctAnswer": "D",
+      "explanation": "Prefilling is a soft structural guide. It constrains the opening of the response but does not give Claude explicit knowledge of how many items must appear. If the prompt does not clearly specify the expected count or does not instruct Claude to extract all occurrences, Claude may stop after producing what it judges to be a reasonable set. Using tool_use with a schema that includes an array field and explicit instructions in the prompt ('extract ALL entities') provides stronger guarantees.",
+      "whyWrongMap": {
+        "A": "Prefilling works perfectly with array structures. Starting with `[` is a common and valid prefill pattern for array-valued responses.",
+        "B": "A `max_tokens` ceiling would cause the response to truncate mid-token and produce malformed JSON, not a cleanly closed `]}`. The fact that the closure is syntactically valid rules out a token-limit truncation.",
+        "C": "Prefilling is handled at the message level before tokenization; it does not interact with or corrupt the tokenizer's handling of later content."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/prefill-claudes-response",
+        "https://docs.anthropic.com/en/docs/tool-use/overview"
+      ]
+    },
+    {
+      "id": "q-4.3-medium-5",
+      "taskStatement": "4.3",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A team wants to extract structured data from legal documents using Claude. They define a `parse_contract` tool. The schema has a top-level `parties` field typed as an array of objects, each with `party_name` (string, required) and `role` (enum: `[\"buyer\", \"seller\", \"guarantor\"]`, required).",
+      "text": "A document references an entity called 'escrow agent'. Which schema update correctly handles this without removing the enum constraint entirely?",
+      "options": {
+        "A": "Add `\"escrow_agent\"` to the `role` enum array so the value is explicitly allowed",
+        "B": "Change `role` to type `string` and drop the enum to allow any free-form role name",
+        "C": "Make `role` nullable so Claude can emit `null` when the role does not match a known value",
+        "D": "Add a second field `custom_role` (nullable string) for roles outside the enum, and keep `role` with its original enum plus `\"other\"`; set `role` to `\"other\"` when the actual role is unknown"
+      },
+      "correctAnswer": "A",
+      "explanation": "The cleanest fix is to expand the enum to include the newly discovered value. Enums are a closed list of valid values and should be updated as the domain grows. This preserves strict validation for all known roles while accurately representing `escrow agent` as a first-class value in the schema.",
+      "whyWrongMap": {
+        "B": "Dropping the enum entirely sacrifices all validation, opening the field to arbitrary strings. This trades a schema gap for unbounded drift \u2014 future roles like 'buyer ' (with a trailing space) or 'Buyer' would pass silently.",
+        "C": "Making `role` nullable does not handle the `escrow agent` role; it only allows Claude to skip the field. A contract party whose role is known should have a non-null value, not an absent one.",
+        "D": "The two-field pattern (enum + `custom_role`) adds schema complexity without benefit if the actual value is already deterministic. It is appropriate when truly free-form overflow is expected, but for a single known new role, simply extending the enum is simpler and less error-prone."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/tool-use/tool-use-best-practices"
+      ]
+    },
+    {
+      "id": "q-4.3-hard-1",
+      "taskStatement": "4.3",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "An architect designs a pipeline where Claude extracts structured financial events from earnings call transcripts. The tool `record_event` has this partial schema:\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"event_type\": { \"type\": \"string\", \"enum\": [\"revenue\", \"guidance\", \"acquisition\", \"risk\"] },\n    \"amount_usd\": { \"type\": \"number\" },\n    \"currency_override\": { \"type\": [\"string\", \"null\"] },\n    \"metadata\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"fiscal_quarter\": { \"type\": \"string\" },\n        \"confidence\": { \"type\": \"number\", \"minimum\": 0, \"maximum\": 1 }\n      },\n      \"required\": [\"fiscal_quarter\"]\n    }\n  },\n  \"required\": [\"event_type\", \"metadata\"]\n}\n```\n\nIn production, `amount_usd` is absent in roughly 40% of calls (for qualitative events), but Claude sometimes emits `0` or `null` for it.",
+      "text": "Which combination of schema adjustments best resolves the fabricated `amount_usd` values while preserving all other constraints?",
+      "options": {
+        "A": "Add `\"amount_usd\"` to `required` and change its type to `[\"number\", \"null\"]` so Claude must always emit either a number or an explicit null",
+        "B": "Remove `amount_usd` from `properties` entirely so Claude never attempts to populate it",
+        "C": "Keep `amount_usd` absent from `required` (already the case) and change its type to `[\"number\", \"null\"]`; add a description clarifying it should be omitted when no monetary figure is present",
+        "D": "Move `amount_usd` inside the `metadata` sub-object and add it to `metadata.required` alongside `fiscal_quarter`"
+      },
+      "correctAnswer": "C",
+      "explanation": "The field is already optional (not in `required`), so the structural fix is to ensure Claude has a null escape hatch via `[\"number\", \"null\"]` and clear semantic guidance in the `description`. When a field is optional AND nullable, Claude understands it may be omitted or null; the description reinforces that omission is correct for qualitative events. Making it required (A) would force fabrication on qualitative rows. Removing it (B) silently drops monetary data on quantitative events. Moving it to a sub-object (D) changes the data model and still does not address the fabrication root cause.",
+      "whyWrongMap": {
+        "A": "Adding `amount_usd` to `required` reintroduces the fabrication pressure that the question is trying to eliminate. Claude would be forced to supply a value for every event, producing `0` or a hallucinated figure for qualitative events.",
+        "B": "Removing the field from `properties` prevents Claude from returning monetary amounts even when they are clearly stated in the transcript, causing silent data loss on the 60% of events where the amount is present.",
+        "D": "Relocating the field to a sub-object is a structural change with no bearing on the nullable/required semantics. Unless `amount_usd` is also removed from `metadata.required`, it would become mandatory for every event, recreating the same hallucination problem."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/tool-use/tool-use-best-practices"
+      ]
+    },
+    {
+      "id": "q-4.3-hard-2",
+      "taskStatement": "4.3",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A system uses Claude to auto-complete multi-step forms. Each tool call represents one form section. The architect proposes prefilling the assistant turn with `{\"section\": \"personal_info\", \"fields\": {` to lock in the section header before Claude fills the nested fields. A senior engineer objects that the tool-use approach should be used instead, arguing that prefilling provides weaker guarantees and will fail on long forms.",
+      "text": "Which statement most precisely captures the trade-off between prefilling and forced tool use for this use case?",
+      "options": {
+        "A": "Prefilling and tool use are equivalent for nested JSON because both ultimately rely on Claude's ability to generate valid JSON syntax",
+        "B": "Prefilling locks the opening tokens of the response but does not enforce schema compliance for nested fields; a forced tool call with a validated `input_schema` ensures every field conforms to declared types and constraints, making the senior engineer's objection correct for production",
+        "C": "Prefilling is strictly superior because it avoids an extra round-trip to the API that tool use requires",
+        "D": "Forced tool use is unreliable for nested objects because Claude cannot parse schemas with more than two levels of nesting"
+      },
+      "correctAnswer": "B",
+      "explanation": "Prefilling is a prompt-level technique: it constrains where the generation starts but imposes no structural validation. Claude may generate syntactically valid JSON that violates type, enum, or required constraints in nested fields because nothing at the API level checks the inner structure. Forced tool use with a complete `input_schema` provides schema-level validation at the API boundary, ensuring every field in every nesting level conforms to declared constraints. For a production form-completion pipeline the senior engineer is correct.",
+      "whyWrongMap": {
+        "A": "The ability to generate valid JSON syntax is a necessary but not sufficient condition for correctness. Syntactically valid JSON can still violate type constraints, miss required fields, or use values outside enum boundaries \u2014 none of which prefilling prevents.",
+        "C": "Prefilling does not require an extra round-trip; both approaches are single API calls. The claim is factually incorrect and the premise about round-trips does not apply.",
+        "D": "Claude handles deeply nested schemas correctly. There is no documented nesting depth limit for `input_schema`. The objection in option D is a fabricated technical constraint."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/prefill-claudes-response",
+        "https://docs.anthropic.com/en/docs/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/tool-use/forcing-tool-use"
+      ]
+    },
+    {
+      "id": "q-4.3-hard-3",
+      "taskStatement": "4.3",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A data platform ingests diverse documents and routes them through three Claude tools: `extract_invoice`, `extract_contract`, and `extract_correspondence`. Each tool has a different schema. The system currently uses `tool_choice: {\"type\": \"any\"}` and a routing instruction in the system prompt. In production, Claude occasionally calls the wrong tool for a document type, producing a response that is structurally valid for the wrong schema.",
+      "text": "What architectural change best guarantees that the correct schema is enforced for each document type?",
+      "options": {
+        "A": "Switch to `tool_choice: {\"type\": \"auto\"}` so Claude has full flexibility to choose the right tool based on the document content",
+        "B": "Classify the document type in a first API call (using a lightweight classification prompt), then issue a second API call with only the matching tool registered and `tool_choice: {\"type\": \"tool\", \"name\": \"<matched_tool>\"}` forced",
+        "C": "Merge all three schemas into a single `extract_document` tool with a `document_type` discriminator field and use `tool_choice: {\"type\": \"tool\", \"name\": \"extract_document\"}`",
+        "D": "Add stronger routing instructions to the system prompt and increase `temperature` to 0 so Claude reliably selects the correct tool"
+      },
+      "correctAnswer": "B",
+      "explanation": "Separating classification from extraction via a two-call pipeline eliminates the ambiguity at the root of the problem. The first lightweight call determines document type; the second call registers only the matching tool and forces it with `tool_choice`. Claude has no choice but to use the correct schema because it is the only tool available. This is the standard pattern for deterministic multi-schema routing.",
+      "whyWrongMap": {
+        "A": "`auto` gives Claude maximum flexibility, which is exactly what causes wrong-tool selections. Increasing flexibility worsens the problem rather than solving it.",
+        "C": "Merging into a single tool with a discriminator field introduces schema complexity: the merged schema must accommodate all three document types, causing many fields to be optional for any given document type. This weakens validation and transfers the routing decision back to Claude's judgment inside the tool call rather than eliminating it.",
+        "D": "Setting `temperature: 0` improves determinism for a given prompt but does not change the fundamental ambiguity of having three tools available under `any` routing. A deterministically wrong answer is still wrong, and prompt instructions remain soft constraints."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/tool-use/forcing-tool-use",
+        "https://docs.anthropic.com/en/docs/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/tool-use/tool-use-best-practices"
+      ]
+    },
+    {
+      "id": "q-4.3-hard-4",
+      "taskStatement": "4.3",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "An engineer is migrating a structured-output pipeline from JSON mode (system prompt instruction + text parsing) to the tool-use approach. The original system prompt says: 'You must respond with a JSON object matching this schema: {\u2026}'. The engineer replaces it with a tool definition and `tool_choice: {\"type\": \"tool\", \"name\": \"output_result\"}`. During migration testing, they notice that Claude's reasoning explanation (previously in a `reasoning` field of the JSON) no longer appears.",
+      "text": "What is the most accurate explanation, and what is the correct way to recover the reasoning field?",
+      "options": {
+        "A": "Tool use suppresses all reasoning. Use extended thinking (`\"thinking\": {\"type\": \"enabled\"}`) instead of a `reasoning` field in the schema",
+        "B": "The `reasoning` field was only produced because the old system prompt explicitly named it. In the tool schema, add `reasoning` to `properties` (as a string) and to `required`; Claude will populate it as part of the structured output",
+        "C": "Claude never produces reasoning inside tool calls. The reasoning must be captured by examining the `stop_reason` field of the API response",
+        "D": "JSON mode produces a `reasoning` field automatically; tool use does not. The migration must keep the JSON mode approach to preserve reasoning output"
+      },
+      "correctAnswer": "B",
+      "explanation": "The `reasoning` field did not disappear because of an inherent tool-use limitation \u2014 it disappeared because the new schema does not declare it. Claude faithfully fills fields that are declared in the `input_schema`. Adding `reasoning` as a required string field instructs Claude to provide its rationale as part of the structured output, exactly as before. This is a schema completeness issue, not a fundamental capability difference between JSON mode and tool use.",
+      "whyWrongMap": {
+        "A": "Extended thinking is a separate feature (streaming thinking tokens) and is not required to obtain a reasoning field. A simple string field in the schema achieves the same goal with less complexity and no additional API parameters.",
+        "C": "`stop_reason` indicates why Claude stopped generating (e.g., `end_turn`, `tool_use`) and contains no reasoning content. Reasoning content must be an explicit field in the response body, not metadata.",
+        "D": "There is no automatic `reasoning` field in JSON mode. In the original pipeline, the field appeared because the system prompt schema explicitly included it. The same mechanism works in tool use \u2014 the field must be declared in the schema."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/docs/tool-use/overview",
+        "https://docs.anthropic.com/en/docs/tool-use/tool-use-best-practices",
+        "https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking"
+      ]
+    },
+    {
+      "id": "q-4.4-easy-1",
+      "taskStatement": "4.4",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "A tool call returns an invalid result. You need to inform the model that the tool failed so it can adjust its approach.",
+      "text": "When a tool call fails and you want Claude to retry with corrected parameters, which field in the tool_result block signals that the previous attempt produced an error?",
+      "options": {
+        "A": "error: true",
+        "B": "isError: true",
+        "C": "status: 'failed'",
+        "D": "retry: true"
+      },
+      "correctAnswer": "B",
+      "explanation": "The Messages API uses the boolean field `isError: true` inside a tool_result content block to indicate that execution failed. Claude reads this flag and uses the accompanying content as error context when deciding how to adjust.",
+      "whyWrongMap": {
+        "A": "`error: true` is not a recognised field in the Anthropic tool_result schema; using it would be silently ignored.",
+        "C": "`status: 'failed'` is not part of the tool_result schema and would not be interpreted as an error signal.",
+        "D": "`retry: true` is not a valid field; retry decisions are made by the orchestrator, not communicated via this flag."
+      },
+      "references": [
+        "Anthropic Docs \u2013 Tool use: handling errors",
+        "Anthropic Docs \u2013 Messages API: content block types"
+      ]
+    },
+    {
+      "id": "q-4.4-easy-2",
+      "taskStatement": "4.4",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "You are designing a retry policy for an agentic pipeline. A senior engineer asks how many retries are considered safe before escalating.",
+      "text": "What is the recommended maximum number of retries before escalating or falling back when a tool call continues to fail?",
+      "options": {
+        "A": "1",
+        "B": "5\u201310",
+        "C": "2\u20133",
+        "D": "Unlimited, until the model succeeds"
+      },
+      "correctAnswer": "C",
+      "explanation": "Anthropic guidance recommends 2\u20133 retries as a safe upper bound. Beyond this limit the pipeline should escalate to a human or trigger a graceful fallback, preventing runaway loops and wasted tokens.",
+      "whyWrongMap": {
+        "A": "A single retry is often too few; transient errors or slightly malformed parameters frequently succeed on a second attempt.",
+        "B": "5\u201310 retries risk runaway loops, excessive cost, and potential harm if the model keeps attempting a broken action.",
+        "D": "Unlimited retries create infinite-loop risk, destroy cost predictability, and are explicitly warned against in Anthropic's agentic guidelines."
+      },
+      "references": [
+        "Anthropic Docs \u2013 Agentic and multi-agent frameworks: avoiding loops",
+        "Anthropic Docs \u2013 Tool use best practices"
+      ]
+    },
+    {
+      "id": "q-4.4-easy-3",
+      "taskStatement": "4.4",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "A junior engineer is crafting the error message returned to Claude after a failed JSON validation.",
+      "text": "Which error message provides the most useful feedback to Claude for self-correction?",
+      "options": {
+        "A": "\"Validation failed. Try again.\"",
+        "B": "\"Error occurred in the pipeline.\"",
+        "C": "\"Field 'email' must be a valid RFC 5321 address; received 'user@@example'.\"",
+        "D": "\"Bad input.\""
+      },
+      "correctAnswer": "C",
+      "explanation": "Specific feedback naming the exact field, the constraint violated, and the invalid value received gives Claude the precise context it needs to correct only the failing parameter. Vague messages force Claude to guess what changed.",
+      "whyWrongMap": {
+        "A": "\"Validation failed. Try again.\" gives no actionable information; Claude cannot determine which field to fix or why.",
+        "B": "\"Error occurred in the pipeline\" is too abstract and could describe dozens of different root causes.",
+        "D": "\"Bad input\" conveys no structure; Claude has no basis for targeted correction and may change the wrong parameter."
+      },
+      "references": [
+        "Anthropic Docs \u2013 Tool use: error messages",
+        "Anthropic Docs \u2013 Prompt engineering: specificity"
+      ]
+    },
+    {
+      "id": "q-4.4-easy-4",
+      "taskStatement": "4.4",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "An orchestrator detects that Claude has called the same tool with identical arguments three consecutive times without success.",
+      "text": "What mechanism should an orchestrator maintain to detect and break potential infinite retry loops?",
+      "options": {
+        "A": "A hard-coded sleep of 5 seconds between retries",
+        "B": "A detected_pattern tracker that records repeated tool calls and their arguments",
+        "C": "Increasing the temperature of Claude's sampler after each retry",
+        "D": "Disabling all tools after the first failure"
+      },
+      "correctAnswer": "B",
+      "explanation": "A `detected_pattern` tracker logs each tool invocation signature (name + arguments). When the same signature appears more than the allowed retry count, the orchestrator recognises the loop and escalates rather than retrying again.",
+      "whyWrongMap": {
+        "A": "Sleeping between retries reduces throughput but does not detect or break a loop; the same call will still be repeated.",
+        "C": "Changing sampler temperature does not address the structural loop; it introduces randomness but may still reproduce the same call.",
+        "D": "Disabling all tools prevents any useful work from continuing and is far too broad a response to a single failing tool."
+      },
+      "references": [
+        "Anthropic Docs \u2013 Agentic frameworks: loop detection",
+        "Anthropic Docs \u2013 Tool use: retry strategies"
+      ]
+    },
+    {
+      "id": "q-4.4-medium-1",
+      "taskStatement": "4.4",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "Your pipeline validates tool output before passing it to the next stage. A schema check reveals a missing required field. The model has already used two of its three allowed retries.",
+      "text": "On the third (final) retry attempt, the tool output still fails validation. What is the correct next action?",
+      "options": {
+        "A": "Silently drop the output and proceed with downstream steps using partial data",
+        "B": "Increase the retry limit to allow more attempts",
+        "C": "Escalate to a human operator or trigger a defined fallback workflow",
+        "D": "Restart the entire pipeline from the beginning"
+      },
+      "correctAnswer": "C",
+      "explanation": "After exhausting the retry budget (2\u20133 attempts), the pipeline must not continue with invalid data or loop further. Escalating to a human or invoking a fallback preserves data integrity, limits blast radius, and follows Anthropic's minimal-footprint principle.",
+      "whyWrongMap": {
+        "A": "Proceeding with partial data violates the validation contract and may corrupt downstream steps or produce incorrect outputs.",
+        "B": "Dynamically expanding the retry limit defeats the purpose of the cap and risks runaway token consumption.",
+        "D": "Restarting the full pipeline wastes work completed before the failure point and does not address the root cause."
+      },
+      "references": [
+        "Anthropic Docs \u2013 Agentic frameworks: escalation",
+        "Anthropic Docs \u2013 Tool use: retry limits and fallback"
+      ]
+    },
+    {
+      "id": "q-4.4-medium-2",
+      "taskStatement": "4.4",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "Claude calls a create_record tool and receives `isError: true` with the message 'duplicate key on field user_id'. On the next attempt, Claude sends the same user_id again.",
+      "text": "What is the most likely root cause of Claude repeating the same erroneous value, and how should the error message be improved?",
+      "options": {
+        "A": "The model's context window is too small; increase max_tokens",
+        "B": "The error message lacked actionable guidance; it should state the conflicting value and suggest a corrective action such as checking for an existing record",
+        "C": "The retry logic is firing too quickly; add a delay",
+        "D": "The tool schema is missing a description field; add one"
+      },
+      "correctAnswer": "B",
+      "explanation": "Claude adjusts behaviour based on the content of the error message. If the message only names the constraint without indicating what the model should do differently (e.g., look up the existing record or generate a new ID), Claude has insufficient signal to change its approach.",
+      "whyWrongMap": {
+        "A": "Context window size does not explain why Claude repeats the same value; the error message is already in context.",
+        "C": "A timing delay does not change the information available to Claude and would not prevent repeating the same value.",
+        "D": "Adding a description to the tool schema helps with initial parameter selection but does not address how Claude interprets runtime errors."
+      },
+      "references": [
+        "Anthropic Docs \u2013 Tool use: error feedback content",
+        "Anthropic Docs \u2013 Prompt engineering: actionable instructions"
+      ]
+    },
+    {
+      "id": "q-4.4-medium-3",
+      "taskStatement": "4.4",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "You are building a pipeline that calls an external API. Sometimes the API returns a transient 503 error unrelated to Claude's parameters. Other times, Claude generates a malformed request body that causes a 400 error.",
+      "text": "How should the retry strategy differ between a transient 503 error and a 400 validation error?",
+      "options": {
+        "A": "Both should be retried immediately with the same parameters",
+        "B": "Both should escalate to a human immediately without retrying",
+        "C": "A 503 should be retried with the same parameters (possibly with backoff); a 400 should include the specific validation error in the tool_result so Claude can correct the request",
+        "D": "A 400 should be retried with the same parameters; a 503 should be retried with different parameters"
+      },
+      "correctAnswer": "C",
+      "explanation": "Transient errors (503) are not caused by bad parameters, so retrying with identical parameters is appropriate. Validation errors (400) indicate bad input from Claude; the error detail must be fed back via `isError: true` so Claude can generate a corrected request.",
+      "whyWrongMap": {
+        "A": "Retrying a 400 with the same parameters will always fail because the issue is in Claude's output, not the service state.",
+        "B": "Immediate escalation on a transient 503 is wasteful; most transient errors resolve on retry without human intervention.",
+        "D": "This reverses the correct logic: 503s do not require parameter changes, while 400s do."
+      },
+      "references": [
+        "Anthropic Docs \u2013 Tool use: error handling strategies",
+        "Anthropic Docs \u2013 Agentic frameworks: error classification"
+      ]
+    },
+    {
+      "id": "q-4.4-medium-4",
+      "taskStatement": "4.4",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "An agentic pipeline uses a detected_pattern tracker. After two retries, the tracker logs that Claude is calling tool A, then tool B, then tool A again in a cycle.",
+      "text": "Which condition should the orchestrator use to determine that a loop has been detected and retries should cease?",
+      "options": {
+        "A": "Total elapsed wall-clock time exceeds 30 seconds",
+        "B": "The same sequence of tool calls with matching arguments repeats more than the configured retry threshold",
+        "C": "Claude's response contains the word 'retry'",
+        "D": "The number of assistant turns exceeds 10"
+      },
+      "correctAnswer": "B",
+      "explanation": "Loop detection should be based on structural repetition: the same tool names and argument signatures appearing in the same order beyond the retry threshold. This is precise, deterministic, and independent of timing or surface-level text.",
+      "whyWrongMap": {
+        "A": "Wall-clock time is an unreliable heuristic; slow legitimate operations would be incorrectly flagged, and fast loops might slip through.",
+        "C": "Inspecting response text for keywords is fragile; Claude may legitimately mention 'retry' in explanations without looping.",
+        "D": "Turn count alone conflates long legitimate tasks with loops; a complex task may validly require many turns."
+      },
+      "references": [
+        "Anthropic Docs \u2013 Agentic frameworks: loop detection patterns",
+        "Anthropic Docs \u2013 Tool use: orchestrator responsibilities"
+      ]
+    },
+    {
+      "id": "q-4.4-medium-5",
+      "taskStatement": "4.4",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "After a failed tool call, the orchestrator must decide whether to retry automatically or pause and ask a human for guidance.",
+      "text": "In which situation is it most appropriate to escalate to a human rather than retry automatically?",
+      "options": {
+        "A": "The tool returns a well-structured validation error that clearly names the offending field",
+        "B": "A transient network timeout occurs during the first attempt",
+        "C": "The retry limit has been reached and the action involves an irreversible side effect such as sending a payment",
+        "D": "The tool schema description is missing optional metadata"
+      },
+      "correctAnswer": "C",
+      "explanation": "Irreversible or high-stakes actions that have exhausted retries require human judgement. Anthropic's guidance emphasises that agentic systems should prefer reversible actions and escalate when irreversibility combines with persistent failure.",
+      "whyWrongMap": {
+        "A": "A clear, field-level validation error is exactly the case where automated retry with corrected parameters is appropriate.",
+        "B": "A transient network timeout on the first attempt is a strong candidate for automated retry with exponential backoff.",
+        "D": "Missing optional metadata degrades Claude's initial parameter quality but does not by itself warrant human escalation."
+      },
+      "references": [
+        "Anthropic Docs \u2013 Agentic frameworks: human-in-the-loop",
+        "Anthropic Docs \u2013 Minimising footprint: irreversible actions"
+      ]
+    },
+    {
+      "id": "q-4.4-hard-1",
+      "taskStatement": "4.4",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "You are architecting a production multi-agent pipeline. Agent A validates data and sends it to Agent B for processing. Agent B's tool occasionally returns `isError: true` with a schema mismatch. You must design the full retry-with-feedback loop including loop prevention.",
+      "text": "Which architecture correctly implements all four required components: error feedback, retry limit, loop detection, and escalation?",
+      "options": {
+        "A": "Agent A retries indefinitely until Agent B succeeds, logging each attempt. If a human manually monitors the logs and notices repetition, they intervene.",
+        "B": "The orchestrator sends `isError: true` with the schema diff in tool_result, increments a per-call retry counter, checks the detected_pattern tracker for repeated (tool, args) pairs, and after 3 failures escalates to a human-review queue.",
+        "C": "The orchestrator catches the error, rewrites Claude's last assistant message to remove the bad tool call, and re-runs the conversation from the corrected point without informing Claude of the error.",
+        "D": "Agent B retries the tool call internally up to 10 times before returning any result to Agent A, keeping all retry logic hidden from the orchestrator."
+      },
+      "correctAnswer": "B",
+      "explanation": "Option B implements all four required components correctly: (1) `isError: true` with the schema diff provides specific feedback; (2) the per-call counter enforces the retry limit; (3) the detected_pattern tracker prevents infinite loops; (4) escalation to a human-review queue handles persistent failure safely.",
+      "whyWrongMap": {
+        "A": "Indefinite retries with manual human monitoring have no programmatic loop-breaking mechanism and violate the retry-limit requirement.",
+        "C": "Silently rewriting the conversation history removes the error context Claude needs for self-correction and creates a misleading conversation record.",
+        "D": "Hiding 10 internal retries inside Agent B circumvents the orchestrator's visibility, prevents proper loop detection, and exceeds the recommended 2\u20133 retry limit."
+      },
+      "references": [
+        "Anthropic Docs \u2013 Multi-agent orchestration",
+        "Anthropic Docs \u2013 Tool use: retry and feedback loops",
+        "Anthropic Docs \u2013 Agentic frameworks: loop detection"
+      ]
+    },
+    {
+      "id": "q-4.4-hard-2",
+      "taskStatement": "4.4",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A pipeline processes financial transactions. On retry 2, the model produces a tool call that passes schema validation but the downstream service returns a business-logic error: 'Insufficient funds in source account'. The orchestrator must decide whether to retry, escalate, or abort.",
+      "text": "How should the orchestrator handle this business-logic error compared to a schema validation error?",
+      "options": {
+        "A": "Treat it identically to a schema error: return `isError: true` with the message and let Claude retry with corrected parameters",
+        "B": "Recognise that this is a state-of-the-world constraint that Claude cannot resolve by changing parameters; escalate immediately to a human or abort the transaction",
+        "C": "Increase the retry limit to 10 because financial errors require more attempts",
+        "D": "Retry automatically after a 60-second delay to allow the account balance to change"
+      },
+      "correctAnswer": "B",
+      "explanation": "A business-logic error like 'Insufficient funds' reflects an external state constraint that Claude cannot fix by adjusting its output. Retrying will not resolve it. The correct response is immediate escalation or abort, preserving the integrity of the financial transaction and following the principle of not persisting with actions that require conditions outside the model's control.",
+      "whyWrongMap": {
+        "A": "Treating a state-of-the-world constraint as a correctable schema error is a category mistake; Claude cannot generate parameters that create funds that do not exist.",
+        "C": "Increasing the retry limit for financial errors introduces more risk of duplicate transactions and does not address the underlying constraint.",
+        "D": "Waiting 60 seconds on the assumption that the balance might change is speculative and introduces unacceptable latency and unpredictability in financial workflows."
+      },
+      "references": [
+        "Anthropic Docs \u2013 Agentic frameworks: error classification",
+        "Anthropic Docs \u2013 Minimising footprint: high-stakes actions",
+        "Anthropic Docs \u2013 Human-in-the-loop: escalation triggers"
+      ]
+    },
+    {
+      "id": "q-4.4-hard-3",
+      "taskStatement": "4.4",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "Claude is orchestrating a sequence of five tool calls. On call 3, the tool fails. The detected_pattern tracker records this as a new pattern. On the second retry of call 3, the same failure occurs. The orchestrator now needs to evaluate the full retry state before deciding the next action.",
+      "text": "Which combination of signals should the orchestrator evaluate TOGETHER before deciding to escalate versus retry a third time?",
+      "options": {
+        "A": "Only the HTTP status code of the last tool response",
+        "B": "The retry counter for the specific (tool, args) pair, the detected_pattern history across the session, the reversibility of call 3's action, and the specificity of the error message",
+        "C": "The total number of assistant turns in the conversation so far",
+        "D": "Whether the model's confidence score for its last tool_use block exceeds 0.9"
+      },
+      "correctAnswer": "B",
+      "explanation": "A robust escalation decision requires holistic evaluation: (1) the per-call retry counter shows whether the budget is exhausted; (2) detected_pattern history reveals whether this is part of a broader loop; (3) reversibility determines the blast radius if a third attempt causes a side effect; (4) error message specificity indicates whether Claude has enough information to correct its output.",
+      "whyWrongMap": {
+        "A": "HTTP status alone cannot distinguish a transient 500 from a persistent business-logic error, nor does it reflect retry history or reversibility.",
+        "C": "Total assistant turns is a coarse proxy; it does not isolate which specific tool is failing or whether the failure is in a loop.",
+        "D": "Claude does not expose a confidence score for tool_use blocks in the Anthropic API; this signal does not exist and cannot be used."
+      },
+      "references": [
+        "Anthropic Docs \u2013 Agentic frameworks: orchestrator decision logic",
+        "Anthropic Docs \u2013 Tool use: loop detection and escalation",
+        "Anthropic Docs \u2013 Minimising footprint: reversibility"
+      ]
+    },
+    {
+      "id": "q-4.4-hard-4",
+      "taskStatement": "4.4",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "You are reviewing an existing agentic system. On tool failure the orchestrator currently returns the raw exception stack trace as the `content` of the `isError: true` tool_result block. Claude then retries. The team reports that retries rarely succeed and the model sometimes leaks internal path information in its responses.",
+      "text": "What are the TWO most significant problems with returning a raw stack trace as the error feedback content, and what is the correct alternative?",
+      "options": {
+        "A": "Stack traces are too long and cause context window overflow; the alternative is to truncate the trace to 50 characters",
+        "B": "Stack traces expose internal implementation details (security risk) and provide no actionable parameter-level guidance (ineffective feedback); the correct alternative is a structured error message naming the specific field or constraint that failed with a corrective hint",
+        "C": "Stack traces are formatted incorrectly for JSON and break the API; the alternative is to base64-encode them",
+        "D": "Stack traces cause Claude to believe it has a bug in its own code and stop responding; the alternative is to prefix the trace with 'ignore this'"
+      },
+      "correctAnswer": "B",
+      "explanation": "Raw stack traces create two distinct problems: (1) they expose internal file paths, library versions, and implementation details that could be surfaced to end users or logged insecurely; (2) they contain no field-level guidance that helps Claude correct its parameters \u2014 the model cannot infer from 'NullPointerException at line 47' which argument was wrong. The solution is to intercept the exception, map it to a user-facing error message that names the offending field and the constraint violated, and return that as the `isError: true` content.",
+      "whyWrongMap": {
+        "A": "Truncating the trace to 50 characters preserves the security leak, removes even the minimal context the trace contained, and still provides no actionable feedback.",
+        "C": "Stack traces are valid strings and do not break the JSON API; base64-encoding them makes them even less readable to Claude and does not address either core problem.",
+        "D": "Claude does not interpret stack traces as evidence of its own code bugs; the described behaviour is not accurate, and prefixing with 'ignore this' would simply cause Claude to discard the only error context it received."
+      },
+      "references": [
+        "Anthropic Docs \u2013 Tool use: error message best practices",
+        "Anthropic Docs \u2013 Security: information disclosure in errors",
+        "Anthropic Docs \u2013 Prompt engineering: specificity of feedback"
+      ]
+    },
+    {
+      "id": "q-4.5-easy-1",
+      "taskStatement": "4.5",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "A developer is submitting a batch job using the Message Batches API and wants to track which response corresponds to which input request.",
+      "text": "What field should be included in each request within a batch to correlate responses back to their originating inputs?",
+      "options": {
+        "A": "request_id",
+        "B": "custom_id",
+        "C": "correlation_token",
+        "D": "batch_index"
+      },
+      "correctAnswer": "B",
+      "explanation": "The Message Batches API uses a `custom_id` field on each individual request. When results are returned, each result carries the same `custom_id`, allowing you to map responses back to the exact input that produced them, regardless of ordering or partial failures.",
+      "whyWrongMap": {
+        "A": "`request_id` is not a field defined by the Message Batches API; using it would cause the request to be rejected or ignored.",
+        "C": "`correlation_token` is not part of the API contract; it is an invented field name that would have no effect.",
+        "D": "`batch_index` is not a real field; the API does not expose positional indexing for correlation."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/api/creating-message-batches"
+      ]
+    },
+    {
+      "id": "q-4.5-easy-2",
+      "taskStatement": "4.5",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "A product manager asks the engineering team how many requests can be packed into a single batch call to the Message Batches API.",
+      "text": "What is the maximum number of individual requests allowed in a single Message Batches API call?",
+      "options": {
+        "A": "1,000",
+        "B": "5,000",
+        "C": "10,000",
+        "D": "100,000"
+      },
+      "correctAnswer": "C",
+      "explanation": "The Message Batches API supports up to 10,000 requests per batch. This limit governs how many individual inference calls can be bundled together in a single batch submission.",
+      "whyWrongMap": {
+        "A": "1,000 is the limit for some other rate-limited operations but is not the batch cap; choosing this would lead to unnecessarily splitting batches.",
+        "B": "5,000 is not the documented limit and would result in submitting more batches than necessary.",
+        "D": "100,000 exceeds the documented maximum and would result in an API error if attempted."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/api/creating-message-batches"
+      ]
+    },
+    {
+      "id": "q-4.5-easy-3",
+      "taskStatement": "4.5",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "A startup is evaluating the cost impact of switching a high-volume document summarization pipeline from synchronous API calls to batch processing.",
+      "text": "What cost benefit does the Message Batches API provide compared to real-time synchronous API calls?",
+      "options": {
+        "A": "10% discount on input tokens only",
+        "B": "25% discount on all tokens",
+        "C": "50% discount on all tokens",
+        "D": "Free processing for batches under 1,000 requests"
+      },
+      "correctAnswer": "C",
+      "explanation": "The Message Batches API offers a 50% cost discount compared to standard synchronous API pricing. This discount applies to the overall token cost, making batch processing significantly more economical for workloads that can tolerate asynchronous, non-real-time processing.",
+      "whyWrongMap": {
+        "A": "A 10% discount applies only to input tokens is not the correct model; the batch discount is 50% across all tokens.",
+        "B": "25% is not the documented discount rate; the actual discount is 50%.",
+        "D": "There is no free-processing tier for small batches; the 50% discount applies uniformly regardless of batch size."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/api/creating-message-batches",
+        "https://www.anthropic.com/pricing"
+      ]
+    },
+    {
+      "id": "q-4.5-easy-4",
+      "taskStatement": "4.5",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "An engineer needs to decide between the real-time Messages API and the Message Batches API for a live customer support chatbot that must respond within two seconds.",
+      "text": "Why is the Message Batches API unsuitable for a live customer support chatbot requiring sub-second responses?",
+      "options": {
+        "A": "The Batches API does not support multi-turn conversations",
+        "B": "The Batches API has a 24-hour processing window and is asynchronous, not real-time",
+        "C": "The Batches API charges higher per-token rates for interactive sessions",
+        "D": "The Batches API is limited to text-only inputs and cannot handle customer queries"
+      },
+      "correctAnswer": "B",
+      "explanation": "The Message Batches API is designed for asynchronous, latency-tolerant workloads. Batches are processed within a 24-hour window, meaning results are not returned immediately. A live chatbot requiring responses within two seconds must use the synchronous Messages API instead.",
+      "whyWrongMap": {
+        "A": "Multi-turn conversation support is not the limiting factor; the Batches API can technically handle conversation-shaped messages, but the async nature makes it unfit for real-time chat.",
+        "C": "The Batches API is cheaper, not more expensive; this is the opposite of reality.",
+        "D": "The Batches API supports the same input modalities as the Messages API; text-only is not a restriction."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/api/creating-message-batches"
+      ]
+    },
+    {
+      "id": "q-4.5-medium-1",
+      "taskStatement": "4.5",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A data engineering team submits a batch of 8,000 document classification requests. After the batch completes, they discover that 200 requests have a status of `errored` while 7,800 succeeded.",
+      "text": "What is the correct strategy for handling this partial-failure result from the Message Batches API?",
+      "options": {
+        "A": "Discard all 8,000 results and resubmit the entire batch to guarantee consistency",
+        "B": "Use the `custom_id` on errored results to identify failed inputs, then resubmit only those 200 in a new batch",
+        "C": "Treat all 8,000 results as failed because a batch is atomic and partial success is invalid",
+        "D": "Contact Anthropic support to trigger automatic retry of failed requests within the original batch"
+      },
+      "correctAnswer": "B",
+      "explanation": "Individual requests in a batch can fail independently; the batch is not atomic. Each result carries the original `custom_id`, so you can filter for errored results, retrieve the original inputs by matching `custom_id`, and resubmit only the failed subset in a new batch. This avoids re-running successful work and keeps costs low.",
+      "whyWrongMap": {
+        "A": "Discarding all results wastes the 7,800 successful completions and incurs unnecessary re-processing cost; batch results are per-request, not all-or-nothing.",
+        "C": "Batches are explicitly not atomic; the API design intentionally allows partial success, and treating partial success as full failure is incorrect.",
+        "D": "There is no automatic retry mechanism within an existing batch; you must initiate a new batch for failed requests."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/api/creating-message-batches",
+        "https://docs.anthropic.com/en/api/retrieving-message-batch-results"
+      ]
+    },
+    {
+      "id": "q-4.5-medium-2",
+      "taskStatement": "4.5",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A team runs nightly batch jobs that summarize 50,000 articles. Each night they must decide how to structure their batch submissions given the 10,000-request-per-batch limit.",
+      "text": "How should the team structure their 50,000 article summaries to comply with the Message Batches API limit while maximizing efficiency?",
+      "options": {
+        "A": "Submit all 50,000 as one batch; the API will auto-split them",
+        "B": "Submit them as 5 separate batches of 10,000 requests each, potentially in parallel",
+        "C": "Use the real-time API in a loop of 50,000 sequential calls to avoid batching complexity",
+        "D": "Reduce the article count per night to 10,000 to fit within one batch"
+      },
+      "correctAnswer": "B",
+      "explanation": "Since each batch is capped at 10,000 requests, 50,000 articles require at least 5 batches. Submitting multiple batches in parallel is fully supported and allows the pipeline to stay within per-batch limits while still processing the full nightly volume within the 24-hour window.",
+      "whyWrongMap": {
+        "A": "The API does not auto-split batches; submitting more than 10,000 requests in a single call will result in a validation error.",
+        "C": "Using 50,000 sequential real-time API calls eliminates the 50% cost discount and adds significant latency overhead compared to parallel batch submissions.",
+        "D": "Artificially reducing nightly throughput to fit one batch misses the point; the system design should scale to business volume, not artificially constrain it."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/api/creating-message-batches"
+      ]
+    },
+    {
+      "id": "q-4.5-medium-3",
+      "taskStatement": "4.5",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A compliance team generates audit reports from large policy documents every weekend. The reports are not needed until Monday morning. The team is currently using the synchronous Messages API with a rate-limited retry loop.",
+      "text": "Which architectural change would best optimize this workload's cost and operational complexity?",
+      "options": {
+        "A": "Increase the synchronous API concurrency to saturate rate limits faster",
+        "B": "Switch to the Message Batches API to leverage the 50% cost discount and remove the need for a retry loop",
+        "C": "Pre-cache all policy documents in a vector store and use retrieval-augmented generation to reduce token usage",
+        "D": "Deploy a dedicated on-premises LLM to eliminate API costs entirely"
+      },
+      "correctAnswer": "B",
+      "explanation": "Weekend batch report generation has high latency tolerance (results needed Monday morning), making it an ideal fit for the Message Batches API. Switching eliminates the complex rate-limited retry loop, provides a 50% cost discount, and fits comfortably within the 24-hour processing window.",
+      "whyWrongMap": {
+        "A": "Increasing synchronous concurrency increases cost and operational complexity; it does not address the fundamental inefficiency of using a real-time API for a latency-tolerant workload.",
+        "C": "RAG can reduce token usage but does not address the core architectural mismatch of using real-time APIs for a batch workload; it also adds significant implementation complexity.",
+        "D": "On-premises LLM deployment involves substantial capital expense, operational overhead, and model capability trade-offs that far outweigh the cost savings from batch pricing."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/api/creating-message-batches",
+        "https://www.anthropic.com/pricing"
+      ]
+    },
+    {
+      "id": "q-4.5-medium-4",
+      "taskStatement": "4.5",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A developer polls a batch status endpoint every 30 seconds to check whether their 10,000-request batch has finished. Batch processing takes around 4 hours on average.",
+      "text": "What is the most efficient approach to determine when a batch job has completed, given the 24-hour processing window?",
+      "options": {
+        "A": "Poll every 30 seconds throughout the entire processing window",
+        "B": "Poll with exponential backoff starting at a few minutes, or use a webhook/callback mechanism if supported",
+        "C": "Always wait the full 24 hours before attempting to retrieve results",
+        "D": "Submit the same batch twice so whichever finishes first can be used"
+      },
+      "correctAnswer": "B",
+      "explanation": "Aggressive polling every 30 seconds wastes API quota and compute for a workload that typically takes hours. The recommended approach is exponential backoff (e.g., check after 5 minutes, then 10, then 20) to reduce unnecessary requests while still detecting completion promptly. If the platform supports event-driven callbacks, those are even more efficient.",
+      "whyWrongMap": {
+        "A": "Polling every 30 seconds over a 4-hour window generates hundreds of unnecessary status checks, consuming rate limit quota and adding operational noise without benefit.",
+        "C": "Waiting the full 24 hours regardless of actual completion introduces unnecessary delay; most batches finish well before the maximum window.",
+        "D": "Submitting duplicate batches doubles cost and produces redundant results; it does not improve detection latency and creates reconciliation complexity."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/api/retrieving-message-batches",
+        "https://docs.anthropic.com/en/api/creating-message-batches"
+      ]
+    },
+    {
+      "id": "q-4.5-medium-5",
+      "taskStatement": "4.5",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "An architect is designing a system that classifies customer feedback into 15 sentiment categories. The classification pipeline runs hourly on roughly 3,000 new feedback items. The business requires results within 45 minutes of collection.",
+      "text": "Should this workload use the Message Batches API or the real-time Messages API, and why?",
+      "options": {
+        "A": "Real-time API, because 45 minutes is insufficient for the 24-hour batch window",
+        "B": "Batches API, because 3,000 items fits within the 10,000-request limit",
+        "C": "Batches API with priority processing enabled to guarantee 45-minute SLA",
+        "D": "Real-time API for the first 1,000 items and Batches API for the remaining 2,000"
+      },
+      "correctAnswer": "A",
+      "explanation": "The Message Batches API has a 24-hour processing window, meaning results could arrive anywhere within that window. A business SLA of 45 minutes cannot be reliably met with batch processing. The real-time Messages API must be used here, even though it costs more, because the latency requirement disqualifies asynchronous batch processing.",
+      "whyWrongMap": {
+        "C": "There is no priority processing tier in the Message Batches API that guarantees a specific sub-24-hour SLA; the 24-hour window is the only commitment.",
+        "B": "Fitting within the 10,000-request limit is necessary but not sufficient; latency requirements must also be met, and 45 minutes cannot be guaranteed by the batch API.",
+        "D": "Splitting requests between real-time and batch APIs adds architectural complexity and still leaves 2,000 items potentially delayed beyond 45 minutes; it does not solve the SLA problem."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/api/creating-message-batches"
+      ]
+    },
+    {
+      "id": "q-4.5-hard-1",
+      "taskStatement": "4.5",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A financial services firm runs a nightly pipeline that generates personalized investment insights for 80,000 client accounts. Each insight requires one Claude API call. The pipeline must complete before market open at 9:30 AM EST, giving a 7-hour window starting at 2:30 AM. Regulatory requirements mandate an audit trail linking each response to the originating client account. The firm also wants to minimize API costs.",
+      "text": "Which architectural design best satisfies all constraints: volume, time window, auditability, and cost?",
+      "options": {
+        "A": "Submit 8 concurrent batches of 10,000 requests each, using each client's account ID as the `custom_id`; poll with backoff and store result files with account mapping for audit",
+        "B": "Use the real-time API with 80 concurrent workers, each processing 1,000 accounts sequentially, and log request/response pairs to an audit database",
+        "C": "Submit one batch of 80,000 requests, relying on the API to handle the volume above the documented limit",
+        "D": "Process 10,000 accounts with the Batches API each night and defer the remaining 70,000 to the next night's run"
+      },
+      "correctAnswer": "A",
+      "explanation": "Splitting 80,000 accounts into 8 batches of 10,000 stays within the per-batch limit. Using the account ID as `custom_id` creates a built-in audit linkage between every response and its originating client. The 50% cost discount applies across all 8 batches. With 8 concurrent batches in a 7-hour window, completion before market open is feasible. Polling with exponential backoff avoids rate limit waste.",
+      "whyWrongMap": {
+        "B": "Using the real-time API for 80,000 sequential-within-worker calls incurs full per-token pricing (no 50% discount) and introduces complex concurrency management; it also risks rate limiting across 80 workers.",
+        "C": "Submitting 80,000 requests in a single batch exceeds the 10,000-request-per-batch limit and will result in an API validation error; the API does not silently handle over-limit submissions.",
+        "D": "Deferring 70,000 accounts to future nights means 87.5% of clients receive stale insights; this violates the business requirement to process all 80,000 accounts nightly before market open."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/api/creating-message-batches",
+        "https://docs.anthropic.com/en/api/retrieving-message-batch-results"
+      ]
+    },
+    {
+      "id": "q-4.5-hard-2",
+      "taskStatement": "4.5",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A machine learning team uses batch processing to generate training labels for a dataset of 500,000 text samples. After retrieving batch results, they find that 12,000 samples (2.4%) received error responses due to content policy triggers on certain edge-case inputs. The team must decide how to handle these failures without corrupting the training dataset.",
+      "text": "What is the most architecturally sound approach for handling the 12,000 errored samples while maintaining dataset integrity?",
+      "options": {
+        "A": "Exclude all 12,000 errored samples from the training dataset permanently to avoid noise",
+        "B": "Use `custom_id` to retrieve the original inputs for errored samples, apply input sanitization or prompt restructuring, and resubmit as a new batch; track which samples were reprocessed with modified prompts in the audit log",
+        "C": "Assign a default neutral label to all 12,000 errored samples to preserve dataset size",
+        "D": "Resubmit the entire 500,000-sample batch to ensure all items are processed with identical prompts"
+      },
+      "correctAnswer": "B",
+      "explanation": "The correct approach uses `custom_id` to identify the 12,000 failed inputs precisely, then investigates the failure cause (content policy triggers). Prompt restructuring can often resolve policy rejections without altering the semantic content of the labeling task. Resubmitting only the failed subset in a new batch minimizes cost and processing time. Tracking reprocessed samples maintains dataset provenance integrity.",
+      "whyWrongMap": {
+        "A": "Permanently excluding 12,000 samples creates a systematic bias in the training dataset by removing edge cases that triggered policy filters; these may be the most informative samples for robust model training.",
+        "C": "Assigning arbitrary default labels to policy-rejected samples introduces label noise and misrepresents the actual content of those samples, which degrades model quality.",
+        "D": "Resubmitting all 500,000 samples wastes significant cost and time re-processing 488,000 already-successful completions; batch results are per-request and the successful ones need not be rerun."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/api/creating-message-batches",
+        "https://docs.anthropic.com/en/api/retrieving-message-batch-results"
+      ]
+    },
+    {
+      "id": "q-4.5-hard-3",
+      "taskStatement": "4.5",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "An architect is designing a hybrid inference pipeline for an e-commerce platform. Product page generation requires real-time generation (sub-500ms) for live user browsing. Nightly catalog enrichment (SEO descriptions, keyword extraction, attribute tagging) for 200,000 products requires completion by 6 AM. The platform also runs real-time recommendation explanations triggered by user clicks. The team wants to minimize total API spend.",
+      "text": "Which routing strategy correctly assigns workloads to the appropriate API tier to minimize cost while meeting all latency requirements?",
+      "options": {
+        "A": "Route all three workloads through the Message Batches API to maximize the 50% discount",
+        "B": "Route product page generation and recommendation explanations to the real-time API; route nightly catalog enrichment to the Message Batches API split into 20 batches of 10,000",
+        "C": "Route nightly catalog enrichment and recommendation explanations to the Batches API; route only product page generation to the real-time API",
+        "D": "Route all three workloads through the real-time API and use aggressive caching to offset the higher per-token cost"
+      },
+      "correctAnswer": "B",
+      "explanation": "Product page generation (sub-500ms, live user) and recommendation explanations (triggered by user clicks, inherently real-time) both require synchronous API calls. Nightly catalog enrichment (200,000 products, 6 AM deadline from a presumably late-night start) has high latency tolerance and maps perfectly to the Batches API. 200,000 items require 20 batches of 10,000. The 50% discount on the highest-volume workload (catalog enrichment) maximizes cost savings without compromising user-facing latency.",
+      "whyWrongMap": {
+        "A": "Routing live user browsing and real-time recommendation explanations through the Batches API would result in responses arriving hours later; both workloads have strict sub-second latency requirements that batch processing cannot meet.",
+        "C": "Recommendation explanations are triggered by individual user clicks and require immediate responses; routing them to the batch API would mean users receive no explanation during their browsing session, breaking the user experience.",
+        "D": "Using the real-time API for 200,000 nightly catalog enrichment operations eliminates the 50% batch discount on the highest-volume workload, significantly increasing costs without any latency benefit since users are not waiting for those results."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/api/creating-message-batches",
+        "https://www.anthropic.com/pricing"
+      ]
+    },
+    {
+      "id": "q-4.5-hard-4",
+      "taskStatement": "4.5",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A healthcare analytics company processes de-identified patient discharge summaries to extract structured clinical codes. They have 30,000 summaries ready each morning and need final coded results by 5 PM the same day. Their current synchronous pipeline fails intermittently under load, and the team wants to redesign it using the Message Batches API. A strict requirement is that every summary must be traceable to its coded result for HIPAA compliance purposes.",
+      "text": "Which design decision is most critical for ensuring HIPAA-compliant traceability while correctly leveraging the Message Batches API?",
+      "options": {
+        "A": "Store the full patient summary content inside the `custom_id` field for direct traceability",
+        "B": "Assign each summary a pseudonymous internal document ID as the `custom_id`; maintain a separate secure mapping table linking document IDs to patient records outside the API payload",
+        "C": "Use sequential integers as `custom_id` values and rely on submission order to reconstruct the mapping after results are returned",
+        "D": "Submit all 30,000 summaries in 3 batches of 10,000 with no `custom_id` and match results by response content comparison"
+      },
+      "correctAnswer": "B",
+      "explanation": "HIPAA compliance requires minimizing PHI exposure in external systems. Using a pseudonymous document ID as `custom_id` keeps PHI out of the API payload while still enabling precise traceability through a secure internal mapping table. This satisfies both the technical requirement (correlating results to inputs via `custom_id`) and the compliance requirement (no PHI transmitted as metadata to the API).",
+      "whyWrongMap": {
+        "A": "Embedding patient summary content or direct patient identifiers in `custom_id` would transmit PHI as metadata in API requests and responses, creating a HIPAA compliance violation and expanding the PHI footprint unnecessarily.",
+        "C": "Relying on submission order is fragile; individual requests within a batch can fail independently, and the API does not guarantee result ordering matches submission ordering. This approach would break traceability whenever any request fails.",
+        "D": "Matching results by content comparison is computationally expensive, error-prone for similar summaries, and does not provide a reliable audit trail; it also fails entirely when errors occur since error responses contain no summary content."
+      },
+      "references": [
+        "https://docs.anthropic.com/en/api/creating-message-batches",
+        "https://docs.anthropic.com/en/api/retrieving-message-batch-results"
+      ]
+    },
+    {
+      "id": "q-4.6-easy-1",
+      "taskStatement": "4.6",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "A developer asks why a single Claude instance sometimes fails to catch errors in code it just wrote.",
+      "text": "What is the primary reason a model reviewing its own output tends to miss errors?",
+      "options": {
+        "A": "The model runs out of context window space during review",
+        "B": "The model carries the same assumptions and reasoning biases from generation into review, making it likely to agree with its own output",
+        "C": "Single-instance review always produces lower quality than human review",
+        "D": "The model cannot read code it has already written in the same session"
+      },
+      "correctAnswer": "B",
+      "explanation": "Self-review suffers from confirmation bias: the model that generated the output used certain assumptions and reasoning paths. When it reviews the same output, it tends to evaluate it through the same lens, causing it to overlook flaws it introduced. This is the core self-review limitation that motivates multi-instance architectures.",
+      "whyWrongMap": {
+        "A": "Context window exhaustion is a separate concern and is not the core reason self-review misses errors in typical scenarios.",
+        "C": "Single-instance review can sometimes match human review quality; the issue is specifically the bias introduced by reviewing one's own output.",
+        "D": "Models can read their own prior output within a session; the limitation is cognitive bias, not memory access."
+      },
+      "references": [
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 Self-review limitations",
+        "Anthropic documentation: Multi-agent review patterns"
+      ]
+    },
+    {
+      "id": "q-4.6-easy-2",
+      "taskStatement": "4.6",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "An architect is explaining independent review instances to a junior engineer.",
+      "text": "What is the defining characteristic of an independent review instance in a multi-instance review architecture?",
+      "options": {
+        "A": "It runs on a different physical server than the generation instance",
+        "B": "It uses a smaller, faster model to reduce latency",
+        "C": "It starts with a fresh context and has no access to the reasoning or intermediate steps of the generating instance",
+        "D": "It always uses a different model family than the generator"
+      },
+      "correctAnswer": "C",
+      "explanation": "Independence in review architectures means the reviewing instance begins with a fresh context \u2014 it sees only the artifact to be reviewed, not the chain of thought or intermediate decisions that produced it. This prevents the reviewer from inheriting the generator's biases and assumptions.",
+      "whyWrongMap": {
+        "A": "Physical server separation is irrelevant; independence is a property of context and reasoning state, not infrastructure placement.",
+        "B": "Model size is a cost/latency trade-off decision, not what defines independence; a small model reviewing with shared context is not independent.",
+        "D": "Using the same model family is acceptable as long as the reviewing instance has a fresh context; model diversity can add value but is not the defining criterion."
+      },
+      "references": [
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 Independent review instances",
+        "Anthropic multi-agent design patterns documentation"
+      ]
+    },
+    {
+      "id": "q-4.6-easy-3",
+      "taskStatement": "4.6",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "A team is designing a code review pipeline for a large monorepo with hundreds of files changed per pull request.",
+      "text": "In a two-phase review architecture, what is the primary purpose of the Phase 1 per-file review pass?",
+      "options": {
+        "A": "To generate documentation for each file before the cross-file pass",
+        "B": "To evaluate each file in isolation for correctness, style, and local logic errors",
+        "C": "To check that all files are syntactically valid before running tests",
+        "D": "To assign severity scores that Phase 2 uses to decide which files to skip"
+      },
+      "correctAnswer": "B",
+      "explanation": "Phase 1 (per-file pass) focuses on individual file quality \u2014 logic correctness, naming, error handling, and style \u2014 without needing knowledge of the full system. This localised focus keeps context manageable and allows parallel execution across files.",
+      "whyWrongMap": {
+        "A": "Documentation generation is a separate concern; Phase 1 is an analytical review pass, not a doc-generation step.",
+        "C": "Syntax validation is typically handled by linters or compilers before the review pipeline; Phase 1 addresses deeper code quality concerns.",
+        "D": "Phase 1 findings inform Phase 2 but do not determine which files to skip; Phase 2 checks cross-cutting concerns regardless of Phase 1 severity scores."
+      },
+      "references": [
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 Per-file and cross-file passes"
+      ]
+    },
+    {
+      "id": "q-4.6-easy-4",
+      "taskStatement": "4.6",
+      "domainId": 4,
+      "difficulty": "easy",
+      "scenario": "A small startup is choosing between single-instance and multi-instance review for a simple internal script generator.",
+      "text": "In which situation is single-instance review the most appropriate choice?",
+      "options": {
+        "A": "When the output will be deployed to production without human oversight",
+        "B": "When the task is low-stakes, the artifact is small, and cost minimisation is a priority",
+        "C": "When the system must detect all possible security vulnerabilities",
+        "D": "When multiple engineers will independently validate the final output"
+      },
+      "correctAnswer": "B",
+      "explanation": "Single-instance review is appropriate when the cost of missing an error is low, the artifact is small enough that bias effects are limited, and budget constraints make multiple review passes uneconomical. Multi-instance review is reserved for high-stakes or complex outputs where the added cost is justified.",
+      "whyWrongMap": {
+        "A": "Unattended production deployment is a high-stakes scenario where multi-instance review or human oversight is strongly preferred, not single-instance review.",
+        "C": "Security-critical review is a high-stakes case that warrants multi-instance or specialised review, not single-instance.",
+        "D": "If multiple engineers are already validating the output, that is a form of multi-person review; single-instance model review would only be chosen when that human review is absent or insufficient."
+      },
+      "references": [
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 When to use multi-instance vs single-instance review"
+      ]
+    },
+    {
+      "id": "q-4.6-medium-1",
+      "taskStatement": "4.6",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A team runs three independent Claude instances to review a proposed API design. Two instances flag a missing authentication check; one instance approves the design without flagging any issues.",
+      "text": "Which consensus mechanism is the team using, and what is its key advantage in this scenario?",
+      "options": {
+        "A": "Unanimous agreement; it ensures no false positives reach the engineering team",
+        "B": "Majority vote; it surfaces the issue despite one reviewer missing it, reducing the impact of any single reviewer's blind spot",
+        "C": "Structured disagreement; it forces a fourth review instance to resolve the tie",
+        "D": "Weighted confidence scoring; it discards the outlier instance's response entirely"
+      },
+      "correctAnswer": "B",
+      "explanation": "Majority vote (2 of 3 reviewers flag the issue) correctly identifies the authentication problem even though one reviewer missed it. The advantage is resilience: a single reviewer's blind spot or reasoning failure does not suppress a valid finding. This is the canonical use case for majority voting in multi-instance review.",
+      "whyWrongMap": {
+        "A": "Unanimous agreement would require all three instances to agree; with one approving and two flagging, unanimous consensus would suppress the valid finding \u2014 the opposite of what is needed.",
+        "C": "Structured disagreement is a mechanism for surfacing and articulating differences, not a tie-breaker for a 2-vs-1 split; a fourth instance is not typically summoned by majority vote.",
+        "D": "Discarding the outlier entirely without examination removes potentially useful signal; majority vote acts on the outcome without discarding any reviewer's full response."
+      },
+      "references": [
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 Consensus mechanisms: majority vote",
+        "Anthropic multi-agent orchestration patterns"
+      ]
+    },
+    {
+      "id": "q-4.6-medium-2",
+      "taskStatement": "4.6",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "An architect is designing a review pipeline for a microservices codebase. Phase 1 reviewers examine individual services; Phase 2 receives the Phase 1 findings and the full set of changed files.",
+      "text": "What class of defect is Phase 2 (cross-file pass) specifically designed to detect that Phase 1 cannot reliably find?",
+      "options": {
+        "A": "Off-by-one errors within a single function",
+        "B": "Missing null checks inside a single service",
+        "C": "Inconsistent API contracts, data model mismatches, and violated invariants that span multiple files or services",
+        "D": "Unused imports and dead code within individual files"
+      },
+      "correctAnswer": "C",
+      "explanation": "Cross-file (Phase 2) review is specifically designed to catch systemic issues that only become visible when multiple files are considered together: inconsistent interface definitions, shared data model drift, violated cross-cutting invariants, and integration mismatches. These are invisible to a per-file reviewer with localised context.",
+      "whyWrongMap": {
+        "A": "Off-by-one errors are local to a single function and are well-suited to Phase 1 per-file review.",
+        "B": "Missing null checks are a local code quality concern addressable in Phase 1.",
+        "D": "Unused imports and dead code are per-file concerns handled by Phase 1 or static analysis tools, not the cross-file pass."
+      },
+      "references": [
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 Per-file and cross-file passes"
+      ]
+    },
+    {
+      "id": "q-4.6-medium-3",
+      "taskStatement": "4.6",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "Two independent review instances produce contradictory findings about whether a security design is adequate. The architect needs both perspectives surfaced and documented rather than one silently overriding the other.",
+      "text": "Which consensus mechanism is most appropriate for this requirement?",
+      "options": {
+        "A": "Majority vote with a third tiebreaker instance",
+        "B": "Structured disagreement, where both findings are retained, labelled, and presented to a human decision-maker",
+        "C": "Averaging the confidence scores of both instances and accepting the higher-scoring finding",
+        "D": "Discarding both findings and rerunning with a single, higher-capability instance"
+      },
+      "correctAnswer": "B",
+      "explanation": "Structured disagreement is designed for exactly this scenario: when two reviewers reach different conclusions, rather than forcing a winner, the architecture surfaces both findings with their reasoning, labelled as a disagreement, for human adjudication. This preserves minority perspectives and is especially valuable for security decisions where a false negative is costly.",
+      "whyWrongMap": {
+        "A": "A third tiebreaker could resolve the disagreement, but it risks suppressing the minority view without human understanding of the reasoning; structured disagreement is more appropriate when both views must be documented.",
+        "C": "Confidence score averaging is not a standard consensus mechanism and could silently discard the dissenting view without surfacing it to stakeholders.",
+        "D": "Discarding both findings loses valuable signal and increases cost; the disagreement itself is informative and should be preserved."
+      },
+      "references": [
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 Consensus mechanisms: structured disagreement"
+      ]
+    },
+    {
+      "id": "q-4.6-medium-4",
+      "taskStatement": "4.6",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "A financial services company is evaluating whether to use single-instance or multi-instance review for contract clause analysis. Contracts can be 200 pages long and errors carry significant legal liability.",
+      "text": "What combination of factors most strongly justifies choosing multi-instance review in this scenario?",
+      "options": {
+        "A": "The contracts are long and the team wants to reduce API latency",
+        "B": "High stakes (legal liability), complex artifacts (200 pages), and the need for cross-validation to reduce the probability of a missed clause",
+        "C": "The company wants to reduce total token costs by distributing work across instances",
+        "D": "Multi-instance review is always required when documents exceed 50 pages"
+      },
+      "correctAnswer": "B",
+      "explanation": "The decision to use multi-instance review is driven by the combination of high consequence of error (legal liability) and artifact complexity (200-page contracts with many interdependent clauses). These factors make the additional cost of multiple review passes worthwhile because a single missed clause could have severe downstream consequences.",
+      "whyWrongMap": {
+        "A": "Multi-instance review increases total compute and typically increases latency, not reduces it; latency is not a justification for multi-instance review.",
+        "C": "Multi-instance review increases token costs overall; it is justified by quality and risk reduction, not cost savings.",
+        "D": "There is no universal page-count threshold; the decision is based on stakes, complexity, and error cost, not document length alone."
+      },
+      "references": [
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 When to use multi-instance vs single-instance review",
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 Cost/quality trade-offs"
+      ]
+    },
+    {
+      "id": "q-4.6-medium-5",
+      "taskStatement": "4.6",
+      "domainId": 4,
+      "difficulty": "medium",
+      "scenario": "An engineering lead is analysing the cost impact of moving from single-instance to three-instance majority-vote review for a high-volume document processing pipeline that runs 10,000 reviews per day.",
+      "text": "How should the architect frame the cost/quality trade-off when justifying the move to three-instance review?",
+      "options": {
+        "A": "Three-instance review reduces per-review cost because work is parallelised across instances",
+        "B": "The ~3x increase in token cost is justified only if the value of errors caught by the additional instances exceeds that incremental cost",
+        "C": "Three-instance review is always cost-justified for pipelines processing more than 1,000 documents per day",
+        "D": "Multi-instance review eliminates the need for human oversight, reducing total operational cost"
+      },
+      "correctAnswer": "B",
+      "explanation": "Multi-instance review multiplies token costs roughly proportionally to the number of instances. The business case requires demonstrating that the expected value of additional errors caught (errors prevented \u00d7 cost per error) exceeds the incremental token cost. For high-volume, low-stakes pipelines, this calculus often favours single-instance review; for high-stakes pipelines, multi-instance is justified even at scale.",
+      "whyWrongMap": {
+        "A": "Parallelisation reduces wall-clock latency but does not reduce total token consumption; running three instances processes roughly three times the tokens.",
+        "C": "Volume alone does not determine cost-justification; the error cost and stakes per document are the critical variables.",
+        "D": "Multi-instance review improves automated review quality but does not eliminate the need for human oversight, especially for high-stakes decisions."
+      },
+      "references": [
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 Cost/quality trade-offs of multiple review passes"
+      ]
+    },
+    {
+      "id": "q-4.6-hard-1",
+      "taskStatement": "4.6",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A team is building a multi-pass review system for a distributed system's architecture document. Phase 1 uses three independent instances to review individual component designs. Phase 2 receives Phase 1 summaries and performs cross-component consistency analysis. However, the team notices that Phase 2 is consistently reproducing the same blind spots as Phase 1 because Phase 2 is seeded with Phase 1 summaries.",
+      "text": "What architectural change would most effectively address this bias propagation problem?",
+      "options": {
+        "A": "Increase the number of Phase 1 instances from three to five",
+        "B": "Replace Phase 1 summaries with structured finding schemas that separate conclusions from raw observations, and have Phase 2 re-examine the original artifact independently before consulting Phase 1 outputs",
+        "C": "Run Phase 2 before Phase 1 to avoid being anchored on Phase 1 findings",
+        "D": "Use a different LLM provider for Phase 2 to ensure model diversity"
+      },
+      "correctAnswer": "B",
+      "explanation": "When Phase 2 is seeded with Phase 1 summaries, it inherits Phase 1's framing and blind spots \u2014 a form of anchoring bias propagation. The fix has two parts: (1) separate raw observations from conclusions in Phase 1 output so Phase 2 can reason from evidence rather than inherited verdicts, and (2) have Phase 2 independently examine the original artifact before consulting Phase 1 findings. This preserves Phase 2's independence while still allowing it to benefit from Phase 1 signal.",
+      "whyWrongMap": {
+        "A": "Adding more Phase 1 instances increases coverage of Phase 1's perspective but does not address the structural problem that Phase 2 is anchored on Phase 1 summaries; the bias propagation path remains intact.",
+        "C": "Running Phase 2 before Phase 1 would make Phase 2 lack the benefit of per-component analysis, and would not fix the eventual anchoring if Phase 1 results were later fed in.",
+        "D": "Model diversity can reduce correlated errors but does not address the structural anchoring caused by seeding Phase 2 with Phase 1 conclusions; the propagation path must be architecturally broken."
+      },
+      "references": [
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 Independent review instances",
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 Per-file and cross-file passes"
+      ]
+    },
+    {
+      "id": "q-4.6-hard-2",
+      "taskStatement": "4.6",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A healthcare AI company uses a five-instance majority-vote review for clinical decision support outputs. An internal audit reveals that all five instances share the same systematic bias toward recommending a particular drug class due to training data skew. All five agree on every review, giving the team false confidence in the consensus.",
+      "text": "What does this scenario expose as a fundamental limitation of majority vote, and what architectural strategy best mitigates it?",
+      "options": {
+        "A": "Majority vote cannot handle more than three instances; reducing to three instances would fix the false confidence",
+        "B": "Correlated errors across instances mean unanimous agreement does not imply correctness; mitigation requires either using models with architecturally different training or injecting adversarial reviewer instances with explicit counter-hypothesis prompts",
+        "C": "The solution is to add a sixth instance to break potential ties",
+        "D": "Majority vote should be replaced with confidence threshold filtering: only accept findings above 0.9 confidence"
+      },
+      "correctAnswer": "B",
+      "explanation": "Majority vote assumes that errors are uncorrelated across instances. When all instances share the same systematic bias (e.g., from identical training data), they produce correlated errors and unanimity provides no quality signal \u2014 it is merely five echoes of the same flaw. Mitigation requires breaking correlation: using models trained on different data distributions, or injecting adversarial reviewer instances explicitly prompted to argue the counter-hypothesis, forces genuine disagreement that can surface the blind spot.",
+      "whyWrongMap": {
+        "A": "The number of instances is irrelevant to correlated bias; reducing from five to three would not change the underlying systematic error if all instances share it.",
+        "C": "A sixth instance with the same bias would only reinforce the false consensus; the problem is correlation, not count.",
+        "D": "Confidence thresholds filter low-confidence responses but do not address systematic bias; a biased instance can produce high-confidence wrong answers, making confidence filtering ineffective against correlated errors."
+      },
+      "references": [
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 Consensus mechanisms: majority vote",
+        "Anthropic documentation: Correlated failures in multi-agent systems"
+      ]
+    },
+    {
+      "id": "q-4.6-hard-3",
+      "taskStatement": "4.6",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "An architect is designing a review system for auto-generated infrastructure-as-code (IaC) templates. The templates are generated in 50-file batches. The team must choose between: Option X \u2014 one review instance that reads all 50 files in a single context, and Option Y \u2014 50 parallel per-file instances followed by a cross-file consistency instance. Budget and time are constrained.",
+      "text": "Which option should the architect choose, and what is the most accurate reasoning?",
+      "options": {
+        "A": "Option X, because a single large context allows the reviewer to see all interdependencies simultaneously without coordination overhead",
+        "B": "Option Y, because parallel per-file instances are always faster and cheaper than a single large-context review",
+        "C": "Option Y, because per-file instances each operate at optimal context depth for local issues, and the cross-file instance receives structured summaries rather than 50 raw files, keeping both passes within effective context utilisation \u2014 while also parallelising Phase 1 to reduce wall-clock time",
+        "D": "Option X, because multi-instance architectures always produce more false positives than single-instance review"
+      },
+      "correctAnswer": "C",
+      "explanation": "Option Y is superior for this workload. A single instance reviewing 50 IaC files faces context dilution \u2014 attention quality degrades as context grows, and the model may miss local issues buried in a large prompt. Option Y keeps Phase 1 reviewers focused on one file at optimum context depth. Phase 2 receives compact structured summaries (not raw files), allowing it to reason about cross-file consistency without context overload. Phase 1 runs in parallel, reducing wall-clock time despite the additional coordination. The quality and latency benefits justify the modest coordination overhead.",
+      "whyWrongMap": {
+        "A": "While a single large context can see all files, attention quality degrades with context length, making it less reliable for catching local issues across 50 files; interdependency detection does not require all files in one prompt if Phase 2 receives structured cross-file summaries.",
+        "B": "Option Y is not always cheaper in total tokens \u2014 it may use more tokens overall \u2014 but it is better quality; cost and speed are secondary arguments; the primary justification is context quality per review pass.",
+        "D": "Multi-instance architectures do not inherently produce more false positives; false positive rates depend on reviewer calibration and prompt design, not instance count."
+      },
+      "references": [
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 Per-file and cross-file passes",
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 Cost/quality trade-offs"
+      ]
+    },
+    {
+      "id": "q-4.6-hard-4",
+      "taskStatement": "4.6",
+      "domainId": 4,
+      "difficulty": "hard",
+      "scenario": "A team implements a structured disagreement mechanism for a legal document review system. Two instances disagree on whether a liability clause is enforceable. The team's process routes disagreements to a senior attorney. After six months, the attorney notices that 80% of routed disagreements are about the same narrow clause type and that both reviewers are consistently wrong in opposite directions on this clause type.",
+      "text": "What does this pattern reveal about the review architecture, and what is the most appropriate systemic fix?",
+      "options": {
+        "A": "The structured disagreement mechanism is working correctly; routing to a human is the intended behaviour and no change is needed",
+        "B": "The two instances have complementary but individually biased models of this clause type; the fix is to add a third specialised instance prompted with explicit domain knowledge about this clause type, and to feed disagreement cases back as few-shot examples to recalibrate reviewer prompts",
+        "C": "The disagreement rate proves the review system is unreliable; the team should revert to single-instance review",
+        "D": "The attorney should be replaced by an automated rule engine for this clause type to reduce review latency"
+      },
+      "correctAnswer": "B",
+      "explanation": "The pattern reveals that both reviewer instances have systematic but opposing biases on a specific clause type \u2014 neither is correct, but they are wrong in complementary ways. This is a prompt calibration and domain knowledge gap, not a structural failure. The optimal fix combines: (1) adding a third instance specifically prompted with authoritative domain knowledge about this clause type to provide a calibrated third opinion, and (2) using the accumulated attorney-resolved disagreement cases as few-shot calibration examples to reduce future errors. This closes the feedback loop and improves the system over time.",
+      "whyWrongMap": {
+        "A": "While the structured disagreement mechanism is functioning, the 80% concentration on one clause type signals a systematic bias that should be corrected rather than permanently routed to a human; accepting perpetual human escalation for a known pattern is not optimal architecture.",
+        "C": "High disagreement on a specific clause type indicates a targeted calibration problem, not general unreliability; reverting to single-instance review would hide the disagreement but not fix the underlying bias and would reduce overall quality.",
+        "D": "Rule engines are brittle for nuanced legal language; the appropriate fix is improving the review instances' domain knowledge and calibration, not replacing human judgment with rigid rules for complex legal interpretation."
+      },
+      "references": [
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 Consensus mechanisms: structured disagreement",
+        "Claude Certified Architect Study Guide, Domain 4, Section 4.6 \u2013 Multi-instance review design"
       ]
     }
   ]
