@@ -74,6 +74,26 @@ Three-priority selection: overdue reviews first, then weak areas, then new mater
 
 </td>
 </tr>
+<tr>
+<td width="50%">
+
+### 📖 Learn Before You're Tested
+Each of the 30 task statements has a **concept lesson** (handout) you can read before tackling questions. Ask Claude to teach you about any topic — it delivers a structured lesson with key concepts, mental models, and examples from Anthropic's docs. The server tracks which lessons you've viewed.
+
+### 🗺 Full Curriculum Browser
+Browse the entire exam curriculum with your current mastery level per task statement. See which topics are unassessed, weak, developing, strong, or mastered — all at a glance. Drill into any task for its concept lesson and question history.
+
+</td>
+<td width="50%">
+
+### 📋 Personalized Study Plans
+Get a recommended study order based on your assessment results and learning path. The plan tells you which domain to focus on next, how many reviews are overdue, and estimates your time to exam readiness.
+
+### 🔄 Pick Up Where You Left Off
+Everything persists in a local SQLite database. Close Claude, come back tomorrow, switch from Claude Desktop to Claude Code — your mastery levels, answer history, review schedule, and handout progress are all waiting for you.
+
+</td>
+</tr>
 </table>
 
 <br />
@@ -171,6 +191,47 @@ Restart your MCP client and start chatting. Here's what to say:
 | Get a study plan | *"What should I study next?"* |
 | Deep dive on a topic | *"Teach me about task 2.3 — tool provisioning"* |
 | Reset and start over | *"Reset my progress"* |
+
+<br />
+
+## 📋 What Can You Do?
+
+Everything happens through natural conversation with Claude. Here's every capability:
+
+### 🎓 Learning & Studying
+
+| Action | How to ask | What happens |
+|--------|-----------|--------------|
+| **Read a concept lesson** | *"Teach me about task 1.5 — tool-use hooks"* | Claude calls `get_section_details` which loads the concept handout for that task statement. You get a structured lesson with key concepts, mental models, and examples — all before any questions. The server tracks that you've viewed it. |
+| **Browse the curriculum** | *"Show me the full curriculum"* | Claude calls `get_curriculum` and displays all 5 domains, 30 task statements, and your current mastery level for each (unassessed/weak/developing/strong/mastered). |
+| **Get a study plan** | *"What should I study next?"* | Claude calls `get_study_plan` which analyzes your mastery, learning path, and overdue reviews to recommend a domain order and estimate time remaining. |
+| **Read a concept handout** | *"Show me the handout for task 2.3"* | Claude reads the `handout://2.3` MCP resource — a markdown document explaining the core concepts for that task statement. |
+| **View exam info** | *"Tell me about the exam format"* | Claude reads the `exam-info://overview` resource with exam format, domain weights, passing score, and scenario descriptions. |
+
+### 📝 Assessment & Practice
+
+| Action | How to ask | What happens |
+|--------|-----------|--------------|
+| **Take the initial assessment** | *"Start an assessment"* | `start_assessment` delivers 15 questions (3 per domain: 1 easy, 1 medium, 1 hard). Based on your score, you're placed on a beginner-friendly (<60%) or exam-weighted (≥60%) learning path. |
+| **Get a practice question** | *"Give me a question"* | `get_practice_question` uses the three-priority algorithm: overdue reviews → weak areas → new material. You always get the most impactful question. |
+| **Focus on a specific domain** | *"Quiz me on domain 3"* | You can ask for questions filtered to a specific domain or task statement. |
+| **Answer a question** | *"B"* or *"I think it's C"* | `submit_answer` grades your response with a pure function — no LLM judgment. You get: correct/incorrect, explanation, why each wrong option is wrong, references, updated mastery, and next review date. |
+
+### 📊 Progress & Tracking
+
+| Action | How to ask | What happens |
+|--------|-----------|--------------|
+| **Check overall progress** | *"Show my progress"* | `get_progress` returns: total questions answered, overall accuracy %, reviews due, and per-domain breakdown with accuracy and mastered task count. |
+| **Find weak areas** | *"What are my weak areas?"* | `get_weak_areas` lists every task statement below 70% accuracy, ranked from weakest to strongest, with attempt counts and mastery levels. |
+| **Deep dive on a task** | *"Show me details for task 1.2"* | `get_section_details` returns: mastery level, accuracy %, total attempts, whether you've read the concept lesson, and the full concept handout text. |
+| **View the curriculum map** | *"Show the curriculum with my mastery"* | `get_curriculum` displays all 30 task statements with their mastery level badge: `[UNASSESSED]`, `[WEAK]`, `[DEVELOPING]`, `[STRONG]`, or `[MASTERED]`. |
+
+### 🔧 Management
+
+| Action | How to ask | What happens |
+|--------|-----------|--------------|
+| **Reset all progress** | *"Reset my progress"* | `reset_progress` wipes all answers, mastery, review schedule, and handout views. Requires explicit confirmation — no accidental resets. |
+| **Access reference projects** | *"Show me a reference project for domain 2"* | `scaffold_project` provides hands-on coding exercises for each domain. |
 
 <br />
 
@@ -300,42 +361,153 @@ Claude: ❌ Incorrect. The correct answer is B.
         This question will appear again in 1 day.
 ```
 
-### Studying a Specific Topic
+### Learning a Topic (Concept Lesson)
 
 ```
 You: "Teach me about task 1.5 — tool-use hooks"
 
-Claude: 📖 Task 1.5: Build tool-use hooks for pre/post-processing
-        and audit logging
+Claude: ═══ 1.5: Build tool-use hooks for pre/post-processing
+        and audit logging ═══
+
+        Domain: Agentic Architecture & Orchestration
+        Description: Hook into tool execution lifecycle for
+        validation, transformation, and logging.
+
+        Mastery: unassessed
+        Accuracy: 0%
+        Attempts: 0
+        Handout Viewed: No
+
+        --- Concept Lesson ---
+
+        # Tool-Use Hooks
 
         Mental Model: "The model drives decisions, code enforces
         guardrails"
 
+        ## What Are Hooks?
         Tool-use hooks are callback functions that run before
         (PreToolUse) or after (PostToolUse) a tool is executed
-        in an agentic loop...
+        in an agentic loop. They provide deterministic control
+        points in an otherwise probabilistic system.
 
-        [detailed concept lesson with examples]
+        ## PreToolUse Hooks
+        - Run BEFORE the tool executes
+        - Can validate parameters, enforce permissions, or abort
+        - Return `{ abort: true, message: "..." }` to block
+        - Example: Prevent file writes outside a sandbox directory
+
+        ## PostToolUse Hooks
+        - Run AFTER the tool returns its result
+        - Can transform output, redact PII, or log for audit
+        - Example: Strip email addresses from API responses
+
+        ## When to Use Hooks vs. System Prompts
+        - Hooks: deterministic rules (path restrictions, schema
+          validation, PII redaction)
+        - System prompts: soft heuristics (tone, style, judgment)
+
+        📚 References:
+        • docs.anthropic.com/en/docs/agents#hooks
 
         Ready to test your understanding? I have 13 questions
         on this topic ranging from easy to hard.
 ```
 
-### Targeting Weak Areas
+### Checking Your Progress
+
+```
+You: "Show me my progress"
+
+Claude: ═══ CERTIFICATION STUDY PROGRESS ═══
+
+        Questions Answered: 164
+        Overall Accuracy: 71%
+        Reviews Due: 3
+
+        Domain Progress:
+          D1: Agentic Architecture & Orchestration — 68% accuracy,
+              4/7 mastered
+          D2: Tool Design & MCP Integration — 82% accuracy,
+              3/5 mastered
+          D3: Claude Code Configuration & Workflows — 51% accuracy,
+              1/6 mastered
+          D4: Prompt Engineering & Structured Output — 35% accuracy,
+              0/6 mastered
+          D5: Context Management & Reliability — 22% accuracy,
+              0/6 mastered
+```
+
+### Getting a Study Plan
+
+```
+You: "What should I study next?"
+
+Claude: ═══ YOUR STUDY PLAN ═══
+
+        Learning Path: exam-weighted
+        Estimated Time Remaining: ~14 hours
+
+        Next Recommended Domain: D4 — Prompt Engineering &
+        Structured Output
+
+        Domain Study Order:
+          1. D1: Agentic Architecture & Orchestration
+          2. D3: Claude Code Configuration & Workflows
+          3. D4: Prompt Engineering & Structured Output
+          4. D2: Tool Design & MCP Integration
+          5. D5: Context Management & Reliability
+
+        Reviews Due: 3
+        Start with your overdue reviews before new material.
+```
+
+### Viewing the Curriculum Map
+
+```
+You: "Show me the full curriculum"
+
+Claude: ═══ CERTIFICATION CURRICULUM ═══
+
+        ## Domain 1: Agentic Architecture & Orchestration (27%)
+
+          1.1 [MASTERED] Design and implement agentic loops (94%)
+          1.2 [STRONG] Orchestrate multi-agent systems (78%)
+          1.3 [MASTERED] Manage subagent context isolation (92%)
+          1.4 [DEVELOPING] Implement deterministic guardrails (55%)
+          1.5 [MASTERED] Build tool-use hooks (96%)
+          1.6 [WEAK] Apply task decomposition patterns (44%)
+          1.7 [MASTERED] Manage conversation lifecycle (90%)
+
+        ## Domain 2: Tool Design & MCP Integration (18%)
+
+          2.1 [STRONG] Design effective tool schemas (85%)
+          2.2 [DEVELOPING] Structured error handling (62%)
+          2.3 [UNASSESSED] Configure tool_choice (—)
+          ...
+```
+
+### Finding Weak Areas
 
 ```
 You: "What are my weak areas?"
 
-Claude: 📉 Topics Needing Work
+Claude: ═══ WEAK AREAS ═══
 
-        1. Task 4.3 — Structured output via tool_use (32%)
-           Last attempt: 2 days ago, 2/6 correct
-        2. Task 5.1 — Context window management (38%)
-           Last attempt: 3 days ago, 3/8 correct
-        3. Task 1.6 — Task decomposition patterns (44%)
-           Last attempt: 1 day ago, 4/9 correct
+          1.6: Apply task decomposition patterns
+            Accuracy: 44% (4/9)
+            Mastery: weak
 
-        Want me to drill you on your weakest topic first?
+          4.3: Configure structured output via tool_use
+            Accuracy: 32% (2/6)
+            Mastery: weak
+
+          5.1: Manage context window limits
+            Accuracy: 38% (3/8)
+            Mastery: weak
+
+        These 3 tasks are below 70%. Want me to start drilling
+        your weakest one?
 ```
 
 <br />
