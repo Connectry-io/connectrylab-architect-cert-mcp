@@ -747,5 +747,6 @@ MIT © [Connectry Labs](https://connectry.io/labs)
 <p align="center">
   <a href="https://github.com/Connectry-io/connectrylab-architect-cert-mcp">GitHub</a> •
   <a href="https://www.npmjs.com/package/connectry-architect-mcp">npm</a> •
-  <a href="https://connectry.io/labs">Website</a>
+  <a href="https://connectry.io/labs/architect-cert/">Architect Cert</a> •
+  <a href="https://connectry.io/labs">Connectry Labs</a>
 </p>
