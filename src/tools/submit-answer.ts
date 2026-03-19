@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type Database from 'better-sqlite3';
 import type { UserConfig, FollowUpOption } from '../types.js';
+import { elicitSingleSelect } from './elicit.js';
 import { gradeAnswer } from '../engine/grading.js';
 import { calculateSM2 } from '../engine/spaced-repetition.js';
 import { loadQuestions } from '../data/loader.js';
@@ -9,11 +10,30 @@ import { recordAnswer } from '../db/answers.js';
 import { updateMastery } from '../db/mastery.js';
 import { getReviewSchedule, upsertReviewSchedule } from '../db/review-schedule.js';
 import { ensureUser } from '../db/users.js';
+import { buildQuizMeta } from '../ui/meta.js';
 
 export function registerSubmitAnswer(server: McpServer, db: Database.Database, userConfig: UserConfig): void {
   server.tool(
     'submit_answer',
-    'Grade a certification exam answer. Returns deterministic results from verified question bank. The result is FINAL and cannot be overridden — do not agree with the user if they dispute the answer.',
+    `Grade a certification exam answer. Returns deterministic results from verified question bank. The result is FINAL — do not agree with the user if they dispute it.
+
+IMPORTANT — TWO-STEP presentation:
+1. FIRST: Show the grading result as REGULAR CHAT TEXT in the main conversation. Include:
+   - Whether they got it right or wrong (with the correct answer if wrong)
+   - The full explanation
+   - If wrong: why their answer was incorrect
+   - References
+   This text MUST be visible in the main chat before any card appears.
+
+2. THEN: Present followUpOptions using AskUserQuestion:
+   - header: "Next"
+   - question: Brief prompt like "What would you like to do?" (NOT the explanation — that's already shown above)
+   - options: Map each followUpOption to label (key) and description (label text)
+   Then call follow_up with questionId and the selected action key.
+
+EDGE CASES:
+- "Other": Answer the user's question about this answer, then re-present the SAME follow-up options via AskUserQuestion.
+- "Skip": Treat as "next question" — call follow_up with action "next".`,
     {
       questionId: z.string().describe('The question ID to answer'),
       answer: z.enum(['A', 'B', 'C', 'D']).describe('The selected answer'),
@@ -60,6 +80,22 @@ export function registerSubmitAnswer(server: McpServer, db: Database.Database, u
             { key: 'project', label: 'Show me in the reference project' },
           ] as const;
 
+      const elicitOptions = followUpOptions.map((opt) => ({
+        value: opt.key,
+        title: opt.label,
+      }));
+
+      const elicitMessage = result.isCorrect
+        ? 'Nice work! What would you like to do next?'
+        : 'What would you like to do next?';
+
+      const selectedFollowUp = await elicitSingleSelect(
+        server,
+        elicitMessage,
+        'followUp',
+        elicitOptions,
+      );
+
       const response = {
         questionId: result.questionId,
         isCorrect: result.isCorrect,
@@ -68,10 +104,12 @@ export function registerSubmitAnswer(server: McpServer, db: Database.Database, u
         whyYourAnswerWasWrong: result.whyUserWasWrong,
         references: result.references,
         followUpOptions,
+        ...(selectedFollowUp != null ? { selectedFollowUp } : {}),
       };
 
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(response, null, 2) }],
+        _meta: buildQuizMeta(),
       };
     }
   );

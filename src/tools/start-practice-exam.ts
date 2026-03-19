@@ -5,11 +5,26 @@ import { loadQuestions, loadCurriculum } from '../data/loader.js';
 import { buildPracticeExam, buildInitialDomainScores, EXAM_DISTRIBUTION } from '../engine/exam-builder.js';
 import { createExamAttempt, getActiveExam, getExamHistory } from '../db/exam-attempts.js';
 import { ensureUser } from '../db/users.js';
+import { elicitSingleSelect } from './elicit.js';
+import { buildQuizMeta } from '../ui/meta.js';
 
 export function registerStartPracticeExam(server: McpServer, db: Database.Database, userConfig: UserConfig): void {
   server.tool(
     'start_practice_exam',
-    'Start a full 60-question practice exam simulating the real Claude Certified Architect — Foundations exam. Questions are weighted by domain (D1: 16, D2: 11, D3: 12, D4: 12, D5: 9). Scored out of 1000, passing is 720. Results are saved for comparison across attempts.',
+    `Start a full 60-question practice exam (D1:16, D2:11, D3:12, D4:12, D5:9). Scored 0-1000, passing 720.
+
+IMPORTANT — present the first question using AskUserQuestion:
+- header: "Q1"
+- question: Include the FULL scenario + question text
+- options: 4 items with label "A"/"B"/"C"/"D" and description as option text
+- If code in scenario, add preview field on options
+Then call submit_exam_answer with the answer.
+
+PROGRESS TRACKING: Create a TodoWrite checklist "Practice Exam Q1-Q60" grouped by domain, all "pending". Update each to "completed" after grading.
+
+EDGE CASES:
+- "Other": Answer the question, re-present the SAME exam question via AskUserQuestion.
+- "Skip": Move to next exam question without grading. Never break the flow.`,
     {},
     async () => {
       const userId = userConfig.userId;
@@ -62,10 +77,7 @@ export function registerStartPracticeExam(server: McpServer, db: Database.Databa
 
       const firstQuestion = examQuestions[0];
 
-      return {
-        content: [{
-          type: 'text' as const,
-          text: [
+      const text = [
             '═══ PRACTICE EXAM STARTED ═══',
             '',
             'Simulating the Claude Certified Architect — Foundations exam.',
@@ -93,8 +105,25 @@ export function registerStartPracticeExam(server: McpServer, db: Database.Databa
             `D) ${firstQuestion.options.D}`,
             '',
             `[Submit your answer using submit_exam_answer with examId: ${examId} and questionId: "${firstQuestion.id}"]`,
-          ].join('\n'),
+          ].join('\n');
+
+      const selected = await elicitSingleSelect(server, 'Select your answer:', 'answer', [
+        { value: 'A', title: `A) ${firstQuestion.options.A}` },
+        { value: 'B', title: `B) ${firstQuestion.options.B}` },
+        { value: 'C', title: `C) ${firstQuestion.options.C}` },
+        { value: 'D', title: `D) ${firstQuestion.options.D}` },
+      ]);
+
+      const responseText = selected !== null
+        ? `${text}\n\nUser selected: ${selected}`
+        : text;
+
+      return {
+        content: [{
+          type: 'text' as const,
+          text: responseText,
         }],
+        _meta: buildQuizMeta(),
       };
     }
   );

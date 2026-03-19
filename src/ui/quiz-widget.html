@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz</title>
+<style>
+:root{--bg:#fff;--bg2:#f7f7f8;--tx:#1a1a1a;--tx2:#6b6b6b;--ac:#6b4fbb;--ach:#5a3fa8;--bd:#e5e5e5;--ok:#16a34a;--okbg:#f0fdf4;--no:#dc2626;--nobg:#fef2f2;--r:8px;--sh:0 1px 3px rgba(0,0,0,.08)}
+@media(prefers-color-scheme:dark){:root{--bg:#1e1e1e;--bg2:#2a2a2a;--tx:#e5e5e5;--tx2:#a0a0a0;--ac:#8b7fd4;--ach:#7a6ec5;--bd:#3a3a3a;--ok:#22c55e;--okbg:#0a2615;--no:#ef4444;--nobg:#2a0a0a;--sh:0 1px 3px rgba(0,0,0,.3)}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--tx);line-height:1.6;padding:20px;max-width:640px;margin:0 auto}
+.badge{display:inline-block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:3px 8px;border-radius:4px;background:var(--bg2);color:var(--tx2);border:1px solid var(--bd)}
+.badge--easy{color:var(--ok);border-color:var(--ok)}.badge--medium{color:#d97706;border-color:#d97706}.badge--hard{color:var(--no);border-color:var(--no)}
+.hdr{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.hdr__task{font-size:12px;color:var(--tx2)}
+.scn{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--tx2);line-height:1.5}
+.scn::before{content:'Scenario';display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--ac);margin-bottom:6px}
+.q{font-size:16px;font-weight:600;margin-bottom:20px;line-height:1.5}
+.opts{display:flex;flex-direction:column;gap:10px}
+.ob{display:flex;align-items:flex-start;gap:12px;width:100%;padding:14px 16px;border:1px solid var(--bd);border-radius:var(--r);background:var(--bg);color:var(--tx);font-size:14px;line-height:1.5;text-align:left;cursor:pointer;transition:border-color .15s,background .15s;box-shadow:var(--sh)}
+.ob:hover:not(:disabled){border-color:var(--ac);background:var(--bg2)}
+.ob:active:not(:disabled){transform:scale(.995)}
+.ob:disabled{cursor:default;opacity:.7}
+.ob__l{flex-shrink:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--bg2);border:1px solid var(--bd);font-weight:700;font-size:13px;color:var(--tx2)}
+.ob__t{padding-top:3px}
+.ob--sel{border-color:var(--ac);background:var(--bg2)}
+.ob--sel .ob__l{background:var(--ac);border-color:var(--ac);color:#fff}
+.ob--ld{border-color:var(--ac);opacity:.8}
+.ob--ld .ob__l{position:relative;background:var(--ac);border-color:var(--ac);color:transparent}
+.ob--ld .ob__l::after{content:'';position:absolute;width:16px;height:16px;border:2px solid transparent;border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+.ob--ok{border-color:var(--ok);background:var(--okbg)}
+.ob--ok .ob__l{background:var(--ok);border-color:var(--ok);color:#fff}
+.ob--no{border-color:var(--no);background:var(--nobg)}
+.ob--no .ob__l{background:var(--no);border-color:var(--no);color:#fff}
+@keyframes spin{to{transform:rotate(360deg)}}
+.res{margin-top:20px;padding:16px;border-radius:var(--r);border:1px solid var(--bd);animation:fi .3s ease}
+.res--ok{border-color:var(--ok);background:var(--okbg)}
+.res--no{border-color:var(--no);background:var(--nobg)}
+.res__h{font-weight:700;font-size:15px;margin-bottom:8px}
+.res--ok .res__h{color:var(--ok)}.res--no .res__h{color:var(--no)}
+.res__e{font-size:14px;line-height:1.6;color:var(--tx)}
+.fu{margin-top:20px;animation:fi .3s ease}
+.fu__lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--tx2);margin-bottom:10px}
+.fu__grid{display:flex;flex-wrap:wrap;gap:8px}
+.fb{padding:8px 14px;border:1px solid var(--bd);border-radius:var(--r);background:var(--bg);color:var(--tx);font-size:13px;font-weight:500;cursor:pointer;transition:border-color .15s,background .15s;box-shadow:var(--sh)}
+.fb:hover:not(:disabled){border-color:var(--ac);background:var(--bg2);color:var(--ac)}
+.fb:disabled{cursor:default;opacity:.6}
+.fb--on{border-color:var(--ac);background:var(--ac);color:#fff}
+.err{margin-top:12px;padding:10px 14px;border-radius:var(--r);background:var(--nobg);border:1px solid var(--no);color:var(--no);font-size:13px;animation:fi .3s ease}
+.hidden{display:none}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="ld"><p style="color:var(--tx2);font-size:14px">Loading question...</p></div>
+  <div id="qz" class="hidden">
+    <div class="hdr"><span id="db" class="badge"></span><span id="tl" class="hdr__task"></span></div>
+    <div id="sb" class="scn hidden"></div>
+    <div id="qt" class="q"></div>
+    <div id="op" class="opts"></div>
+    <div id="eb" class="err hidden"></div>
+    <div id="rb" class="res hidden"></div>
+    <div id="fb" class="fu hidden">
+      <div class="fu__lbl">Continue learning</div>
+      <div id="fg" class="fu__grid"></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+var rpcN=0;
+function isNA(e){var m=String(e?.message||e||'').toLowerCase();return m.includes('not available')||m.includes('not supported')||m.includes('undefined')}
+async function callTool(name,args){
+  var hs=[window.openai,window.mcp].filter(function(h){return h&&typeof h.callTool==='function'});
+  for(var i=0;i<hs.length;i++){try{return await hs[i].callTool(name,args)}catch(e){if(isNA(e))continue;throw e}}
+  var id='q:'+(++rpcN);
+  return new Promise(function(ok,fail){
+    var t=setTimeout(function(){window.removeEventListener('message',on);fail(new Error('Tool call timed out'))},15000);
+    function on(ev){if(!ev.data||ev.data.id!==id)return;window.removeEventListener('message',on);clearTimeout(t);ev.data.error?fail(new Error(ev.data.error.message||'Tool call failed')):ok(ev.data.result)}
+    window.addEventListener('message',on);
+    window.parent.postMessage({jsonrpc:'2.0',id:id,method:'tools/call',params:{name:name,arguments:args}},'*');
+  });
+}
+var S={qd:null,sel:null,graded:false,gr:null};
+var D={};
+function idom(){['ld','qz','db','tl','sb','qt','op','eb','rb','fb','fg'].forEach(function(k){D[k]=document.getElementById(k)})}
+function parseQD(){
+  var el=document.getElementById('question-data');
+  if(el){try{return JSON.parse(el.textContent)}catch(e){}}
+  var bd=document.body.getAttribute('data-question');
+  if(bd){try{return JSON.parse(bd)}catch(e){}}
+  var ps=document.querySelectorAll('pre,code,script[type="application/json"]');
+  for(var i=0;i<ps.length;i++){try{var p=JSON.parse(ps[i].textContent);if(p&&p.questionId)return p}catch(e){}}
+  return null;
+}
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function renderQ(data){
+  S.qd=data;D.ld.classList.add('hidden');D.qz.classList.remove('hidden');
+  var df=(data.difficulty||'medium').toLowerCase();
+  D.db.textContent=df;D.db.className='badge badge--'+df;
+  D.tl.textContent=data.taskStatement?'Task '+data.taskStatement:'';
+  if(data.scenario){D.sb.textContent=data.scenario;D.sb.classList.remove('hidden')}
+  D.qt.textContent=data.question;
+  D.op.innerHTML='';
+  ['A','B','C','D'].forEach(function(L){
+    if(!data.options||!data.options[L])return;
+    var b=document.createElement('button');b.className='ob';b.setAttribute('data-l',L);
+    b.innerHTML='<span class="ob__l">'+L+'</span><span class="ob__t">'+esc(data.options[L])+'</span>';
+    b.addEventListener('click',function(){onAns(L)});D.op.appendChild(b);
+  });
+}
+async function onAns(L){
+  if(S.sel||S.graded)return;S.sel=L;
+  var bs=D.op.querySelectorAll('.ob');
+  bs.forEach(function(b){b.disabled=true;if(b.getAttribute('data-l')===L)b.classList.add('ob--sel','ob--ld')});
+  hideErr();
+  try{
+    var r=await callTool('submit_answer',{questionId:S.qd.questionId,answer:L});
+    var g=parseGR(r);S.graded=true;S.gr=g;renderGR(g);
+  }catch(e){
+    showErr('Failed to submit: '+e.message);S.sel=null;
+    bs.forEach(function(b){b.disabled=false;b.classList.remove('ob--sel','ob--ld')});
+  }
+}
+function parseGR(r){
+  if(!r)return{correct:false,explanation:'No response received.'};
+  var t='';
+  if(r.content&&Array.isArray(r.content)){for(var i=0;i<r.content.length;i++){if(r.content[i].type==='text'){t=r.content[i].text;break}}}
+  else if(typeof r==='string')t=r;
+  else if(r.text)t=r.text;
+  try{var p=JSON.parse(t);return{correct:!!p.correct,correctAnswer:p.correctAnswer||null,explanation:p.explanation||'',followUpOptions:p.followUpOptions||null}}
+  catch(e){return{correct:false,explanation:t||'Unable to parse result.',correctAnswer:null,followUpOptions:null}}
+}
+function renderGR(g){
+  D.op.querySelectorAll('.ob').forEach(function(b){
+    var L=b.getAttribute('data-l');b.classList.remove('ob--ld');
+    if(g.correctAnswer&&L===g.correctAnswer)b.classList.add('ob--ok');
+    else if(L===S.sel&&!g.correct)b.classList.add('ob--no');
+    else if(L===S.sel&&g.correct)b.classList.add('ob--ok');
+  });
+  D.rb.className='res '+(g.correct?'res--ok':'res--no');
+  D.rb.innerHTML='<div class="res__h">'+(g.correct?'Correct!':'Incorrect')+'</div><div class="res__e">'+esc(g.explanation)+'</div>';
+  D.rb.classList.remove('hidden');
+  renderFU(g);
+}
+var FU_DEF=[{action:'next_question',label:'Next Question'},{action:'code_example',label:'Code Example'},{action:'concept_lesson',label:'Concept Lesson'},{action:'full_handout',label:'Full Handout'},{action:'reference_project',label:'Reference Project'},{action:'why_others_wrong',label:'Why Others Wrong'}];
+function fmtAct(a){return a.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})}
+function renderFU(g){
+  var acts=(g.followUpOptions&&g.followUpOptions.length>0)?g.followUpOptions:FU_DEF;
+  D.fg.innerHTML='';
+  acts.forEach(function(item){
+    var act=item.action||item,lbl=item.label||fmtAct(act);
+    var b=document.createElement('button');b.className='fb';b.textContent=lbl;
+    b.addEventListener('click',function(){onFU(act,b)});D.fg.appendChild(b);
+  });
+  D.fb.classList.remove('hidden');
+}
+async function onFU(act,btn){
+  D.fg.querySelectorAll('.fb').forEach(function(b){b.disabled=true});btn.classList.add('fb--on');hideErr();
+  try{await callTool('follow_up',{questionId:S.qd.questionId,action:act})}
+  catch(e){showErr('Follow-up failed: '+e.message);D.fg.querySelectorAll('.fb').forEach(function(b){b.disabled=false});btn.classList.remove('fb--on')}
+}
+function showErr(m){D.eb.textContent=m;D.eb.classList.remove('hidden')}
+function hideErr(){D.eb.classList.add('hidden')}
+function onMsg(ev){if(ev.data&&ev.data.type==='question-data'&&ev.data.payload&&ev.data.payload.questionId)renderQ(ev.data.payload)}
+function init(){idom();window.addEventListener('message',onMsg);var d=parseQD();if(d)renderQ(d)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+</body>
+</html>

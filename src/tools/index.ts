@@ -18,6 +18,7 @@ import { registerFollowUp } from './follow-up.js';
 import { registerStartCapstoneBuild } from './start-capstone-build.js';
 import { registerCapstoneBuildStep } from './capstone-build-step.js';
 import { registerCapstoneBuildStatus } from './capstone-build-status.js';
+import { registerDashboard } from './dashboard.js';
 
 export function registerTools(server: McpServer, db: Database.Database, userConfig: UserConfig): void {
   registerSubmitAnswer(server, db, userConfig);
@@ -37,4 +38,5 @@ export function registerTools(server: McpServer, db: Database.Database, userConf
   registerStartCapstoneBuild(server, db, userConfig);
   registerCapstoneBuildStep(server, db, userConfig);
   registerCapstoneBuildStatus(server, db, userConfig);
+  registerDashboard(server, db, userConfig);
 }

@@ -6,11 +6,23 @@ import { loadQuestions } from '../data/loader.js';
 import { gradeAnswer } from '../engine/grading.js';
 import { getExamById, recordExamAnswer, completeExam, getExamHistory } from '../db/exam-attempts.js';
 import { ensureUser } from '../db/users.js';
+import { elicitSingleSelect } from './elicit.js';
+import { buildQuizMeta } from '../ui/meta.js';
 
 export function registerSubmitExamAnswer(server: McpServer, db: Database.Database, userConfig: UserConfig): void {
   server.tool(
     'submit_exam_answer',
-    'Submit an answer for a practice exam question. The answer is graded deterministically. After all 60 questions, the exam is scored and saved. DO NOT soften results — relay the grading output verbatim.',
+    `Submit an answer for a practice exam question. Graded deterministically. DO NOT soften results.
+
+IMPORTANT — TWO-STEP presentation after grading:
+1. FIRST: Show the grading result as REGULAR CHAT TEXT. Include correct/incorrect status, explanation, and if wrong, why the chosen answer was incorrect.
+2. THEN: If there's a next question, present it using AskUserQuestion:
+   - header: "Q[number]"
+   - question: Include the FULL scenario + question text
+   - options: 4 items with label "A"/"B"/"C"/"D" and description as option text
+   Then call submit_exam_answer again with the answer.
+
+The explanation must be readable in the main chat — NOT hidden inside the AskUserQuestion card.`,
     {
       examId: z.number().describe('The practice exam ID'),
       questionId: z.string().describe('The question ID being answered'),
@@ -134,11 +146,25 @@ export function registerSubmitExamAnswer(server: McpServer, db: Database.Databas
             lines.push(`B) ${nextQuestion.options.B}`);
             lines.push(`C) ${nextQuestion.options.C}`);
             lines.push(`D) ${nextQuestion.options.D}`);
+
+            const selected = await elicitSingleSelect(server, 'Select your answer:', 'answer', [
+              { value: 'A', title: `A) ${nextQuestion.options.A}` },
+              { value: 'B', title: `B) ${nextQuestion.options.B}` },
+              { value: 'C', title: `C) ${nextQuestion.options.C}` },
+              { value: 'D', title: `D) ${nextQuestion.options.D}` },
+            ]);
+
+            if (selected !== null) {
+              lines.push('', `User selected: ${selected}`);
+            }
           }
         }
       }
 
-      return { content: [{ type: 'text' as const, text: lines.join('\n') }] };
+      return {
+        content: [{ type: 'text' as const, text: lines.join('\n') }],
+        _meta: buildQuizMeta(),
+      };
     }
   );
 }

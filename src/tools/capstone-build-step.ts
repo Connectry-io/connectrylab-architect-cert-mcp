@@ -18,6 +18,7 @@ import {
   abandonBuild,
   getBuildSteps,
 } from '../db/capstone.js';
+import { elicitSingleSelect } from './elicit.js';
 
 const ACTIONS = ['confirm', 'quiz', 'build', 'next', 'status', 'abandon'] as const;
 
@@ -297,10 +298,37 @@ function handleAbandon(db: Database.Database, userId: string): ReturnType<typeof
   });
 }
 
+function appendSelectedAction(
+  response: ReturnType<typeof textResponse>,
+  selected: string | null,
+): ReturnType<typeof textResponse> {
+  if (!selected) return response;
+
+  const existingText = response.content[0].text;
+  return {
+    ...response,
+    content: [{ type: 'text' as const, text: `${existingText}\n\nUser selected next action: ${selected}` }],
+  };
+}
+
 export function registerCapstoneBuildStep(server: McpServer, db: Database.Database, userConfig: UserConfig): void {
   server.tool(
     'capstone_build_step',
-    'Drive your guided capstone build — quiz, build, and advance through 18 progressive steps.',
+    `Drive your guided capstone build — quiz, build, and advance through 18 progressive steps.
+
+IMPORTANT:
+- When presenting quiz questions, use AskUserQuestion with header "Answer" for A/B/C/D selection. If code is in the scenario, add preview fields.
+- After grading a quiz answer, FIRST show the result (correct/incorrect, explanation) as REGULAR CHAT TEXT so the user can read it. THEN present follow-up options or the next question via AskUserQuestion. Explanations must NOT be hidden behind cards.
+- When presenting action choices (quiz/build/next), use AskUserQuestion with header "Action".
+
+PROGRESS TRACKING:
+- On "confirm": Create a TodoWrite checklist with all 18 build steps, all set to "pending".
+- On "next": Update the completed step to "completed" and the new current step to "in_progress".
+- This gives the user a visual build progress tracker.
+
+EDGE CASES:
+- "Other": Answer the question, then re-present the current options via AskUserQuestion.
+- "Skip": During quiz, treat as moving to the build phase. During build, treat as advancing to next step.`,
     {
       action: z.enum(ACTIONS).describe('The build action: confirm, quiz, build, next, status, or abandon'),
     },
@@ -309,8 +337,17 @@ export function registerCapstoneBuildStep(server: McpServer, db: Database.Databa
       ensureUser(db, userId);
 
       switch (action) {
-        case 'confirm':
-          return handleConfirm(db, userId);
+        case 'confirm': {
+          const result = handleConfirm(db, userId);
+          if ('isError' in result) return result;
+          const selected = await elicitSingleSelect(
+            server,
+            'Build confirmed! What would you like to do next?',
+            'nextAction',
+            [{ value: 'quiz', title: 'Start the first quiz' }],
+          );
+          return appendSelectedAction(result, selected);
+        }
 
         case 'quiz':
           return handleQuiz(db, userId);
@@ -323,11 +360,34 @@ export function registerCapstoneBuildStep(server: McpServer, db: Database.Databa
           if (build.status !== 'building') {
             return errorResponse(`Build must be in "building" status. Current status: "${build.status}".`);
           }
-          return handleBuild(db, userId, build);
+          const result = handleBuild(db, userId, build);
+          if ('isError' in result) return result;
+          const selected = await elicitSingleSelect(
+            server,
+            'Build instructions generated. What would you like to do next?',
+            'nextAction',
+            [
+              { value: 'next', title: 'Advance to the next step' },
+              { value: 'status', title: 'Check build progress' },
+            ],
+          );
+          return appendSelectedAction(result, selected);
         }
 
-        case 'next':
-          return handleNext(db, userId);
+        case 'next': {
+          const result = handleNext(db, userId);
+          if ('isError' in result) return result;
+          const selected = await elicitSingleSelect(
+            server,
+            'Step advanced. What would you like to do next?',
+            'nextAction',
+            [
+              { value: 'quiz', title: 'Start this step\'s quiz' },
+              { value: 'status', title: 'Check build progress' },
+            ],
+          );
+          return appendSelectedAction(result, selected);
+        }
 
         case 'status':
           return handleStatus(db, userId);

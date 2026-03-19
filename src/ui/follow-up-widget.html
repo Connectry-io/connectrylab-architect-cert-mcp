@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Follow-Up</title>
+<style>
+:root{--bg:#fff;--bg2:#f7f7f8;--tx:#1a1a1a;--tx2:#6b6b6b;--ac:#6b4fbb;--ach:#5a3fa8;--bd:#e5e5e5;--ok:#16a34a;--okbg:#f0fdf4;--no:#dc2626;--nobg:#fef2f2;--r:8px;--sh:0 1px 3px rgba(0,0,0,.08)}
+@media(prefers-color-scheme:dark){:root{--bg:#1e1e1e;--bg2:#2a2a2a;--tx:#e5e5e5;--tx2:#a0a0a0;--ac:#8b7fd4;--ach:#7a6ec5;--bd:#3a3a3a;--ok:#22c55e;--okbg:#0a2615;--no:#ef4444;--nobg:#2a0a0a;--sh:0 1px 3px rgba(0,0,0,.3)}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--tx);line-height:1.6;padding:16px 20px;max-width:640px;margin:0 auto}
+.rs{padding:12px 16px;border-radius:var(--r);border:1px solid var(--bd);margin-bottom:16px;font-size:14px}
+.rs--ok{border-color:var(--ok);background:var(--okbg)}
+.rs--no{border-color:var(--no);background:var(--nobg)}
+.rs__ic{font-weight:700;margin-right:4px}
+.rs--ok .rs__ic{color:var(--ok)}.rs--no .rs__ic{color:var(--no)}
+.rs__tx{color:var(--tx2);font-size:13px;margin-top:4px;line-height:1.5}
+.lbl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--tx2);margin-bottom:10px}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.ab{padding:10px 16px;border:1px solid var(--bd);border-radius:var(--r);background:var(--bg);color:var(--tx);font-size:13px;font-weight:500;cursor:pointer;transition:border-color .15s,background .15s,color .15s;box-shadow:var(--sh)}
+.ab:hover:not(:disabled){border-color:var(--ac);background:var(--bg2);color:var(--ac)}
+.ab:active:not(:disabled){transform:scale(.97)}
+.ab:disabled{cursor:default;opacity:.6}
+.ab--on{border-color:var(--ac);background:var(--ac);color:#fff}
+.ab--on:hover{background:var(--ach);color:#fff}
+.ab--pri{background:var(--ac);border-color:var(--ac);color:#fff}
+.ab--pri:hover:not(:disabled){background:var(--ach);border-color:var(--ach);color:#fff}
+.err{margin-top:12px;padding:10px 14px;border-radius:var(--r);background:var(--nobg);border:1px solid var(--no);color:var(--no);font-size:13px;animation:fi .3s ease}
+.hidden{display:none}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="ld"><p style="color:var(--tx2);font-size:14px">Loading follow-up options...</p></div>
+  <div id="ms" class="hidden">
+    <div id="rs" class="rs hidden"></div>
+    <div class="lbl">What would you like to do next?</div>
+    <div id="ac" class="acts"></div>
+    <div id="eb" class="err hidden"></div>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+var rpcN=0;
+function isNA(e){var m=String(e?.message||e||'').toLowerCase();return m.includes('not available')||m.includes('not supported')||m.includes('undefined')}
+async function callTool(name,args){
+  var hs=[window.openai,window.mcp].filter(function(h){return h&&typeof h.callTool==='function'});
+  for(var i=0;i<hs.length;i++){try{return await hs[i].callTool(name,args)}catch(e){if(isNA(e))continue;throw e}}
+  var id='fu:'+(++rpcN);
+  return new Promise(function(ok,fail){
+    var t=setTimeout(function(){window.removeEventListener('message',on);fail(new Error('Tool call timed out'))},15000);
+    function on(ev){if(!ev.data||ev.data.id!==id)return;window.removeEventListener('message',on);clearTimeout(t);ev.data.error?fail(new Error(ev.data.error.message||'Tool call failed')):ok(ev.data.result)}
+    window.addEventListener('message',on);
+    window.parent.postMessage({jsonrpc:'2.0',id:id,method:'tools/call',params:{name:name,arguments:args}},'*');
+  });
+}
+var DEF=[
+  {action:'next_question',label:'Next Question',primary:true},
+  {action:'code_example',label:'Code Example'},
+  {action:'concept_lesson',label:'Concept Lesson'},
+  {action:'full_handout',label:'Full Handout'},
+  {action:'reference_project',label:'Reference Project'},
+  {action:'why_others_wrong',label:'Why Others Wrong'}
+];
+var S={qid:null,correct:null,explanation:null,actions:null};
+var D={};
+function idom(){['ld','ms','rs','ac','eb'].forEach(function(k){D[k]=document.getElementById(k)})}
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function fmtAct(a){return String(a).replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase()})}
+function parseCx(){
+  var el=document.getElementById('followup-data');
+  if(el){try{return JSON.parse(el.textContent)}catch(e){}}
+  var bd=document.body.getAttribute('data-context');
+  if(bd){try{return JSON.parse(bd)}catch(e){}}
+  var ps=document.querySelectorAll('pre,code,script[type="application/json"]');
+  for(var i=0;i<ps.length;i++){try{var p=JSON.parse(ps[i].textContent);if(p&&p.questionId)return p}catch(e){}}
+  return null;
+}
+function render(data){
+  S.qid=data.questionId;S.correct=data.correct!=null?data.correct:null;
+  S.explanation=data.explanation||null;S.actions=data.followUpOptions||data.actions||DEF;
+  D.ld.classList.add('hidden');D.ms.classList.remove('hidden');
+  if(S.correct!=null){
+    var cls='rs '+(S.correct?'rs--ok':'rs--no');
+    var html='<span class="rs__ic">'+esc(S.correct?'Correct':'Incorrect')+'</span>';
+    if(S.explanation)html+='<div class="rs__tx">'+esc(S.explanation)+'</div>';
+    D.rs.className=cls;D.rs.innerHTML=html;D.rs.classList.remove('hidden');
+  }
+  D.ac.innerHTML='';
+  var acts=Array.isArray(S.actions)?S.actions:DEF;
+  acts.forEach(function(item){
+    var act=item.action||item,lbl=item.label||fmtAct(act);
+    var isPri=item.primary===true||act==='next_question';
+    var b=document.createElement('button');
+    b.className='ab'+(isPri?' ab--pri':'');b.textContent=lbl;
+    b.addEventListener('click',function(){onAct(act,b)});D.ac.appendChild(b);
+  });
+}
+async function onAct(act,btn){
+  D.ac.querySelectorAll('.ab').forEach(function(b){b.disabled=true});btn.classList.add('ab--on');hideErr();
+  try{await callTool('follow_up',{questionId:S.qid,action:act})}
+  catch(e){showErr('Action failed: '+e.message);D.ac.querySelectorAll('.ab').forEach(function(b){b.disabled=false});btn.classList.remove('ab--on')}
+}
+function showErr(m){D.eb.textContent=m;D.eb.classList.remove('hidden')}
+function hideErr(){D.eb.classList.add('hidden')}
+function onMsg(ev){if(ev.data&&ev.data.type==='followup-data'&&ev.data.payload&&ev.data.payload.questionId)render(ev.data.payload)}
+function init(){idom();window.addEventListener('message',onMsg);var d=parseCx();if(d)render(d)}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+</body>
+</html>

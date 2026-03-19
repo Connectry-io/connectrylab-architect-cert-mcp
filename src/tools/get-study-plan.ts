@@ -12,7 +12,11 @@ import { ensureUser } from '../db/users.js';
 export function registerGetStudyPlan(server: McpServer, db: Database.Database, userConfig: UserConfig): void {
   server.tool(
     'get_study_plan',
-    'Get a personalized study plan based on your assessment results, weak areas, and learning path.',
+    `Get a personalized study plan based on your assessment results, weak areas, and learning path.
+
+IMPORTANT — after showing the study plan, use AskUserQuestion with header "Focus" and multiSelect: true to let the user pick which domains they want to focus on. Options should be the 5 domains with their current mastery as descriptions. Then use their selection to filter get_practice_question calls.
+
+Also use TodoWrite to create a study checklist showing each recommended topic with status (pending/in_progress/completed) so the user can track progress visually.`,
     {},
     async () => {
       const userId = userConfig.userId;

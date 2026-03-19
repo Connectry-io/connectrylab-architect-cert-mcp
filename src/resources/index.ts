@@ -7,6 +7,7 @@ import type Database from 'better-sqlite3';
 import type { UserConfig } from '../types.js';
 import { loadCurriculum, loadHandout } from '../data/loader.js';
 import { recordHandoutView } from '../db/handout-views.js';
+import { getQuizWidgetHtml } from '../ui/loader.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -70,7 +71,21 @@ export function registerResources(server: McpServer, db: Database.Database, user
     }
   );
 
-  // 3. Exam info as static resource
+  // 3. Quiz widget UI resource (MCP App)
+  server.resource(
+    'quiz-widget',
+    'ui://connectry-architect/quiz',
+    { mimeType: 'text/html;profile=mcp-app' },
+    async (uri) => ({
+      contents: [{
+        uri: uri.href,
+        mimeType: 'text/html;profile=mcp-app',
+        text: getQuizWidgetHtml(),
+      }],
+    }),
+  );
+
+  // 4. Exam info as static resource
   server.resource(
     'exam-info',
     'exam-info://overview',
