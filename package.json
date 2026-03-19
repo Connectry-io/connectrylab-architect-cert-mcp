@@ -1,7 +1,8 @@
 {
   "name": "connectry-architect-mcp",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Free certification prep for Claude Certified Architect — by Connectry LABS",
+  "mcpName": "io.github.weareconnectry/connectry-architect-mcp",
   "type": "module",
   "bin": {
     "connectry-architect-mcp": "dist/index.js"
