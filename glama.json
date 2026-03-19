@@ -1,7 +1,6 @@
 {
   "$schema": "https://glama.ai/mcp/schemas/server.json",
   "maintainers": [
-    "weareconnectry",
-    "Connectry-io"
+    "weareconnectry"
   ]
 }
