@@ -22,6 +22,13 @@
   <a href="https://www.npmjs.com/package/connectry-architect-mcp"><img src="https://img.shields.io/npm/dm/connectry-architect-mcp?style=flat&colorA=18181B&colorB=E8784A" alt="npm downloads"></a>
   <a href="https://github.com/Connectry-io/connectrylab-architect-cert-mcp"><img src="https://img.shields.io/github/stars/Connectry-io/connectrylab-architect-cert-mcp?style=flat&colorA=18181B&colorB=E8784A" alt="GitHub stars"></a>
   <a href="https://github.com/Connectry-io/connectrylab-architect-cert-mcp/blob/master/LICENSE"><img src="https://img.shields.io/github/license/Connectry-io/connectrylab-architect-cert-mcp?style=flat&colorA=18181B&colorB=E8784A" alt="License"></a>
+  <a href="https://glama.ai/mcp/servers/Connectry-io/connectrylab-architect-cert-mcp"><img src="https://glama.ai/mcp/servers/Connectry-io/connectrylab-architect-cert-mcp/badges/score.svg" alt="Glama Score"></a>
+</p>
+
+<p align="center">
+  <a href="https://glama.ai/mcp/servers/Connectry-io/connectrylab-architect-cert-mcp">
+    <img src="https://glama.ai/mcp/servers/Connectry-io/connectrylab-architect-cert-mcp/badges/card.svg" alt="Connectry Architect Cert MCP server" />
+  </a>
 </p>
 
 <p align="center">
